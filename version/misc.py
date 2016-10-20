@@ -51,14 +51,32 @@ from PyQt5.QtWidgets import (QWidget, QProgressBar, QLabel,
                              QTableWidgetItem, QTableView, QSplitter,
                              QSplitterHandle, QStyledItemDelegate, QStyleOption)
 
-from utils import (tag_to_string, tag_to_dict, title_parser, ARCHIVE_FILES,
-                     ArchiveFile, IMG_FILES)
-from executors import Executors
-import utils
-import app_constants
-import gallerydb
-import fetch
-import settings
+try:
+    from utils import (tag_to_string, tag_to_dict, title_parser, ARCHIVE_FILES,
+                        ArchiveFile, IMG_FILES)
+    from executors import Executors
+    import utils
+    import app_constants
+    import gallerydb
+    import fetch
+    import settings
+except ImportError:
+    from .utils import (
+        tag_to_string,
+        tag_to_dict,
+        title_parser,
+        ARCHIVE_FILES,
+        ArchiveFile,
+        IMG_FILES
+    )
+    from .executors import Executors
+    from . import (
+        utils,
+        app_constants,
+        gallerydb,
+        fetch,
+        settings,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info

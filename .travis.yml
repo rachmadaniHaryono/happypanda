@@ -1,0 +1,43 @@
+language: python
+sudo: required
+dist: trusty
+
+python:
+  - "3.5"
+addons:
+  apt:
+    packages:
+     - gdb
+     - apport
+compiler:
+ # gcc compiler, clang would be fine too
+ - gcc
+before_install:
+ # What is the current file size max for core files?
+ # It is usually 0, which means no core file will be dumped if there is a crash 
+ - ulimit -c
+ - ulimit -a -S
+ - ulimit -a -H
+install:
+  # Set the core file limit to unlimited so a core file is generated upon crash
+  - ulimit -c unlimited -S
+  - ulimit -c
+  - ulimit -a -S
+  - ulimit -a -H
+  # python
+  - pip3 install PyQt5
+  - pip3 install -r ./requirements-dev.txt
+before_script:
+ - RESULT=0
+script:
+ #- flake8
+ - python -m pytest -v -m "not non_travis"|| RESULT=$?
+ - ls -l
+ - if [[ ${RESULT} == 0 ]]; then echo "\\o/ our test worked without problems"; else echo "ruhroh test returned an errorcode of $RESULT"; fi;
+ # If the program returned an error code, now we check for a
+ # core file in the current working directory and dump the backtrace out
+ - for i in $(find ./ -maxdepth 1 -name 'core*' -print); do gdb $(pwd)/test core* -ex "thread apply all bt" -ex "set pagination 0" -batch; done;
+ # now we should present travis with the original
+ # error code so the run cleanly stops
+ - if [[ ${RESULT} != 0 ]]; then exit $RESULT ; fi;
+

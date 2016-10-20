@@ -21,9 +21,16 @@ from queue import Queue
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
-import app_constants
-import utils
-import settings
+try:
+    import app_constants
+    import utils
+    import settings
+except ImportError:
+    from . import (
+        app_constants,
+        utils,
+        settings,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info

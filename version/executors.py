@@ -4,9 +4,16 @@ from concurrent import futures
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPainter, QBrush, QPen
 
-from database import db_constants
-import utils
-import app_constants
+try:
+    from database import db_constants
+    import utils
+    import app_constants
+except ImportError:
+    from .database import db_constants
+    from . import (
+        utils,
+        app_constants,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info

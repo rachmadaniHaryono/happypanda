@@ -8,12 +8,22 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QDesktopWidget, QGroupBox,
                              QCheckBox, QSizePolicy, QSpinBox)
 from PyQt5.QtCore import (pyqtSignal, Qt, QPoint, QDate, QThread, QTimer)
 
-import app_constants
-import utils
-import gallerydb
-import fetch
-import misc
-import database
+try:
+    import app_constants
+    import utils
+    import gallerydb
+    import fetch
+    import misc
+    import database
+except ImportError:
+    from . import (
+        app_constants,
+        utils,
+        gallerydb,
+        fetch,
+        misc,
+        database,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info
