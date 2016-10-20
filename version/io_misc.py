@@ -13,13 +13,24 @@ from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout,
 							 QTableWidget, QTableWidgetItem, QPlainTextEdit,
 							 QShortcut, QMenu, qApp)
 
-import app_constants
-import misc
-import gallerydb
-import utils
-import pewnet
-import settings
-import fetch
+try:
+    import app_constants
+    import misc
+    import gallerydb
+    import utils
+    import pewnet
+    import settings
+    import fetch
+except ImportError:
+    from . import (
+        app_constants,
+        misc,
+        gallerydb,
+        utils,
+        pewnet,
+        settings,
+        fetch,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info

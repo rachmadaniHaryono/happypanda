@@ -37,21 +37,39 @@ from PyQt5.QtWidgets import (QMainWindow, QListView,
                              QShortcut, QGraphicsBlurEffect, QTableWidget,
                              QTableWidgetItem, QActionGroup)
 
-from executors import Executors
+try:
+    from executors import Executors
 
-import app_constants
-import misc
-import gallery
-import io_misc
-import settingsdialog
-import gallerydialog
-import fetch
-import gallerydb
-import settings
-import pewnet
-import utils
-import misc_db
-import database
+    import app_constants
+    import misc
+    import gallery
+    import io_misc
+    import settingsdialog
+    import gallerydialog
+    import fetch
+    import gallerydb
+    import settings
+    import pewnet
+    import utils
+    import misc_db
+    import database
+except ImportError:
+    from .executors import Executors
+    from . import (
+        app_constants,
+        misc,
+        gallery,
+        io_misc,
+        settingsdialog,
+        gallerydialog,
+        fetch,
+        gallerydb,
+        settings,
+        pewnet,
+        utils,
+        misc_db,
+        database,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info

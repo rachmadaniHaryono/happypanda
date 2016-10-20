@@ -9,15 +9,34 @@ from PyQt5.QtWidgets import (QVBoxLayout, QHBoxLayout, QListWidget, QWidget,
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPalette, QPixmapCache
 
-from misc import FlowLayout, Spacer, PathLineEdit, AppDialog, Line
-import misc
-import settings
-import app_constants
-import misc_db
-import gallerydb
-import utils
-import io_misc
-import pewnet
+try:
+    from misc import FlowLayout, Spacer, PathLineEdit, AppDialog, Line
+    import misc
+    import settings
+    import app_constants
+    import misc_db
+    import gallerydb
+    import utils
+    import io_misc
+    import pewnet
+except ImportError:
+    from .misc import (
+        FlowLayout,
+        Spacer,
+        PathLineEdit,
+        AppDialog,
+        Line
+    )
+    from . import (
+        misc,
+        settings,
+        app_constants,
+        misc_db,
+        gallerydb,
+        utils,
+        io_misc,
+        pewnet,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info
