@@ -10,4 +10,9 @@ install:
   - pip3 install -r ./requirements-dev.txt
 script:
  #- flake8
- - "python -m pytest -v -m 'not non_travis'"
+ - "python -m pytest \
+    -v \
+    -m 'not non_travis' \
+    --cov=version"
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
