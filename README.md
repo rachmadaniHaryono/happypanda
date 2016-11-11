@@ -2,6 +2,8 @@
 
 I'm available in the gitter chat if you have any questions!
 
+[![Build Status](https://travis-ci.org/rachmadaniHaryono/happypanda.svg?branch=master)](https://travis-ci.org/rachmadaniHaryono/happypanda)
+[![codecov](https://codecov.io/gh/rachmadaniHaryono/happypanda/branch/master/graph/badge.svg)](https://codecov.io/gh/rachmadaniHaryono/happypanda)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Pewpews/happypanda?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Stories in Progress](https://badge.waffle.io/Pewpews/happypanda.png?label=In%20Progress&title=Features%20In%20Progress)](https://waffle.io/Pewpews/happypanda)
 [![Stories in Before next release](https://badge.waffle.io/Pewpews/happypanda.png?label=Before%20next%20release&title=Before%20next%20release)](https://waffle.io/Pewpews/happypanda)
