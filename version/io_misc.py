@@ -362,7 +362,9 @@ class GalleryPopup(misc.BasePopup):
 	gallery profiles won't be scaled if scale is set to false
 	"""
 	gallery_doubleclicked = pyqtSignal(gallerydb.Gallery)
-	def __init__(self, tup_gallery, parent = None, menu = None):
+	def __init__(self, tup_gallery, parent=None, menu=None, app_instance=None):
+		if app_instance is None:
+			raise NotImplementedError
 		super().__init__(parent)
 		self.setMaximumWidth(16777215)
 		assert isinstance(tup_gallery, tuple), "Incorrect type received, expected tuple"
@@ -382,7 +384,7 @@ class GalleryPopup(misc.BasePopup):
 		galleries = tup_gallery[1]
 		main_layout.addWidget(scroll_area, 3)
 		for g in galleries:
-			gall_w = misc.GalleryShowcaseWidget(parent=self, menu=menu())
+			gall_w = misc.GalleryShowcaseWidget(parent=self, menu=menu(app_instance=app_instance))
 			gall_w.set_gallery(g, (170//1.40, 170))
 			gall_w.double_clicked.connect(self.gallery_doubleclicked.emit)
 			self.gallery_layout.addWidget(gall_w)
