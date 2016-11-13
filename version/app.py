@@ -12,16 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
-
 import sys
 import logging
 import os
-import scandir
-import random
 import traceback
 
 from PyQt5.QtCore import (
-    QObject,
     QSize,
     QThread,
     QTimer,
@@ -69,6 +65,21 @@ try:
     import utils
     import misc_db
     import database
+    from duplicate_check import DuplicateCheck
+    from update_check import UpdateChecker
+    from db_activity_check import DBActivityChecker
+    from scan_dir import ScanDir
+    from gallery_context_menu import GalleryContextMenu
+    from misc_app import (
+        invoke_first_time_level,
+        normalize_first_time,
+        get_finished_startup_update_text,
+        set_search_case,
+        clean_up_temp_dir,
+        clean_up_db,
+        set_tool_button_attribute,
+        set_action_attribute,
+    )
 except ImportError:
     from . import (
         app_constants,
@@ -85,6 +96,21 @@ except ImportError:
         misc_db,
         database,
     )
+    from .duplicate_check import DuplicateCheck
+    from .update_check import UpdateChecker
+    from .db_activity_check import DBActivityChecker
+    from .scan_dir import ScanDir
+    from .gallery_context_menu import GalleryContextMenu
+    from .misc_app import (
+        invoke_first_time_level,
+        normalize_first_time,
+        get_finished_startup_update_text,
+        set_search_case,
+        clean_up_temp_dir,
+        clean_up_db,
+        set_tool_button_attribute,
+        set_action_attribute,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -92,258 +118,6 @@ log_d = log.debug
 log_w = log.warning
 log_e = log.error
 log_c = log.critical
-
-
-def invoke_first_time_level():
-    """invoke first time of certain level."""
-    app_constants.INTERNAL_LEVEL = 7
-    if app_constants.EXTERNAL_VIEWER_ARGS == '{file}':
-        app_constants.EXTERNAL_VIEWER_ARGS = '{$file}'
-        settings.set('{$file}', 'Advanced', 'external viewer args')
-        settings.save()
-
-
-def normalize_first_time():
-    """normalize for first time."""
-    if app_constants.FIRST_TIME_LEVEL != app_constants.INTERNAL_LEVEL:
-        settings.set(app_constants.INTERNAL_LEVEL, 'Application', 'first time level')
-        settings.save()
-    else:
-        settings.set(app_constants.vs, 'Application', 'version')
-
-
-def get_finished_startup_update_text():
-    """get update text when startup done."""
-    if app_constants.UPDATE_VERSION != app_constants.vs:
-        return (
-            "Happypanda has been updated!",
-            "Don't forget to check out what's new in this version "
-            "<a href='https://github.com/Pewpews/happypanda/blob/master/CHANGELOG.md'>"
-            "by clicking here!</a>")
-    else:
-        hello = [
-            "Hello!", "Hi!", "Onii-chan!", "Senpai!", "Hisashiburi!", "Welcome!",
-            "Okaerinasai!", "Welcome back!", "Hajimemashite!"]
-        return (
-            "{}".format(random.choice(hello)),
-            "Please don't hesitate to report any bugs you find.",
-            10)
-
-
-class DuplicateCheck(QObject):
-    """duplicate checker."""
-
-    found_duplicates = pyqtSignal(tuple)
-    finished = pyqtSignal()
-
-    def __init__(self, notifbar=None):
-        """init func."""
-        super().__init__()
-        self._notifbar = notifbar
-
-    def check_simple(self, model):
-        """check simple."""
-        galleries = model._data
-
-        duplicates = []
-        for n, g in enumerate(galleries, 1):
-            self._notifbar.add_text('Checking gallery {}'.format(n))
-            log_d('Checking gallery {}'.format(g.title.encode(errors="ignore")))
-            for y in galleries:
-                title = g.title.strip().lower() == y.title.strip().lower()
-                path = os.path.normcase(g.path) == os.path.normcase(y.path)
-                if g.id != y.id and (title or path) and g not in duplicates:
-                    duplicates.append(y)
-                    duplicates.append(g)
-                    self.found_duplicates.emit((g, y))
-        self.finished.emit()
-
-
-class UpdateChecker(QObject):
-    """update checker class."""
-
-    UPDATE_CHECK = pyqtSignal(str)
-
-    def __init__(self, **kwargs):
-        """init func."""
-        super().__init__(**kwargs)
-
-    def fetch_vs(self):
-        """fetch version."""
-        import requests
-        import time
-        log_d('Checking Update')
-        time.sleep(1.5)
-        try:
-            r = requests.get("https://raw.githubusercontent.com/Pewpews/happypanda/master/VS.txt")
-            a = r.text
-            vs = a.strip()
-            self.UPDATE_CHECK.emit(vs)
-        except:
-            log.exception('Checking Update: FAIL')
-            self.UPDATE_CHECK.emit('this is a very long text which is sure to be over limit')
-
-
-def set_search_case(b):
-    """set search case."""
-    app_constants.GALLERY_SEARCH_CASE = b
-    settings.set(b, 'Application', 'gallery search case')
-    settings.save()
-
-
-class DBActivityChecker(QObject):
-    """db activity checker."""
-
-    FINISHED = pyqtSignal()
-
-    def __init__(self, **kwargs):
-        """init func."""
-        super().__init__(**kwargs)
-
-    def check(self):
-        """check func."""
-        gallerydb.method_queue.join()
-        self.FINISHED.emit()
-        self.deleteLater()
-
-
-def clean_up_temp_dir():
-    """clean temp up dir."""
-    try:
-        for root, dirs, files in scandir.walk('temp', topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-        log_d('Flush temp on exit: OK')
-    except:
-        log.exception('Flush temp on exit: FAIL')
-
-
-def clean_up_db():
-    """clean up db."""
-    try:
-        log_i("Analyzing database...")
-        gallerydb.GalleryDB.analyze()
-        log_i("Closing database...")
-        gallerydb.GalleryDB.close()
-    except:
-        pass
-
-
-def set_tool_button_attribute(
-        tool_button,
-        shortcut,
-        popup_mode=None,
-        menu=None,
-        tooltip=None,
-        text=None,
-        icon=None,
-        fixed_width=None,
-        clicked_connect_func=None
-):
-    """set attribute toolbutton."""
-    tool_button.setShortcut(shortcut)
-    if text is not None:
-        tool_button.setText(text)
-    if popup_mode is not None:
-        tool_button.setPopupMode(popup_mode)
-    if tooltip is not None:
-        tool_button.setToolTip(tooltip)
-    if icon is not None:
-        tool_button.setIcon(icon)
-    if fixed_width is not None:
-        tool_button.setFixedWidth(fixed_width)
-    if clicked_connect_func is not None:
-        tool_button.clicked.connect(clicked_connect_func)
-    if menu is not None:
-        tool_button.setMenu(menu)
-    return tool_button
-
-
-def set_action_attribute(
-    action,
-    triggered_connect_function,
-    shortcut=None,
-    tool_tip=None,
-    status_tip=None,
-):
-    """set qaction obj attribute."""
-    # if triggered_connect_function is not None:
-    action.triggered.connect(triggered_connect_function)
-    if shortcut is not None:
-        action.setShortcut(shortcut)
-    if tool_tip is not None:
-        action.setToolTip(tool_tip)
-    if status_tip is not None:
-        action.setStatusTip(status_tip)
-    return action
-
-
-class ScanDir(QObject):
-    """dir scanner Qobj."""
-
-    finished = pyqtSignal()
-
-    def __init__(self, addition_view, addition_tab, parent=None, app_window=None):
-        """init func."""
-        if app_window is not None:
-            self.fetch_inst = fetch.Fetch(app_window)
-        else:
-            raise NotImplementedError
-        super().__init__(parent)
-        self.addition_view = addition_view
-        self.addition_tab = addition_tab
-        self._switched = False
-
-    def switch_tab(self):
-        """switch tab."""
-        if not self._switched:
-            self.addition_tab.click()
-            self._switched = True
-
-    def scan_dirs(self):
-        """scan dirs func."""
-        paths = []
-        for p in app_constants.MONITOR_PATHS:
-            if os.path.exists(p):
-                dir_content = scandir.scandir(p)
-                for d in dir_content:
-                    paths.append(d.path)
-            else:
-                log_e("Monitored path does not exists: {}".format(p.encode(errors='ignore')))
-
-        self.fetch_inst.series_path = paths
-        self.fetch_inst.LOCAL_EMITTER.connect(
-            lambda g: self.addition_view.add_gallery(g, app_constants.KEEP_ADDED_GALLERIES)
-        )
-        self.fetch_inst.LOCAL_EMITTER.connect(self.switch_tab)
-        self.fetch_inst.local()
-        self.finished.emit()
-        self.deleteLater()
-
-
-class GalleryContextMenu(QMenu):
-    """gallery context menu."""
-
-    def __init__(self, parent=None, app_instance=None):
-        """init func."""
-        if app_instance is not None:
-            self.app_instance = app_instance
-        else:
-            raise NotImplementedError
-        super().__init__(parent)
-        show_in_library_act = self.addAction('Show in library')
-        show_in_library_act.triggered.connect(self.show_in_library)
-
-    def show_in_library(self):
-        """show in library."""
-        index = gallery.CommonView.find_index(
-            self.app_instance.get_current_view(),
-            self.gallery_widget.gallery.id, True)
-        if index:
-            gallery.CommonView.scroll_to_index(
-                self.app_instance.get_current_view(), index)
 
 
 class AppWindow(QMainWindow):
