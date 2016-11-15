@@ -1,29 +1,53 @@
-﻿#This file is part of Happypanda.
-#Happypanda is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 2 of the License, or
-#any later version.
-#Happypanda is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#You should have received a copy of the GNU General Public License
-#along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
+"""misc obj/class/fucntion for db."""
+# This file is part of Happypanda.
+# Happypanda is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# any later version.
+# Happypanda is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 import pickle
 import logging
 
-from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QWidget,
-                             QVBoxLayout, QTabWidget, QAction, QGraphicsScene,
-                             QSizePolicy, QMenu, QAction, QApplication,
-                             QListWidget, QHBoxLayout, QPushButton, QStackedLayout,
-                             QFrame, QSizePolicy, QListView, QFormLayout, QLineEdit,
-                             QLabel, QStyledItemDelegate, QStyleOptionViewItem,
-                             QCheckBox, QButtonGroup)
-from PyQt5.QtCore import (Qt, QTimer, pyqtSignal, QRect, QSize, QEasingCurve,
-                          QSortFilterProxyModel, QIdentityProxyModel, QModelIndex,
-                          QPointF, QRectF, QObject)
-from PyQt5.QtGui import (QIcon, QStandardItem, QFont, QPainter, QColor, QBrush,
-                         QPixmap, QPalette)
+from PyQt5.QtWidgets import (
+    QApplication,
+    QButtonGroup,
+    QCheckBox,
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLineEdit,
+    QListView,
+    QListWidget,
+    QMenu,
+    QPushButton,
+    QSizePolicy,
+    QStackedLayout,
+    QStyledItemDelegate,
+    QTabWidget,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+from PyQt5.QtCore import (
+    QEasingCurve,
+    QIdentityProxyModel,
+    QObject,
+    QSize,
+    QSortFilterProxyModel,
+    Qt,
+    pyqtSignal,
+)
+from PyQt5.QtGui import (
+    QFont,
+    QIcon,
+    QPixmap,
+)
 
 try:
     import gallerydb
@@ -47,9 +71,12 @@ log_w = log.warning
 log_e = log.error
 log_c = log.critical
 
+
 class ToolbarTabManager(QObject):
-    ""
+    """toolbar tab manager."""
+
     def __init__(self, toolbar, parent=None):
+        """init func."""
         super().__init__(parent)
         self.parent_widget = parent
         self.toolbar = toolbar
@@ -70,8 +97,10 @@ class ToolbarTabManager(QObject):
             return
         if self._last_selected:
             self._last_selected.selected = False
-            self._last_selected.view.list_view.sort_model.rowsInserted.disconnect(self.parent_widget.stat_row_info)
-            self._last_selected.view.list_view.sort_model.rowsRemoved.disconnect(self.parent_widget.stat_row_info)
+            self._last_selected.view.list_view.sort_model.rowsInserted.disconnect(
+                self.parent_widget.stat_row_info)
+            self._last_selected.view.list_view.sort_model.rowsRemoved.disconnect(
+                self.parent_widget.stat_row_info)
             self._last_selected.view.hide()
         b.selected = True
         self._last_selected = b
@@ -80,7 +109,14 @@ class ToolbarTabManager(QObject):
         b.view.list_view.sort_model.rowsRemoved.connect(self.parent_widget.stat_row_info)
         b.view.show()
 
-    def addTab(self, name, view_type=app_constants.ViewType.Default, delegate_paint=True, allow_sidebarwidget=False):
+    def addTab(  # NOQA
+            self,
+            name,
+            view_type=app_constants.ViewType.Default,
+            delegate_paint=True,
+            allow_sidebarwidget=False
+    ):
+        """add tab."""
         if self.toolbar:
             t = misc.ToolbarButton(self.toolbar, name)
             t.select.connect(self._manage_selected)
@@ -88,17 +124,18 @@ class ToolbarTabManager(QObject):
             if self.library_btn:
                 t.view = gallery.MangaViews(view_type, self.parent_widget, allow_sidebarwidget)
                 t.view.hide()
-                t.close_tab.connect(lambda:self.library_btn.click())
+                t.close_tab.connect(lambda: self.library_btn.click())
                 if not allow_sidebarwidget:
                     t.clicked.connect(self.parent_widget.sidebar_list.arrow_handle.click)
             else:
                 t.view = self.parent_widget.default_manga_view
             if delegate_paint:
-                t.view.list_view.manga_delegate._paint_level = 9000 # over nine thousand!!!
+                t.view.list_view.manga_delegate._paint_level = 9000  # over nine thousand!!!
             self._actions.append(self.toolbar.insertWidget(self.idx_widget, t))
             return t
 
-    def removeTab(self, button_or_index):
+    def removeTab(self, button_or_index):  # NOQA
+        """remove tab."""
         if self.toolbar:
             if isinstance(button_or_index, int):
                 self.toolbar.removeAction(self._actions.pop(button_or_index))
@@ -113,23 +150,29 @@ class ToolbarTabManager(QObject):
                 if act_to_remove:
                     self._actions.remove(act)
 
+
 class NoTooltipModel(QIdentityProxyModel):
+    """no tooltip model."""
 
     def __init__(self, model, parent=None):
+        """init func."""
         super().__init__(parent)
         self.setSourceModel(model)
 
     def data(self, index, role=Qt.DisplayRole):
+        """data."""
         if role == Qt.ToolTipRole:
             return None
         if role == Qt.DecorationRole:
             return QPixmap(app_constants.GARTIST_PATH)
-        return self.sourceModel().data(index, role)
-
+        return self.sourceModel().data(index,  role)
 
 
 class UniqueInfoModel(QSortFilterProxyModel):
+    """unique info model."""
+
     def __init__(self, gallerymodel, role, parent=None):
+        """init func."""
         super().__init__(parent)
         self.setSourceModel(NoTooltipModel(gallerymodel, parent))
         self._unique = set()
@@ -137,14 +180,15 @@ class UniqueInfoModel(QSortFilterProxyModel):
         self.custom_filter = None
         self.setDynamicSortFilter(True)
 
-    def filterAcceptsRow(self, source_row, parent_index):
+    def filterAcceptsRow(self, source_row, parent_index):  # NOQA
+        """filter accepted row."""
         if self.sourceModel():
             idx = self.sourceModel().index(source_row, 0, parent_index)
             if idx.isValid():
                 unique = idx.data(self._unique_role)
                 if unique:
-                    if not unique in self._unique:
-                        if self.custom_filter != None:
+                    if unique not in self._unique:
+                        if self.custom_filter is not None:
                             if not idx.data(Qt.UserRole + 1) in self.custom_filter:
                                 return False
                         self._unique.add(unique)
@@ -152,25 +196,35 @@ class UniqueInfoModel(QSortFilterProxyModel):
         return False
 
     def invalidate(self):
+        """invalidate."""
         self._unique.clear()
         super().invalidate()
 
+
 class ListDelegate(QStyledItemDelegate):
+    """list delegate."""
+
     def __init__(self, parent=None):
+        """init func."""
         self.parent_widget = parent
         super().__init__(parent)
         self.create_new_list_txt = 'Create new list...'
-    
-    def sizeHint(self, option, index):
+
+    def sizeHint(self, option, index):  # NOQA
+        """size hint."""
         size = super().sizeHint(option, index)
         if index.data(Qt.DisplayRole) == self.create_new_list_txt:
             return size
         return QSize(size.width(), size.height() * 2)
 
+
 class GalleryArtistsList(QListView):
+    """gallery artists list."""
+
     artist_clicked = pyqtSignal(str)
 
     def __init__(self, gallerymodel, parent=None):
+        """init func."""
         super().__init__(parent)
         self.g_artists_model = UniqueInfoModel(gallerymodel, gallerymodel.ARTIST_ROLE, self)
         self.setModel(self.g_artists_model)
@@ -181,20 +235,27 @@ class GalleryArtistsList(QListView):
         self.ARTIST_ROLE = gallerymodel.ARTIST_ROLE
 
     def _artist_clicked(self, idx):
+        """artist clicked."""
         if idx.isValid():
             self.artist_clicked.emit(idx.data(self.ARTIST_ROLE))
 
     def set_current_glist(self, g_list=None):
+        """set current gallery list."""
         if g_list:
             self.g_artists_model.custom_filter = g_list
         else:
             self.g_artists_model.custom_filter = None
         self.g_artists_model.invalidate()
 
+
 class TagsTreeView(QTreeWidget):
+    """tags tree view."""
+
     TAG_SEARCH = pyqtSignal(str)
     NEW_LIST = pyqtSignal(str, gallerydb.GalleryList)
+
     def __init__(self, parent):
+        """init func."""
         super().__init__(parent)
         self.setSelectionBehavior(self.SelectItems)
         self.setSelectionMode(self.ExtendedSelection)
@@ -202,6 +263,7 @@ class TagsTreeView(QTreeWidget):
         self.itemDoubleClicked.connect(lambda i: self.search_tags([i]) if i.parent() else None)
 
     def _convert_to_str(self, items):
+        """convert to str."""
         tags = {}
         d_tags = []
         for item in items:
@@ -213,7 +275,7 @@ class TagsTreeView(QTreeWidget):
                 tags[ns_item.text(0)].append(item.text(0))
             else:
                 tags[ns_item.text(0)] = [item.text(0)]
-            
+
         search_txt = utils.tag_to_string(tags)
         d_search_txt = ''
         for x, d_t in enumerate(d_tags, 1):
@@ -225,15 +287,18 @@ class TagsTreeView(QTreeWidget):
         return final_txt
 
     def search_tags(self, items):
+        """search tags."""
         self.TAG_SEARCH.emit(self._convert_to_str(items))
 
     def create_list(self, items):
+        """create list."""
         g_list = gallerydb.GalleryList("New List", filter=self._convert_to_str(items))
         g_list.add_to_db()
-        
+
         self.NEW_LIST.emit(g_list.name, g_list)
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event):  # NOQA
+        """context menu event."""
         handled = False
         selected = False
         s_items = self.selectedItems()
@@ -282,9 +347,9 @@ class TagsTreeView(QTreeWidget):
             event.ignore()
 
     def setup_tags(self):
+        """setup tags."""
         self.clear()
         tags = gallerydb.execute(gallerydb.TagDB.get_ns_tags, False)
-        items = []
         for ns in tags:
             top_item = QTreeWidgetItem(self)
             if ns == 'default':
@@ -296,9 +361,14 @@ class TagsTreeView(QTreeWidget):
                 child_item.setText(0, tag)
         self.sortItems(0, Qt.AscendingOrder)
 
+
 class GalleryListEdit(misc.BasePopup):
+    """gallery list edit."""
+
     apply = pyqtSignal()
+
     def __init__(self, parent):
+        """init func."""
         super().__init__(parent, blur=False)
         main_layout = QFormLayout(self.main_widget)
         self.name_edit = QLineEdit(self)
@@ -322,6 +392,7 @@ class GalleryListEdit(misc.BasePopup):
         self.add_buttons("Apply")[0].clicked.connect(self.accept)
 
     def set_list(self, gallery_list, item):
+        """set list."""
         self.gallery_list = gallery_list
         self.name_edit.setText(gallery_list.name)
         self.enforce.setChecked(gallery_list.enforce)
@@ -337,6 +408,7 @@ class GalleryListEdit(misc.BasePopup):
         self.setFixedWidth(self.parent_widget.width())
 
     def accept(self):
+        """accept."""
         name = self.name_edit.text()
         self.item.setText(name)
         self.gallery_list.name = name
@@ -349,34 +421,46 @@ class GalleryListEdit(misc.BasePopup):
         self.apply.emit()
         self.hide()
 
+
 class GalleryListContextMenu(QMenu):
+    """gallery llist context menu."""
+
     def __init__(self, item, parent):
+        """init func."""
         super().__init__(parent)
         self.parent_widget = parent
         self.item = item
         self.gallery_list = item.item
-        edit = self.addAction("Edit", self.edit_list)
-        clear = self.addAction("Clear", self.clear_list)
-        remove = self.addAction("Delete", self.remove_list)
+        self.addAction("Edit", self.edit_list)
+        self.addAction("Clear", self.clear_list)
+        self.addAction("Delete", self.remove_list)
 
     def edit_list(self):
+        """edit list."""
         self.parent_widget.gallery_list_edit.set_list(self.gallery_list, self.item)
         self.parent_widget.gallery_list_edit.show()
 
     def remove_list(self):
+        """remove list."""
         self.parent_widget.takeItem(self.parent_widget.row(self.item))
         gallerydb.execute(gallerydb.ListDB.remove_list, True, self.gallery_list)
         self.parent_widget.GALLERY_LIST_REMOVED.emit()
 
     def clear_list(self):
+        """clear list."""
         self.gallery_list.clear()
         self.parent_widget.GALLERY_LIST_CLICKED.emit(self.gallery_list)
 
+
 class GalleryLists(QListWidget):
+    """gallery list."""
+
     CREATE_LIST_TYPE = misc.CustomListItem.UserType + 1
     GALLERY_LIST_CLICKED = pyqtSignal(gallerydb.GalleryList)
     GALLERY_LIST_REMOVED = pyqtSignal()
+
     def __init__(self, parent):
+        """init func."""
         super().__init__(parent)
         self.gallery_list_edit = GalleryListEdit(parent)
         self.gallery_list_edit.hide()
@@ -391,23 +475,27 @@ class GalleryLists(QListWidget):
         self.viewport().setAcceptDrops(True)
         self._in_proccess_item = None
         self.current_selected = None
-        self.gallery_list_edit.apply.connect(lambda: self._item_double_clicked(self.current_selected))
+        self.gallery_list_edit.apply.connect(
+            lambda: self._item_double_clicked(self.current_selected))
         self.setup_lists()
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event):  # NOQA
+        """drag enter event."""
         if event.mimeData().hasFormat("list/gallery"):
             event.acceptProposedAction()
         else:
             event.ignore()
 
-    def dragMoveEvent(self, event):
+    def dragMoveEvent(self, event):  # NOQA
+        """drag move event."""
         item = self.itemAt(event.pos())
         self.clearSelection()
         if item:
             item.setSelected(True)
         event.accept()
 
-    def dropEvent(self, event):
+    def dropEvent(self, event):  # NOQA
+        """drop event."""
         galleries = []
 
         galleries = pickle.loads(event.mimeData().data("list/gallery").data())
@@ -415,14 +503,15 @@ class GalleryLists(QListWidget):
         g_list_item = self.itemAt(event.pos())
         if galleries and g_list_item:
             txt = "galleries" if len(galleries) > 1 else "gallery"
-            app_constants.NOTIF_BUBBLE.update_text(g_list_item.item.name, 'Added {} to list...'.format(txt), 5)
+            app_constants.NOTIF_BUBBLE.update_text(
+                g_list_item.item.name, 'Added {} to list...'.format(txt), 5)
             log_i('Adding gallery to list')
             g_list_item.item.add_gallery(galleries)
 
         super().dropEvent(event)
 
-
     def _add_new_list(self, lineedit=None, hint=None, gallery_list=None):
+        """add new list."""
         if not self._in_proccess_item.text():
             self.takeItem(self.row(self._in_proccess_item))
             return
@@ -437,6 +526,7 @@ class GalleryLists(QListWidget):
         self.sortItems()
 
     def create_new_list(self, name=None, gallery_list=None):
+        """create new list."""
         new_item = misc.CustomListItem()
         self._in_proccess_item = new_item
         new_item.setFlags(new_item.flags() | Qt.ItemIsEditable)
@@ -449,6 +539,7 @@ class GalleryLists(QListWidget):
             self.editItem(new_item)
 
     def _item_double_clicked(self, item):
+        """item double clicked."""
         if item:
             self._reset_selected()
             if item.item.filter:
@@ -459,15 +550,18 @@ class GalleryLists(QListWidget):
             self.current_selected = item
 
     def _reset_selected(self):
+        """reset selected."""
         if self.current_selected:
             self.current_selected.setFont(self.font())
 
     def setup_lists(self):
+        """setup list."""
         for g_l in app_constants.GALLERY_LISTS:
             if g_l.type == gallerydb.GalleryList.REGULAR:
                 self.create_new_list(g_l.name, g_l)
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event):  # NOQA
+        """context menu event."""
         item = self.itemAt(event.pos())
         if item and item.type() != self.CREATE_LIST_TYPE:
             menu = GalleryListContextMenu(item, self)
@@ -476,10 +570,12 @@ class GalleryLists(QListWidget):
             return
         event.ignore()
 
+
 class SideBarWidget(QFrame):
-    """
-    """
+    """sidebar widget."""
+
     def __init__(self, parent):
+        """init func."""
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.parent_widget = parent
@@ -492,15 +588,16 @@ class SideBarWidget(QFrame):
         self._widget_layout.addWidget(self._d_widget)
         self.main_layout = QVBoxLayout(self._d_widget)
         self.main_layout.setSpacing(0)
-        self.main_layout.setContentsMargins(0,0,0,0)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.arrow_handle = misc.ArrowHandle(self)
         self.arrow_handle.CLICKED.connect(self.slide)
 
         self._widget_layout.addWidget(self.arrow_handle)
-        self.setContentsMargins(0,0,-self.arrow_handle.width(),0)
+        self.setContentsMargins(0, 0, -self.arrow_handle.width(), 0)
 
         self.show_all_galleries_btn = QPushButton("Show all galleries")
-        self.show_all_galleries_btn.clicked.connect(lambda:parent.manga_list_view.sort_model.set_gallery_list())
+        self.show_all_galleries_btn.clicked.connect(
+            lambda: parent.manga_list_view.sort_model.set_gallery_list())
         self.show_all_galleries_btn.clicked.connect(self.show_all_galleries_btn.hide)
         self.show_all_galleries_btn.hide()
         self.main_layout.addWidget(self.show_all_galleries_btn)
@@ -521,7 +618,6 @@ class SideBarWidget(QFrame):
         bgroup.addButton(self.ns_tags_btn)
         self.lists_btn.setChecked(True)
 
-
         self.main_buttons_layout.addWidget(self.lists_btn)
         self.main_buttons_layout.addWidget(self.artist_btn)
         self.main_buttons_layout.addWidget(self.ns_tags_btn)
@@ -541,7 +637,7 @@ class SideBarWidget(QFrame):
         create_new_list_btn.setFixedSize(create_new_list_btn.width(), create_new_list_btn.height())
         create_new_list_btn.setToolTip("Create a new list!")
         lists_l = QVBoxLayout(gallery_lists_dummy)
-        lists_l.setContentsMargins(0,0,0,0)
+        lists_l.setContentsMargins(0, 0, 0, 0)
         lists_l.setSpacing(0)
         lists_l.addWidget(self.lists)
         lists_l.addWidget(create_new_list_btn)
@@ -549,18 +645,19 @@ class SideBarWidget(QFrame):
         self.lists.GALLERY_LIST_CLICKED.connect(parent.manga_list_view.sort_model.set_gallery_list)
         self.lists.GALLERY_LIST_CLICKED.connect(self.show_all_galleries_btn.show)
         self.lists.GALLERY_LIST_REMOVED.connect(self.show_all_galleries_btn.click)
-        self.lists_btn.clicked.connect(lambda:self.stacked_layout.setCurrentIndex(lists_index))
+        self.lists_btn.clicked.connect(
+            lambda: self.stacked_layout.setCurrentIndex(lists_index))
         self.show_all_galleries_btn.clicked.connect(self.lists.clearSelection)
         self.show_all_galleries_btn.clicked.connect(self.lists._reset_selected)
 
         # artists
         self.artists_list = GalleryArtistsList(parent.manga_list_view.gallery_model, self)
-        self.artists_list.artist_clicked.connect(lambda a: parent.search('artist:"{}"'.format(a)))
+        self.artists_list.artist_clicked.connect(
+            lambda a: parent.search('artist:"{}"'.format(a)))
         artists_list_index = self.stacked_layout.addWidget(self.artists_list)
-        self.artist_btn.clicked.connect(lambda:self.stacked_layout.setCurrentIndex(artists_list_index))
-        #self.lists.GALLERY_LIST_CLICKED.connect(self.artists_list.set_current_glist)
+        self.artist_btn.clicked.connect(
+            lambda: self.stacked_layout.setCurrentIndex(artists_list_index))
         self.show_all_galleries_btn.clicked.connect(self.artists_list.clearSelection)
-        #self.show_all_galleries_btn.clicked.connect(lambda:self.artists_list.set_current_glist())
 
         # ns_tags
         self.tags_tree = TagsTreeView(self)
@@ -570,14 +667,15 @@ class SideBarWidget(QFrame):
         self.show_all_galleries_btn.clicked.connect(self.tags_tree.clearSelection)
         self.tags_layout = QVBoxLayout(self.tags_tree)
         ns_tags_index = self.stacked_layout.addWidget(self.tags_tree)
-        self.ns_tags_btn.clicked.connect(lambda:self.stacked_layout.setCurrentIndex(ns_tags_index))
+        self.ns_tags_btn.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(ns_tags_index))
 
         self.slide_animation = misc.create_animation(self, "maximumSize")
         self.slide_animation.stateChanged.connect(self._slide_hide)
         self.slide_animation.setEasingCurve(QEasingCurve.InOutQuad)
 
     def _slide_hide(self, state):
-        size = self.sizeHint()
+        """slide hide."""
+        self.sizeHint()
         if state == self.slide_animation.Stopped:
             if self.arrow_handle.current_arrow == self.arrow_handle.OUT:
                 self._d_widget.hide()
@@ -589,8 +687,8 @@ class SideBarWidget(QFrame):
                 else:
                     self._d_widget.show()
 
-
     def slide(self, state):
+        """slide."""
         self.slide_animation.setEndValue(QSize(self.arrow_handle.width() * 2, self.height()))
 
         if state:
@@ -600,29 +698,33 @@ class SideBarWidget(QFrame):
             self.slide_animation.setDirection(self.slide_animation.Backward)
             self.slide_animation.start()
 
-    def showEvent(self, event):
+    def showEvent(self, event):  # NOQA
+        """show event."""
         super().showEvent(event)
         if not app_constants.SHOW_SIDEBAR_WIDGET:
             self.arrow_handle.click()
 
     def _init_size(self, event=None):
+        """init func."""
         h = self.parent_widget.height()
         self._max_width = 200
         self.updateGeometry()
         self.setMaximumWidth(self._max_width)
         self.slide_animation.setStartValue(QSize(self._max_width, h))
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event):  # NOQA
+        """resize event."""
         self._init_size(event)
         return super().resizeEvent(event)
 
 
 class DBOverview(QWidget):
-    """
-    
-    """
+    """db overview."""
+
     about_to_close = pyqtSignal()
+
     def __init__(self, parent, window=False):
+        """init func."""
         if window:
             super().__init__(None, Qt.Window)
         else:
@@ -632,7 +734,7 @@ class DBOverview(QWidget):
         main_layout = QVBoxLayout(self)
         tabbar = QTabWidget(self)
         main_layout.addWidget(tabbar)
-        
+
         # Tags stats
         self.tags_stats = QListWidget(self)
         tabbar.addTab(self.tags_stats, 'Statistics')
@@ -648,11 +750,14 @@ class DBOverview(QWidget):
         self.setWindowIcon(QIcon(app_constants.APP_ICO_PATH))
 
     def setup_stats(self):
+        """setup stats."""
         pass
 
     def setup_about_db(self):
+        """setup about db."""
         pass
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):  # NOQA
+        """close event."""
         self.about_to_close.emit()
         return super().closeEvent(event)
