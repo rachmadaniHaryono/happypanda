@@ -139,17 +139,18 @@ class AppWindow(QMainWindow):
         app_constants.GENERAL_THREAD = QThread(self)
         app_constants.GENERAL_THREAD.finished.connect(app_constants.GENERAL_THREAD.deleteLater)
         app_constants.GENERAL_THREAD.start()
-        # db_startup
+        # db_startup_thread
         self._db_startup_thread = QThread(self)
         self._db_startup_thread.finished.connect(self._db_startup_thread.deleteLater)
-        self.db_startup = gallerydb.DatabaseStartup()
         self._db_startup_thread.start()
+        # db_startup
+        self.db_startup = gallerydb.DatabaseStartup()
         self.db_startup.moveToThread(self._db_startup_thread)
         self.db_startup.DONE.connect(
             lambda: self.scan_for_new_galleries()
             if app_constants.LOOK_NEW_GALLERY_STARTUP else None)
         self.db_startup_invoker.connect(self.db_startup.startup)
-
+        #
         self.setAcceptDrops(True)
         # in class function
         self.init_ui()
@@ -180,7 +181,7 @@ class AppWindow(QMainWindow):
                 self,
                 self.switch_display
             ],
-            # next_view
+            # open help content
             [
                 QKeySequence(QKeySequence.HelpContents),
                 self,
@@ -350,7 +351,7 @@ class AppWindow(QMainWindow):
         self._main_layout.addWidget(self.sidebar_list)
         self.current_manga_view = self.default_manga_view
 
-        self.download_window = io_misc.GalleryDownloader(self)
+        self.download_window = io_misc.GalleryDownloaderWidget(self)
         self.download_window.hide()
 
         self.init_toolbar()
