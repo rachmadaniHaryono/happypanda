@@ -346,7 +346,7 @@ class ToolbarButton(QPushButton):
             painter.setPen(QColor("#d64933"))
         #painter.setPen(Qt.NoPen)
         painter.setRenderHint(painter.Antialiasing)
-        ch_width = self._font_metrics.averageCharWidth() / 2
+        ch_width = self._font_metrics.averageCharWidth() / 4
         ch_height = self._font_metrics.height()
         but_rect = QRectF(ch_width, ch_width, self.width() - ch_width * 2, self.height() - ch_width * 2)
         select_rect = QRectF(0,0, self.width(), self.height())
