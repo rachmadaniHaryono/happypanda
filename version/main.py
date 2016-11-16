@@ -35,7 +35,14 @@ except ImportError:
 
 
 def _confirm_with_user(text, informative_text):
-    """confirm with user to create database."""
+    """confirm with user to create database.
+
+    Args:
+        text(str):Message box text.
+        informative_text(str):Informative text for message box.
+    Returns:
+        bool:User confirmed or not.
+    """
     msg_box = QMessageBox()
     msg_box.setWindowIcon(QIcon(app_constants.APP_ICO_PATH))
     msg_box.setText(text)
@@ -47,7 +54,11 @@ def _confirm_with_user(text, informative_text):
 
 
 def parse_args():
-    """parse args."""
+    """parse application arguments.
+
+    Returns:
+        argparse.Namespace: Parsed arguments.
+    """
     parser = argparse.ArgumentParser(
         prog='Happypanda', description='A manga/doujinshi manager with tagging support')
     parser.add_argument(
@@ -68,7 +79,23 @@ def parse_args():
 
 
 class Program:
-    """program class."""
+    """Program class.
+
+    TODO:
+        * find log path from outer function.
+        * set environment variable from outer function.
+
+    Attributes:
+        args(argparse.Namespace): Parsed argument used in program.
+        is_test(bool): State of the program, if it is on test mode.
+        log_path(str): Path of log file.
+        log_debug_path(str): Path of log file in debug mode..
+        _logger_name(str): Logger name.
+        log_i(logging.Logger.info): Info log function.
+        log_d(logging.Logger.debug): Debug log function.
+        log_c(logging.Logger.critical): Critical log function.
+        log(logging.Logger): Logger Class.
+    """
 
     def __init__(self, args=None, test=False, logger_name=None):
         """init func."""
@@ -76,9 +103,12 @@ class Program:
         self.is_test = test
         # set log path
         if os.name == 'posix':
-            self.main_path = os.path.dirname(os.path.realpath(__file__))
-            self.log_path = os.path.join(self.main_path, 'happypanda.log')
-            self.debug_log_path = os.path.join(self.main_path, 'happypanda_debug.log')
+            main_path = os.path.dirname(os.path.realpath(__file__))
+            log_dir = os.path.join(main_path, 'log')
+            if not os.path.exists(log_dir):
+                os.mkdir(log_dir)
+            self.log_path = os.path.join(log_dir, 'happypanda.log')
+            self.debug_log_path = os.path.join(log_dir, 'happypanda_debug.log')
         else:
             self.log_path = 'happypanda.log'
             self.debug_log_path = 'happypanda_debug.log'
@@ -90,7 +120,11 @@ class Program:
         self._logger_name = logger_name
 
     def _create_window_style(self):
-        """create window style."""
+        """create window style.
+
+        Returns:
+            str:Style.
+        """
         d_style = app_constants.default_stylesheet_path
         u_style = app_constants.user_stylesheet_path
         if len(u_style) is not 0:
@@ -109,6 +143,14 @@ class Program:
         return style
 
     def _start_main_window(self, conn, application):
+        """start main window.
+
+        Args:
+            conn:Database connection.
+            application(PyQt5.QtWidgets.QApplication):Application.
+        Returns:
+            int:Return code.
+        """
         db.DBBase._DB_CONN = conn
         # create window
         window = app.AppWindow(self.args.exceptions)
@@ -145,7 +187,7 @@ class Program:
             print("happypanda_debug.log created at {}".format(os.getcwd()))
             # create log
             try:
-                with open(self.debug_log_path, 'x'):
+                with open(self.debug_log_path, 'w'):
                     pass
             except FileExistsError:  # NOQA
                 pass
@@ -176,16 +218,31 @@ class Program:
         self.log_c = self.log.critical
 
     def _uncaught_exceptions(self, ex_type, ex, tb):
+        """Uncaught exceptions.
+
+        Args:
+            ex_type:Exception type.
+            Exception:Exception
+            tb:traceback
+
+        """
         self.log_c(''.join(traceback.format_tb(tb)))
         self.log_c('{}: {}'.format(ex_type, ex))
         traceback.print_exception(ex_type, ex, tb)
 
     def _change_sys_excepthook(self):
         """change system except hook."""
-        sys.excepthook = self._uncaught_exceptions
+        if not self.args.exceptions:
+            sys.excepthook = self._uncaught_exceptions
 
     def _handle_database(self, application):
-        """handle database."""
+        """handle database.
+
+        Args:
+            application(PyQt5.QtWidgets.QApplication):Application.
+        Returns:
+            Database connection
+        """
         conn = None
         try:
             if self.args.test:
@@ -208,7 +265,13 @@ class Program:
         return conn
 
     def _db_upgrade(self, application):
-        """upgrade database."""
+        """upgrade database.
+
+        Args:
+            application(PyQt5.QtWidgets.QApplication):Application.
+        Returns:
+            int:Returns code.
+        """
         self.log_d('Database connection failed')
         text = 'Incompatible database!'
         info_text = (
@@ -229,11 +292,14 @@ class Program:
             return 0
 
     def run(self):
-        """run the program."""
+        """run the program.
+
+        Returns:
+            int: Return code.
+        """
         self._set_logger()
 
-        if not self.args.exceptions:
-            self._change_sys_excepthook()
+        self._change_sys_excepthook()
 
         if app_constants.FORCE_HIGH_DPI_SUPPORT:
             self.log_i("Enabling high DPI display support")
@@ -268,7 +334,13 @@ class Program:
 
 
 def start(test=False):
-    """start the program."""
+    """start the program.
+
+    Args:
+        test(bool): Start program in test mode.
+    Returns:
+        int: Return code.
+    """
     app_constants.APP_RESTART_CODE = -123456789
     args = parse_args()
     program = Program(args=args, test=test, logger_name=__name__)
