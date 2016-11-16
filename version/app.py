@@ -1,4 +1,7 @@
-"""app module."""
+"""App module.
+
+It contain app window.
+"""
 # """
 # This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
@@ -17,6 +20,7 @@ import logging
 import os
 import traceback
 
+import requests
 from PyQt5.QtCore import (
     QSize,
     QThread,
@@ -113,15 +117,67 @@ except ImportError:
     )
 
 log = logging.getLogger(__name__)
+""":class:`logging.Logger`: Logger for module."""
 log_i = log.info
+""":meth:`logging.Logger.info`: Info logger func"""
 log_d = log.debug
+""":meth:`logging.Logger.debug`: Debug logger func"""
 log_w = log.warning
+""":meth:`logging.Logger.warning`: Warning logger func"""
 log_e = log.error
+""":meth:`logging.Logger.error`: Error logger func"""
 log_c = log.critical
+""":meth:`logging.Logger.critical`: Critical logger func"""
+
+
+def get_window_size(main_window):
+    """get main window size.
+
+    Args:
+        main_window(:class:`PyQt5.QtWidgets.QMainWindow`): Window.
+    Returns:
+        tuple: Tuple of int contain window size.
+    """
+    props = settings.win_read(main_window, 'AppWindow')
+    if props.resize:
+        return props.resize
+    else:
+        return(app_constants.MAIN_W, app_constants.MAIN_H)
 
 
 class AppWindow(QMainWindow):
-    """The application's main window."""
+    """The application's main window.
+
+    Args:
+        disable_excepthook(bool):Disable default excepthook and use custom one.
+    Attributes:
+        _db_startup_thread(:class:`PyQt5.QtCore.QThread`):Thread for db startup.
+        search_timer(:class:`PyQt5.QtCore.QTimer`):Search timeout
+        db_activity_checker(:class:`PyQt5.QtCore.pyqtSignal`):Signal for db activity checker.
+        duplicate_check_invoker(:class:`PyQt5.QtCore.pyqtSignal`):Signal when duplicate check run.
+        admin_db_method_invoker(:class:`PyQt5.QtCore.pyqtSignal`): Signal when method for admin db
+            invoked.
+        move_listener(:class:`PyQt5.QtCore.pyqtSignal`):Signal when window moved.
+        db_startup_invoker(:class:`PyQt5.QtCore.pyqtSignal`):Signal which will be invoked when
+            db startup.
+        grid_toggle_g_icon(:class:`PyQt5.QtGui.QIcon`):Icon for gallery grid toogle.
+        grid_toggle_l_icon(:class:`PyQt5.QtGui.QIcon`):Icon for list grid toogle.
+        graphics_blur(:class:`PyQt5.QtWidgets.QGraphicsBlurEffect`):Effect used on main window.
+        grid_toggle(:class:`PyQt5.QtWidgets.QToolButton`):Toggle for grid.
+        toolbar(:class:`PyQt5.widget.QToolBar`):Toolbar for window.
+        get_metadata_fetch_instance(:class:`fetch.Fetch`):Fetch instance
+        g_populate_inst(:class:`.fetch.Fetch`):Fetch instance to populate gallery.
+        admin_db(:class:`.gallerydb.AdminDB`):Admin for db.
+        db_startup(:class:`.gallerydb.DatabaseStartup`):Database startup instance.
+        watchers(:class:`.io_misc.Watchers`):Watcher for window.
+        populate_msg_box(:class:`.misc.BasePopup`):Message box when populating gallery.
+        search_bar(:class:`.misc.LineEdit`):Search bar
+        notification_bar(:class:`.misc.NotificationOverlay`):Notification bar.
+        system_tray(:class:`.misc.SystemTray`):Sytem tray for window.
+        addition_tab(:class:`.misc_db.ToolbarTabManager`):Additional tab for window.
+        tab_manager(:class:`.misc_db.ToolbarTabManager`):Tab manager for window.
+        _g_populate_count(int):Amount of populated gallery.
+    """
 
     move_listener = pyqtSignal()
     db_startup_invoker = pyqtSignal(list)
@@ -161,7 +217,7 @@ class AppWindow(QMainWindow):
         self.graphics_blur.setParent(self)
 
     def set_shortcuts(self):
-        """set Shortcut func."""
+        """Set Shortcut func."""
         shortcut_keys_data = [
             # quit
             [
@@ -185,7 +241,7 @@ class AppWindow(QMainWindow):
             [
                 QKeySequence(QKeySequence.HelpContents),
                 self,
-                lambda: utils.open_web_link("https://github.com/Pewpews/happypanda/wiki")
+                lambda: self._open_web_link('https://github.com/Pewpews/happypanda/wiki')
             ],
 
         ]
@@ -193,7 +249,11 @@ class AppWindow(QMainWindow):
             QShortcut(*data)
 
     def _remove_gallery(self, g):
-        """remove gallery."""
+        """remove gallery.
+
+        Args:
+            g(:class:`.gallery.GalleryMode`):Gallery to be removed.
+        """
         index = gallery.CommonView.find_index(self.get_current_view(), g.id, True)
         if index:
             gallery.CommonView.remove_gallery(self.get_current_view(), [index])
@@ -201,6 +261,11 @@ class AppWindow(QMainWindow):
             log_e('Could not find gallery to remove from watcher')
 
     def _update_gallery(self, g):
+        """update the gallery.
+
+        Args:
+            g(:class:`.gallery.GalleryModel`):Updated gallery.
+        """
         index = gallery.CommonView.find_index(self.get_current_view(), g.id)
         if index:
             gal = index.data(gallery.GalleryModel.GALLERY_ROLE)
@@ -211,11 +276,23 @@ class AppWindow(QMainWindow):
         self.default_manga_view.replace_gallery(g, False)
 
     def _watcher_deleted(self, path, gallery):
+        """function to run when watcher deleted.
+
+        Args:
+            path(str): Path of the gallery.
+            gallery(:class:`.gallery.GalleryModel`): Object gallery.
+        """
         d_popup = io_misc.DeletedPopup(path, gallery, self)
         d_popup.UPDATE_SIGNAL.connect(self._update_gallery)
         d_popup.REMOVE_SIGNAL.connect(self._remove_gallery)
 
     def _watcher_moved(self, new_path, gallery):
+        """watcher moved.
+
+        Args:
+            new_path(str): New path for the gallery.
+            gallery(:class:`.gallery.GalleryModel`): Object gallery.
+        """
         mov_popup = io_misc.MovedPopup(new_path, gallery, self)
         mov_popup.UPDATE_SIGNAL.connect(self._update_gallery)
 
@@ -232,7 +309,11 @@ class AppWindow(QMainWindow):
         self.watchers.gallery_handler.DELETED_SIGNAL.connect(self._watcher_deleted)
 
     def _startup_done(self, status=True):
-        """run after startup done."""
+        """Function to run after startup done.
+
+        Args:
+            status(bool):Show status or not.
+        """
         self.db_startup_invoker.emit(gallery.MangaViews.manga_views)
         normalize_first_time()
         finished_startup_update_text = get_finished_startup_update_text()
@@ -274,18 +355,14 @@ class AppWindow(QMainWindow):
             self._startup_done()
 
     def tray_activate(self, r=None):
-        """activate tray."""
+        """activate tray.
+
+        Args:
+            r(:class:`PyQt5.QtWidgets.QSystemTrayIcon.Trigger`):Enabled or disabled trigger.
+        """
         if not r or r == QSystemTrayIcon.Trigger:
             self.showNormal()
             self.activateWindow()
-
-    def _get_new_size(self):
-        """get new window size."""
-        props = settings.win_read(self, 'AppWindow')
-        if props.resize:
-            return props.resize
-        else:
-            return(app_constants.MAIN_W, app_constants.MAIN_H)
 
     def create_system_tray(self):
         """create system tray."""
@@ -309,8 +386,8 @@ class AppWindow(QMainWindow):
         self.setCentralWidget(self.center)
         self.setWindowIcon(QIcon(app_constants.APP_ICO_PATH))
 
-        new_size = self._get_new_size()
-        self.resize(*new_size)
+        window_size = get_window_size(self)
+        self.resize(*window_size)
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
         misc.centerWidget(self)
@@ -328,7 +405,7 @@ class AppWindow(QMainWindow):
         app_constants.NOTIF_BUBBLE = self.notif_bubble
 
     def init_ui(self):
-        """init func."""
+        """init ui."""
         self.center = QWidget()
         self._main_layout = QHBoxLayout(self.center)
         self._main_layout.setSpacing(0)
@@ -364,21 +441,39 @@ class AppWindow(QMainWindow):
         log_d('Create notificationbar: OK')
         log_d('Window Create: OK')
 
+    def _open_web_link(self, url):
+        """open web link.
+
+        Args:
+            url(str):Url to opn.
+        """
+        try:
+            utils.open_web_link(url)
+        except requests.exceptions.ConnectionError:
+            self.notification_bar.show()
+            self.notification_bar.add_text("Connection error.")
+            log_i('Connection error when opening following url:\n{}'.format(url))
+
     def _check_update_func(self, vs):
+        """check update.
+
+        Args:
+            vs(str):Version of the program.
+        """
         log_i('Received version: {}\nCurrent version: {}'.format(vs, app_constants.vs))
         if vs != app_constants.vs and len(vs) < 10:
             self.notification_bar.begin_show()
             self.notification_bar.add_text(
                 "Version {} of Happypanda is available. Click here to update!".format(vs), False)
             self.notification_bar.clicked.connect(
-                lambda: utils.open_web_link(
-                    'https://github.com/Pewpews/happypanda/releases'))
+                lambda: utils.open_web_link('https://github.com/Pewpews/happypanda/releases'))
             self.notification_bar.set_clickable(True)
         elif vs != app_constants.vs:
             self.notification_bar.add_text(
                 "An error occurred while checking for new version")
 
     def _check_update(self):
+        """check update."""
         self.update_instance = UpdateChecker()
         thread = QThread(self)
         self.update_instance.moveToThread(thread)
@@ -389,6 +484,14 @@ class AppWindow(QMainWindow):
         thread.start()
 
     def _web_metadata_picker(self, gallery, title_url_list, queue, parent=None):
+        """web metadata picker.
+
+        Args:
+            gallery(gallery.GalleryModel):Gallery object.
+            title_url_list(list of str):List of title url.
+            queue:Queue of the picker process.
+            parent:Parent window.
+        """
         if not parent:
             parent = self
         text = "Which gallery do you want to extract metadata from?"
@@ -396,7 +499,13 @@ class AppWindow(QMainWindow):
         s_gallery_popup.USER_CHOICE.connect(queue.put)
 
     def get_metadata_gallery(self, gal):
-        """get metadata gallery."""
+        """get metadata gallery.
+
+        Args:
+            gal(:class:`.gallery.GalleryModel`): Single or multiple gallery object.
+        Return
+            list of :class:`.gallery.GalleryModel`:Found metadata.
+        """
         if gal and not isinstance(gal, list):
             galleries = [gal]
         elif gal:
@@ -411,7 +520,11 @@ class AppWindow(QMainWindow):
         return galleries
 
     def _get_metadata_done(self, status):
-        """function run when get_metada func done."""
+        """function run when get_metada func done.
+
+        Args:
+            status(bool or list of bool):Status.
+        """
         self.notification_bar.end_show()
         gallerydb.execute(database.db.DBBase.end, True)
         try:
@@ -437,7 +550,11 @@ class AppWindow(QMainWindow):
             close_button.clicked.connect(g_popup.close)
 
     def get_metadata(self, gal=None):
-        """get metadata."""
+        """get metadata.
+
+        Args:
+            gal(:class:`.gallery.GalleryModel`):Gallery which require metadata.
+        """
         if not app_constants.GLOBAL_EHEN_LOCK:
             metadata_spinner = misc.Spinner(self)
             metadata_spinner.set_text("Metadata")
@@ -469,7 +586,7 @@ class AppWindow(QMainWindow):
             self.notif_bubble.update_text("Oops!", "Auto metadata fetcher is already running...")
 
     def init_stat_bar(self):
-        """init stat bar."""
+        """init status bar."""
         self.status_bar = self.statusBar()
         self.status_bar.setSizeGripEnabled(False)
         self.stat_info = QLabel()
@@ -488,7 +605,11 @@ class AppWindow(QMainWindow):
         app_constants.STAT_MSG_METHOD = self.stat_temp_msg
 
     def stat_temp_msg(self, msg):
-        """stat of temp msg."""
+        """stat of temp msg.
+
+        Args:
+            msg(str):Message.
+        """
         self.temp_timer.stop()
         self.temp_msg.setText(msg)
         self.status_bar.addWidget(self.temp_msg)
@@ -512,12 +633,11 @@ class AppWindow(QMainWindow):
 
     @property
     def current_manga_view(self):
-        """current manga view."""
+        """Current manga view."""
         return self._current_manga_view
 
     @current_manga_view.setter
     def current_manga_view(self, new_view):
-        """setter for current manga view."""
         if self._current_manga_view:
             self._main_layout.takeAt(1)
         self._current_manga_view = new_view
@@ -537,7 +657,11 @@ class AppWindow(QMainWindow):
         self.db_startup.DONE.connect(self.data_fetch_spinner.before_hide)
 
     def search(self, srch_string):
-        """search."""
+        """search.
+
+        Args:
+            srch_string(str):Search string.
+        """
         "Args should be Search Enums"
         self.search_bar.setText(srch_string)
         self.search_backward.setVisible(True)
@@ -567,7 +691,11 @@ class AppWindow(QMainWindow):
         sett.scroll_speed_changed.connect(self.manga_list_view.updateGeometries)
 
     def _switch_view(self, fav):
-        """switch view."""
+        """switch view.
+
+        Args:
+            fav(bool):Is window on fav tab or other.
+        """
         if fav:
             self.default_manga_view.get_current_view().sort_model.fav_view()
         else:
@@ -579,6 +707,12 @@ class AppWindow(QMainWindow):
         print(self.current_manga_view.sort_model.rowCount())
 
     def _set_cursor_pos(self, old, new):
+        """set cursor post.
+
+        Args:
+            old(int):Old pos
+            new(int):New pos
+        """
         self._search_cursor_pos[0] = old
         self._search_cursor_pos[1] = new
 
@@ -859,6 +993,11 @@ class AppWindow(QMainWindow):
             self.grid_toggle.setIcon(self.grid_toggle_g_icon)
 
     def _search_history(self, _, back=True):  # clicked signal passes a bool
+        """search history.
+
+        Args:
+            back(bool):Search history backward.
+        """
         sort_model = self.manga_list_view.sort_model
         nav = sort_model.PREV if back else sort_model.NEXT
         sort_model.navigate_history(nav)
@@ -876,7 +1015,7 @@ class AppWindow(QMainWindow):
         self.gallery_populate(path, True)
 
     def _populate_from_arch(self):
-        """populte from archive."""
+        """populate from archive."""
         path = QFileDialog.getOpenFileName(
             self, 'Choose an archive containing your galleries', filter=utils.FILE_FILTER)
         path = [path[0]]
@@ -889,7 +1028,11 @@ class AppWindow(QMainWindow):
     # TODO: Improve this so that it adds to the gallery dialog,
     # so user can edit data before inserting (make it a choice)
     def populate(self, mixed=None):
-        """Populate the database with gallery from local drive."""
+        """Populate the database with gallery from local drive.
+
+        Args:
+            mixed(bool):Mix the gallery or not.
+        """
         if mixed:
             gallery_view = misc.GalleryListView(self, True)
             gallery_view.SERIES.connect(self.gallery_populate)
@@ -908,7 +1051,12 @@ class AppWindow(QMainWindow):
             self.populate_msg_box.show()
 
     def gallery_populate(self, path, validate=False):
-        """Scan the given path for gallery to add into the DB."""
+        """Scan the given path for gallery to add into the DB.
+
+        Args:
+            path(str):Path to be scanned.
+            validate(bool):Validate the file or not.
+        """
         if len(path) is not 0:
             data_thread = QThread(self)
             data_thread.setObjectName('General gallery populate')
@@ -923,6 +1071,11 @@ class AppWindow(QMainWindow):
             fetch_spinner.show()
 
             def finished(status):
+                """finished.
+
+                Args:
+                    status(str):Status to be show when it gallery_populate finished.
+                """
                 fetch_spinner.hide()
                 if not status:
                     log_e('Populating DB from gallery folder: Nothing was added!')
@@ -932,7 +1085,11 @@ class AppWindow(QMainWindow):
                         "Check happypanda_log for details..</font>")
 
             def skipped_gs(s_list):
-                """Skipped galleries."""
+                """Skipped galleries.
+
+                Args:
+                    s_list(:class:`.gallery.GalleryModel`):List of skipped gallery.
+                """
                 msg_box = QMessageBox(self)
                 msg_box.setIcon(QMessageBox.Question)
                 msg_box.setText('Do you want to view skipped paths?')
@@ -971,10 +1128,10 @@ class AppWindow(QMainWindow):
                 lambda prog:
                 fetch_spinner.set_text("Populating... {}/{}".format(prog, self._g_populate_count))
             )
-
-            def set_count(c):
-                self._g_populate_count = c
-            self.g_populate_inst.DATA_COUNT.connect(set_count)
+            self.g_populate_inst.DATA_COUNT.connect(
+                lambda c:
+                setattr(self, '_g_populate_count', c)
+            )
             # add_to_model
             self.g_populate_inst.LOCAL_EMITTER.connect(
                 lambda gallery:
@@ -987,10 +1144,6 @@ class AppWindow(QMainWindow):
             data_thread.started.connect(self.g_populate_inst.local)
             data_thread.start()
             log_i('Populating DB from directory/archive')
-
-    def _set_false_scan_for_gallery_const(self):
-        """set false on SCANNING_FOR_GALLERIES."""
-        app_constants.SCANNING_FOR_GALLERIES = False
 
     def scan_for_new_galleries(self):
         """scan for new galleries."""
@@ -1006,13 +1159,16 @@ class AppWindow(QMainWindow):
                 new_gall_spinner.show()
 
                 thread = QThread(self)
-                self.scan_inst = ScanDir(
+                scan_inst = ScanDir(
                     self.addition_tab.view, self.addition_tab, app_window=self)
-                self.scan_inst.moveToThread(thread)
+                scan_inst.moveToThread(thread)
 
-                self.scan_inst.finished.connect(self._set_false_scan_for_gallery_const)
-                self.scan_inst.finished.connect(new_gall_spinner.before_hide)
-                thread.started.connect(self.scan_inst.scan_dirs)
+                scan_inst.finished.connect(
+                    lambda:
+                    setattr(app_constants, 'SCANNING_FOR_GALLERIES', False)
+                )
+                scan_inst.finished.connect(new_gall_spinner.before_hide)
+                thread.started.connect(scan_inst.scan_dirs)
                 thread.finished.connect(thread.deleteLater)
                 thread.start()
             except:
@@ -1026,14 +1182,22 @@ class AppWindow(QMainWindow):
                 "Please specify directory in settings to scan for new galleries!")
 
     def dragEnterEvent(self, event):  # NOQA
-        """drag enter event."""
+        """drag enter event.
+
+        Args:
+            event:Event"""
+
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
         else:
             super().dragEnterEvent(event)
 
     def dropEvent(self, event):  # NOQA
-        """drop event."""
+        """drop event.
+
+        Args:
+            event:Event
+        """
         acceptable = []
         unaccept = []
         for u in event.mimeData().urls():
@@ -1071,7 +1235,10 @@ class AppWindow(QMainWindow):
         super().dropEvent(event)
 
     def resizeEvent(self, event):  # NOQA
-        """resize event."""
+        """resize event.
+
+        Args:
+            event:Event"""
         try:
             self.notification_bar.resize(event.size().width())
         except AttributeError:
@@ -1080,16 +1247,35 @@ class AppWindow(QMainWindow):
         return super().resizeEvent(event)
 
     def moveEvent(self, event):  # NOQA
-        """move event."""
+        """move event.
+
+        Args:
+            event:Event"""
         self.move_listener.emit()
         return super().moveEvent(event)
 
     def showEvent(self, event):  # NOQA
-        """show event."""
+        """show event.
+
+        Args:
+            event:Event"""
+
         return super().showEvent(event)
 
     def cleanup_exit(self):
-        """clean up when exit."""
+        """clean up when exit.
+
+        Args:
+            event:Event
+        Returns:
+            int:Return code.
+
+        Return code are following::
+
+            0:Clean up succes(normal exit).
+            1:User close despite db activity detected(force exit).
+            2:User don't want to close the window(ignore exit).
+        """
         self.system_tray.hide()
         # watchers
         try:
@@ -1134,7 +1320,11 @@ class AppWindow(QMainWindow):
             return 0
 
     def duplicate_check(self, simple=True):
-        """check duplicate."""
+        """check duplicate.
+
+        Args:
+            simple(bool):Use simple duplicate check method.
+        """
         try:
             self.duplicate_check_invoker.disconnect()
         except TypeError:
@@ -1161,7 +1351,13 @@ class AppWindow(QMainWindow):
         self.duplicate_check_invoker.emit(self.default_manga_view.gallery_model)
 
     def excepthook(self, ex_type, ex, tb):
-        """except hook."""
+        """except hook.
+
+        Args:
+            ex_type:Exception type.
+            ex:Exception.
+            tb:Traceback.
+        """
         w = misc.AppDialog(self, misc.AppDialog.MESSAGE)
         w.show()
         log_c(''.join(traceback.format_tb(tb)))
@@ -1169,7 +1365,12 @@ class AppWindow(QMainWindow):
         traceback.print_exception(ex_type, ex, tb)
 
     def closeEvent(self, event):  # NOQA
-        """close event."""
+        """close event.
+
+        Args:
+            event:Event
+        """
+
         r_code = self.cleanup_exit()
         if r_code == 1:
             log_d('Force Exit App: OK')
