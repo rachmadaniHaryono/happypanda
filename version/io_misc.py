@@ -71,15 +71,30 @@ except ImportError:
     )
 
 log = logging.getLogger(__name__)
+""":class:`logging.Logger`: Logger for module."""
 log_i = log.info
+""":meth:`logging.Logger.info`: Info logger func"""
 log_d = log.debug
+""":meth:`logging.Logger.debug`: Debug logger func"""
 log_w = log.warning
+""":meth:`logging.Logger.warning`: Warning logger func"""
 log_e = log.error
+""":meth:`logging.Logger.error`: Error logger func"""
 log_c = log.critical
+""":meth:`logging.Logger.critical`: Critical logger func"""
 
 
 class GalleryDownloaderUrlExtracterWidget(QWidget):
-    """widget for url extractor in gallery downloader."""
+    """widget for url extractor in gallery downloader.
+
+    Args:
+        parent:Parent widget.
+    Attributes:
+        url_emit(:class:`PyQt5.QtCore.pyqtSignal`):Signal when url emitted.
+        main_layout(:class:`PyQt5.QtWidgets.QVBoxLayout`):Main layout.
+        text_area_editor(:class:`PyQt5.QtWidgets.QPlainTextEdit`):Text area editor.
+        add_to_queue_btn(:class:`PyQt5.QtWidgets.QPushButton`):Add to queue button.
+    """
 
     url_emit = pyqtSignal(str)
 
@@ -114,12 +129,29 @@ class GalleryDownloaderUrlExtracterWidget(QWidget):
 
 
 class GalleryDownloaderItemObject(QObject):
-    """Receives a HenItem."""
+    """Receives a HenItem.
+
+    Args:
+        hitem(:class:`.pewnet.HenItem`):H-item
+    Attributes:
+        status_timer(:class:`PyQt5.QtCore.QTimer`):Status timer.
+        d_item_ready(:class:`PyQt5.QtCore.pyqtSignal`):Signal when data item ready.
+        cost_item(:class:`PyQt5.QtWidgets.QTableWidgetItem`):Cost item.
+        profile_item(:class:`PyQt5.QtWidgets.QTableWidgetItem`):Profile item.
+        size_item(:class:`PyQt5.QtWidgets.QTableWidgetItem`):Size item.
+        status_item(:class:`PyQt5.QtWidgets.QTableWidgetItem`):Status item.
+        type_item(:class:`PyQt5.QtWidgets.QTableWidgetItem`):Type item.
+        hitem(:class:`.pewnet.HenItem`):H-item.
+    """
 
     d_item_ready = pyqtSignal(object)
 
     def __init__(self, hitem):
-        """init func."""
+        """init func.
+
+        Args:
+            hitem(:class:`.pewnet.HenItem`):H-item
+        """
         super().__init__()
         self.d_item_ready.connect(self.d_item_ready_finished)
         # item
@@ -173,7 +205,7 @@ class GalleryDownloaderItemObject(QObject):
             self.status_timer.stop()
 
     def d_item_ready_finished(self):
-        """function run when event triggered."""
+        """Run the function when d-item ready."""
         self.status_timer.stop()
         if self.item.download_type == 0:
             self.status_item.setText("Creating gallery...")
@@ -182,7 +214,15 @@ class GalleryDownloaderItemObject(QObject):
 
 
 class GalleryDownloaderListWidget(QTableWidget):
-    """list widget for gallery downloader."""
+    """list widget for gallery downloader.
+
+    Args:
+        app_inst:Application instance.
+        parent:Parent widget.
+    Attributes:
+        init_fetch_instance(:class:`PyQt5.QtCore.pyqtSignal`):Signal when fetch instance initiated.
+        fetch_instance(:class:`.fetch.Fetch`):Fetch instance.
+    """
 
     init_fetch_instance = pyqtSignal(list)
 
@@ -231,13 +271,21 @@ class GalleryDownloaderListWidget(QTableWidget):
         self.doubleClicked.connect(self.widget_double_clicked)
 
     def widget_double_clicked(self, idx):
-        """function run when event triggered."""
+        """Run the funciton when widget double clicked.
+
+        Args:
+            idx:Index
+        """
         hitem = self._get_hitem(idx)
         if hitem.current_state == hitem.DOWNLOADING:
             hitem.open(True)
 
     def add_entry(self, hitem):
-        """function run when event triggered."""
+        """Add entry.
+
+        Args:
+            hitem(:class:`.pewnet.HenItem`):H-item
+        """
         assert isinstance(hitem, pewnet.HenItem)
         g_item = GalleryDownloaderItemObject(hitem)
         if hitem.download_type == 0:
@@ -253,11 +301,22 @@ class GalleryDownloaderListWidget(QTableWidget):
         self.setSortingEnabled(True)
 
     def _get_hitem(self, idx):
+        """get h-item.
+
+        Args:
+            idx:Index
+        Returns:
+            Item.
+        """
         r = idx.row()
         return self.item(r, 0).data(Qt.UserRole+1)
 
     def contextMenuEvent(self, event):  # NOQA
-        """context menu when event is triggered."""
+        """context menu when event is triggered.
+
+        Args:
+            event:Event
+        """
         idx = self.indexAt(event.pos())
         if idx.isValid():
             hitem = self._get_hitem(idx)
@@ -280,12 +339,22 @@ class GalleryDownloaderListWidget(QTableWidget):
             event.ignore()
 
     def _init_gallery(self, download_item):
+        """Init gallery.
+
+        Args:
+            download_item(:class:`GalleryDownloaderItemObject`):Downloaded item.
+        """
         assert isinstance(download_item, GalleryDownloaderItemObject)
         app_constants.TEMP_PATH_IGNORE.append(os.path.normcase(download_item.item.file))
         self.fetch_instance.download_items.append(download_item)
         self.init_fetch_instance.emit([download_item.item.file])
 
     def _gallery_to_model(self, gallery_list):
+        """Gallery to model.
+
+        Args:
+            gallery_list:Gallery list.
+        """
         log_i("Adding downloaded gallery to library")
         try:
             d_item = self.fetch_instance.download_items.pop(0)
@@ -309,7 +378,7 @@ class GalleryDownloaderListWidget(QTableWidget):
             log_i("Could not add downloaded gallery to library")
 
     def clear_list(self):
-        """function run when event triggered."""
+        """Clear list."""
         for r in range(self.rowCount()-1, -1, -1):
             status = self.item(r, 1)
             if '!' in status.text():
@@ -317,7 +386,16 @@ class GalleryDownloaderListWidget(QTableWidget):
 
 
 class GalleryDownloaderWidget(QWidget):
-    """A gallery downloader window."""
+    """A gallery downloader window.
+
+    Args:
+        parent:Parent widget.
+    Attributes:
+        parent_widget:Parent widget
+        download_list(:class:`GalleryDownloaderListWidget`):Download list widget.
+        url_inserter(:class:`PyQt5.QtWidgets.QLineEdit`):Line editor for url.
+        info_lbl(:class:`PyQt5.QtWidgets.QLabel`):Info label.
+    """
 
     def __init__(self, parent):
         """init func."""
@@ -369,12 +447,16 @@ class GalleryDownloaderWidget(QWidget):
         self.setWindowIcon(QIcon(app_constants.APP_ICO_PATH))
 
     def open_batch_url_window_when_url_window_btn_clicked(self):
-        """function run when event triggered."""
+        """Open batch url window hen url window button clicked."""
         self._batch_url = GalleryDownloaderUrlExtracterWidget()
         self._batch_url.url_emit.connect(self.add_download_entry)
 
     def add_download_entry(self, url=None):
-        """add download entry."""
+        """add download entry.
+
+        Args:
+            url(str):Url of download entry.
+        """
         log_i('Adding download entry: {}'.format(url))
         self.info_lbl.hide()
         h_item = None
@@ -409,7 +491,13 @@ class GalleryDownloaderWidget(QWidget):
 
     @staticmethod
     def website_validator(url):
-        """validate website."""
+        """validate website.
+
+        Args:
+            url(str):Url to validate.
+        Returns:
+            :class:`.pewnet.HenManager` of the said url when valid.
+        """
         match_prefix = "^(http\:\/\/|https\:\/\/)?(www\.)?([^\.]?)"  # http:// or https:// + www.
         # match_base = "(.*\.)+" # base. Replace with domain
         # match_tld = "[a-zA-Z0-9][a-zA-Z0-9\-]*" # com
@@ -439,7 +527,7 @@ class GalleryDownloaderWidget(QWidget):
         return manager
 
     def show(self):
-        """show."""
+        """show widget."""
         if self.isVisible():
             self.activateWindow()
         else:
@@ -451,6 +539,15 @@ class GalleryPopup(misc.BasePopup):
 
     Pass a tuple with text and a list of galleries
     gallery profiles won't be scaled if scale is set to false
+
+    Args:
+        tup_gallery(tupple):Tupple of gallery data.
+        parent:Parent.
+        menu:Menu.
+        app_instance:Application instance.
+    Attributes:
+        gallery_doubleclicked(:class:`PyQt5.QtCore.pyqtSignal`):Signal  when gallery double
+            clicked.
     """
 
     gallery_doubleclicked = pyqtSignal(gallerydb.Gallery)
@@ -498,7 +595,11 @@ class GalleryPopup(misc.BasePopup):
         self.show()
 
     def get_all_items(self):
-        """get all items."""
+        """get all items.
+
+        Returns:
+            items(list):List of items.
+        """
         n = self.gallery_layout.rowCount()
         items = []
         for x in range(n):
@@ -508,7 +609,13 @@ class GalleryPopup(misc.BasePopup):
 
 
 class ModifiedPopup(misc.BasePopup):
-    """popup when modified."""
+    """popup when modified.
+
+    Args:
+        path:Path
+        gallery:Gallery.
+        parent:Parent.
+    """
 
     def __init__(self, path, gallery_id, parent=None):
         """init func."""
@@ -520,7 +627,17 @@ class ModifiedPopup(misc.BasePopup):
 
 
 class MovedPopup(misc.BasePopup):
-    """popup when moved."""
+    """popup when moved.
+
+    Args:
+        new_path:New path.
+        gallery:Gallery.
+        parent:Parent.
+    Attributes:
+        UPDATE_SIGNAL:Signal when updated.
+        _new_path:New path.
+        _gallery:Gallery.
+    """
 
     UPDATE_SIGNAL = pyqtSignal(object)
 
@@ -572,19 +689,29 @@ class MovedPopup(misc.BasePopup):
         self.show()
 
     def commit_when_update_btn_clicked(self):
-        """function run when event triggered."""
+        """commit when update buttton clicked."""
         g = utils.update_gallery_path(self._new_path, self._gallery)
         self.UPDATE_SIGNAL.emit(g)
         self.close()
 
     def cancel_when_close_btn_clicked(self):
-        """function run when event triggered."""
+        """Cancel when close button clicked."""
         self._gallery.dead_link = True
         self.close()
 
 
 class DeletedPopup(misc.BasePopup):
-    """deleted popup."""
+    """deleted popup.
+
+    Args:
+        path:Path
+        parent:Parent
+        gallery:Gallery
+    Attributes:
+        REMOVE_SIGNAL(:class:`PyQt5.QtCore.pyqtSignal`):Remove signal.
+        UPDATE_SIGNAL(:class:`PyQt5.QtCore.pyqtSignal`):Update signal.
+        gallery:Gallery.
+    """
 
     REMOVE_SIGNAL = pyqtSignal(object)
     UPDATE_SIGNAL = pyqtSignal(object)
@@ -637,7 +764,7 @@ class DeletedPopup(misc.BasePopup):
         self.show()
 
     def commit_when_update_btn_clicked(self):
-        """function run when event triggered."""
+        """Commit when update button  clicked."""
         msgbox = QMessageBox(self)
         msgbox.setIcon(QMessageBox.Question)
         msgbox.setWindowTitle('Type of gallery source')
@@ -660,13 +787,20 @@ class DeletedPopup(misc.BasePopup):
             self.close()
 
     def remove_commit_when_remove_btn_clicked(self):
-        """function run when event triggered."""
+        """Remove commit when remove button clicked."""
         self.REMOVE_SIGNAL.emit(self._gallery)
         self.close()
 
 
 class GalleryHandler(FileSystemEventHandler, QObject):
-    """gallery handler."""
+    """gallery handler.
+
+    Attributes:
+        CREATE_SIGNAL(:class:`PyQt5.QtCore.pyqtSignal`):Create signal.
+        MODIFIED_SIGNAL(:class:`PyQt5.QtCore.pyqtSignal`):Modified signal.
+        DELETED_SIGNAL(:class:`PyQt5.QtCore.pyqtSignal`):Deleted signal
+        MOVED_SIGNAL(:class:`PyQt5.QtCore.pyqtSignal`):Moved signal.
+    """
 
     CREATE_SIGNAL = pyqtSignal(str)
     MODIFIED_SIGNAL = pyqtSignal(str, int)
@@ -693,7 +827,11 @@ class GalleryHandler(FileSystemEventHandler, QObject):
         return False
 
     def on_created(self, event):
-        """function run when event triggered."""
+        """Run the function when file created.
+
+        Args:
+            event:Event
+        """
         if not app_constants.OVERRIDE_MONITOR:
             if self.file_filter(event):
                 gs = 0
@@ -708,7 +846,11 @@ class GalleryHandler(FileSystemEventHandler, QObject):
             app_constants.OVERRIDE_MONITOR = False
 
     def on_deleted(self, event):
-        """function run when event triggered."""
+        """Run the function when file deleted.
+
+        Args:
+            event:Event.
+        """
         if not app_constants.OVERRIDE_MONITOR:
             if self.file_filter(event):
                 path = event.src_path
@@ -719,7 +861,7 @@ class GalleryHandler(FileSystemEventHandler, QObject):
             app_constants.OVERRIDE_MONITOR = False
 
     def on_moved(self, event):
-        """function run when event triggered."""
+        """Run the function when file moved."""
         if not app_constants.OVERRIDE_MONITOR:
             if self.file_filter(event):
                 old_path = event.src_path
@@ -731,7 +873,12 @@ class GalleryHandler(FileSystemEventHandler, QObject):
 
 
 class Watchers:
-    """watchers."""
+    """watchers.
+
+    Attributes:
+        gallery_handler(:class:`.GalleryHandler`):Gallery handler.
+        watchers(list of :class:`watchdogs.observers.Observer`)
+    """
 
     def __init__(self):
         """init func."""
@@ -753,7 +900,14 @@ class Watchers:
 
 
 class ImpExpData:
-    """import exported data."""
+    """import exported data.
+
+    Args:
+        format(int):Format code.
+    Attributes:
+        structure:Structure.
+        hash_pages_count(int):Hash of page count.
+    """
 
     def __init__(self, format=1):
         """init func."""
@@ -779,7 +933,12 @@ class ImpExpData:
         return p
 
     def add_data(self, name, data):
-        """add data."""
+        """add data.
+
+        Args:
+            name(str):Name.
+            data:Data.
+        """
         if self.type == 0:
             pass
         else:
@@ -796,7 +955,15 @@ class ImpExpData:
             json.dump(self.structure, fp, indent=4)
 
     def _find_pair_for_single_gallery(self, g, found_pairs, identifier):
-        """find pair for single gallery."""
+        """find pair for single gallery.
+
+        Args:
+            g:Gallery.
+            found_pairs:Founded pairs.
+            identifier:Indentifier.
+        Returns:
+            founded pair.
+        """
         found = None
         #
         pages = self.get_pages(g.chapters[0].pages)
@@ -848,7 +1015,13 @@ class ImpExpData:
         return found
 
     def find_pair(self, found_pairs):
-        """find_pair."""
+        """find_pair.
+
+        Args:
+            found_pairs:Founded pair.
+        Returns:
+            found:Found pair.
+        """
         identifier = self.structure['identifier']
         for g in app_constants.GALLERY_DATA:
             if g not in found_pairs and g.chapters[0].pages == identifier['pages']:
@@ -859,7 +1032,13 @@ class ImpExpData:
 
 
 class ImportExport(QObject):
-    """import export."""
+    """import export.
+
+    finished(:class:`PyQt5.QtCore.pyqtSignal`):Signal when finished.
+    imported_g(:class:`PyQt5.QtCore.pyqtSignal`):Signal when gallery imported.
+    progress(:class:`PyQt5.QtCore.pyqtSignal`):Signal for progress.
+    amount(:class:`PyQt5.QtCore.pyqtSignal`):Signal amount.
+    """
 
     finished = pyqtSignal()
     imported_g = pyqtSignal(str)
@@ -871,7 +1050,11 @@ class ImportExport(QObject):
         super().__init__()
 
     def import_data(self, path):
-        """import data."""
+        """import data.
+
+        Args:
+            path:Path.
+        """
         with open(path, 'r', encoding='utf-8') as fp:
             data = json.load(fp)
             data_count = len(data)
@@ -892,7 +1075,11 @@ class ImportExport(QObject):
             self.finished.emit()
 
     def export_data(self, gallery=None):
-        """export data."""
+        """export data.
+
+        Args:
+            gallery:Gallery.
+        """
         galleries = []
         if gallery:
             galleries.append(gallery)
