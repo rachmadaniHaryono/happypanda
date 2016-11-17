@@ -90,20 +90,19 @@ class Program:
         is_test(bool): State of the program, if it is on test mode.
         log_path(str): Path of log file.
         log_debug_path(str): Path of log file in debug mode..
-        _logger_name(str): Logger name.
         log_i(logging.Logger.info): Info log function.
         log_d(logging.Logger.debug): Debug log function.
         log_c(logging.Logger.critical): Critical log function.
         log(logging.Logger): Logger Class.
     """
 
-    def __init__(self, args=None, test=False, logger_name=None):
+    def __init__(self, args=None, test=False):
         """init func."""
         self.args = args
         self.is_test = test
         # set log path
         if os.name == 'posix':
-            main_path = os.path.dirname(os.path.realpath(__file__))
+            main_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
             log_dir = os.path.join(main_path, 'log')
             if not os.path.exists(log_dir):
                 os.mkdir(log_dir)
@@ -116,8 +115,6 @@ class Program:
         if os.path.exists('cacert.pem'):
             os.environ["REQUESTS_CA_BUNDLE"] = os.path.join(
                 os.getcwd(), "cacert.pem")
-        # logger name
-        self._logger_name = logger_name
 
     def _create_window_style(self):
         """create window style.
@@ -184,33 +181,29 @@ class Program:
         if self.args.dev:
             log_handlers.append(logging.StreamHandler())
         if self.args.debug:
-            print("happypanda_debug.log created at {}".format(os.getcwd()))
-            # create log
-            try:
-                with open(self.debug_log_path, 'w'):
-                    pass
-            except FileExistsError:  # NOQA
-                pass
-
-            log_handlers.append(logging.FileHandler(
-                'happypanda_debug.log', 'w', 'utf-8'))
+            print("{} created at \n{}".format(
+                os.path.basename(self.debug_log_path),
+                os.path.dirname(self.debug_log_path)
+            ))
+            file_logger = logging.FileHandler(self.debug_log_path, encoding='utf-8')
+            log_handlers.append(file_logger)
             log_level = logging.DEBUG
             app_constants.DEBUG = True
         else:
-            try:
-                with open(self.log_path, 'x'):
-                    pass
-            except FileExistsError:  # NOQA
-                pass
             log_handlers.append(logging.handlers.RotatingFileHandler(
                 self.log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
 
-        logging.basicConfig(level=log_level,
-                            format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
-                            datefmt='%d-%m %H:%M',
-                            handlers=tuple(log_handlers))
-
-        self.log = logging.getLogger(self._logger_name)
+        # Fix for logging not working
+        # clear the handlers first before adding these custom handler
+        # http://stackoverflow.com/a/15167862
+        logging.getLogger('').handlers = []
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
+            datefmt='%d-%m %H:%M',
+            handlers=log_handlers)
+        # set logger for this file
+        self.log = logging.getLogger(__name__)
         self.log_i = self.log.info
         self.log_d = self.log.debug
         # log_w = log.warning
@@ -343,7 +336,7 @@ def start(test=False):
     """
     app_constants.APP_RESTART_CODE = -123456789
     args = parse_args()
-    program = Program(args=args, test=test, logger_name=__name__)
+    program = Program(args=args, test=test)
     return program.run()
 
 
