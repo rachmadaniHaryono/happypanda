@@ -210,9 +210,9 @@ class Downloader(QObject):
         log_i("Starting download manager with {} jobs".format(max_tasks))
         for x in range(max_tasks):
             thread = threading.Thread(
-                    target=self._downloading,
-                    name='Downloader {}'.format(x),
-                    daemon=True)
+                target=self._downloading,
+                name='Downloader {}'.format(x),
+                daemon=True)
             thread.start()
             self._threads.append(thread)
 
@@ -368,7 +368,7 @@ class ChaikaManager(DLManager):
         else:
             return
         h_item.commit_metadata()
-        h_item.name = h_item.gallery_name+'.zip'
+        h_item.name = h_item.gallery_name + '.zip'
         Downloader.add_to_queue(h_item, self._browser.session)
         return h_item
 
@@ -390,7 +390,7 @@ class ChaikaManager(DLManager):
 
             h_item.gallery_name = chaika['title']
             h_item.gallery_url = self.url + "gallery/{}".format(g_id)
-            h_item.size = "{0:.2f} MB".format(chaika['filesize']/1048576)
+            h_item.size = "{0:.2f} MB".format(chaika['filesize'] / 1048576)
             tags = []
             for t in chaika['tags']:
                 tag = t.replace('_', ' ')
@@ -490,7 +490,7 @@ class HenManager(DLManager):
             raise app_constants.WrongURL
         h_item.thumb_url = gallery['thumb']
         h_item.gallery_name = gallery['title']
-        h_item.size = "{0:.2f} MB".format(gallery['filesize']/1048576)
+        h_item.size = "{0:.2f} MB".format(gallery['filesize'] / 1048576)
 
         if self.ARCHIVE:
             h_item.download_type = 0
@@ -1052,7 +1052,7 @@ class EHen(CommenHen):
             try:
                 r = self._browser.session.post(f_url, files=files, data=values)
             except requests.ConnectionError:
-                time.sleep(file_search_delay+3)
+                time.sleep(file_search_delay + 3)
                 r = self._browser.session.post(f_url, files=files, data=values)
 
             s = BeautifulSoup(r.text, "html.parser")
@@ -1166,7 +1166,7 @@ class ChaikaHen(CommenHen):
             search_string = [search_string]
         x = {}
         for h in search_string:
-            x[h] = [("", self.url+h)]
+            x[h] = [("", self.url + h)]
         return x
 
     def get_metadata(self, list_of_urls):  # NOQA
@@ -1189,10 +1189,10 @@ class ChaikaHen(CommenHen):
             if regex.match(re_string, url):
                 g_or_a_id = regex.search("([0-9]+)", url).group()
                 if 'gallery' in url:
-                    url = self.g_api_url+g_or_a_id
+                    url = self.g_api_url + g_or_a_id
                     chaika_g_id = g_or_a_id
                 else:
-                    url = self.a_api_url+g_or_a_id
+                    url = self.a_api_url + g_or_a_id
                 hash_search = False
             try:
                 try:

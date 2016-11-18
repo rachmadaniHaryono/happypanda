@@ -1,12 +1,36 @@
-import queue, os, threading, random, logging, time, scandir
+"""gallery dialog module."""
+import os
+import threading
+import logging
 from datetime import datetime
 
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QDesktopWidget, QGroupBox,
-                             QHBoxLayout, QFormLayout, QLabel, QLineEdit,
-                             QPushButton, QProgressBar, QTextEdit, QComboBox,
-                             QDateEdit, QFileDialog, QMessageBox, QScrollArea,
-                             QCheckBox, QSizePolicy, QSpinBox)
-from PyQt5.QtCore import (pyqtSignal, Qt, QPoint, QDate, QThread, QTimer)
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDateEdit,
+    QDesktopWidget,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSpinBox,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+from PyQt5.QtCore import (
+    QDate,
+    QThread,
+    QTimer,
+    Qt,
+)
 
 try:
     import app_constants
@@ -32,14 +56,16 @@ log_w = log.warning
 log_e = log.error
 log_c = log.critical
 
+
 class GalleryDialog(QWidget):
-    """
-    A window for adding/modifying gallery.
+    """ A window for adding/modifying gallery.
+
     Pass a list of QModelIndexes to edit their data
     or pass a path to preset path
     """
 
     def __init__(self, parent, arg=None):
+        """init func."""
         super().__init__(parent, Qt.Dialog)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAutoFillBackground(True)
@@ -119,12 +145,13 @@ class GalleryDialog(QWidget):
             web_layout = QHBoxLayout()
             web_main_layout.addLayout(web_layout)
             f_web.setLayout(web_main_layout)
+
             def basic_web(name):
                 return QLabel(name), QLineEdit(), QPushButton("Get metadata"), QProgressBar()
 
             url_lbl, self.url_edit, url_btn, url_prog = basic_web("URL:")
-            url_btn.clicked.connect(lambda: self.web_metadata(self.url_edit.text(), url_btn,
-                                                url_prog))
+            url_btn.clicked.connect(
+                lambda: self.web_metadata(self.url_edit.text(), url_btn, url_prog))
             url_prog.setTextVisible(False)
             url_prog.setMinimum(0)
             url_prog.setMaximum(0)
@@ -132,7 +159,8 @@ class GalleryDialog(QWidget):
             web_layout.addWidget(self.url_edit, 0)
             web_layout.addWidget(url_btn, 0, Qt.AlignRight)
             web_layout.addWidget(url_prog, 0, Qt.AlignRight)
-            self.url_edit.setPlaceholderText("Insert supported gallery URLs or just press the button!")
+            self.url_edit.setPlaceholderText(
+                "Insert supported gallery URLs or just press the button!")
             url_prog.hide()
 
         f_gallery = QGroupBox("Gallery Info")
@@ -173,12 +201,15 @@ class GalleryDialog(QWidget):
         self._find_combobox_match(self.lang_box, app_constants.G_DEF_LANGUAGE, 0)
         tags_l = QVBoxLayout()
         tag_info = misc.ClickedLabel("How do i write namespace & tags? (hover)", parent=self)
-        tag_info.setToolTip("Ways to write tags:\n\nNormal tags:\ntag1, tag2, tag3\n\n"+
-                      "Namespaced tags:\nns1:tag1, ns1:tag2\n\nNamespaced tags with one or more"+
-                      " tags under same namespace:\nns1:[tag1, tag2, tag3], ns2:[tag1, tag2]\n\n"+
-                      "Those three ways of writing namespace & tags can be combined freely.\n"+
-                      "Tags are seperated by a comma, NOT whitespace.\nNamespaces will be capitalized while tags"+
-                      " will be lowercased.")
+        tag_info.setToolTip(
+            "Ways to write tags:\n\nNormal tags:\ntag1, tag2, tag3\n\n"
+            "Namespaced tags:\nns1:tag1, ns1:tag2\n\n"
+            "Namespaced tags with one or more tags under same namespace:\n"
+            "ns1:[tag1, tag2, tag3], ns2:[tag1, tag2]\n\n"
+            "Those three ways of writing namespace & tags can be combined freely.\n"
+            "Tags are seperated by a comma, NOT whitespace.\n"
+            "Namespaces will be capitalized while tags will be lowercased."
+        )
         tag_info.setToolTipDuration(99999999)
         tags_l.addWidget(tag_info)
         self.tags_edit = add_check(misc.CompleterTextEdit())
@@ -191,9 +222,9 @@ class GalleryDialog(QWidget):
         self.type_box = add_check(QComboBox())
         self.type_box.addItems(app_constants.G_TYPES)
         self._find_combobox_match(self.type_box, app_constants.G_DEF_TYPE, 0)
-        #self.type_box.currentIndexChanged[int].connect(self.doujin_show)
-        #self.doujin_parent = QLineEdit()
-        #self.doujin_parent.setVisible(False)
+        # self.type_box.currentIndexChanged[int].connect(self.doujin_show)
+        # self.doujin_parent = QLineEdit()
+        # self.doujin_parent.setVisible(False)
         self.status_box = add_check(QComboBox())
         self.status_box.addItems(app_constants.G_STATUS)
         self._find_combobox_match(self.status_box, app_constants.G_DEF_STATUS, 0)
@@ -223,7 +254,7 @@ class GalleryDialog(QWidget):
         link_layout.addWidget(self.link_btn)
         link_layout.addWidget(self.link_btn2)
         self.link_btn2.hide()
-        
+
         rating_ = checkbox_layout(self.rating_box)
         lang_ = checkbox_layout(self.lang_box)
         if self._multiple_galleries:
@@ -235,7 +266,6 @@ class GalleryDialog(QWidget):
             lang_l.addWidget(lang_)
             lang_l.addWidget(QLabel("Rating:"), 0, Qt.AlignRight)
             lang_l.addWidget(rating_)
-
 
         gallery_layout.addRow("Title:", checkbox_layout(self.title_edit))
         gallery_layout.addRow("Author:", checkbox_layout(self.author_edit))
@@ -251,8 +281,8 @@ class GalleryDialog(QWidget):
         self.title_edit.setFocus()
 
     def resizeEvent(self, event):
-        self.tags_edit.setFixedHeight(event.size().height()//8)
-        self.descr_edit.setFixedHeight(event.size().height()//12.5)
+        self.tags_edit.setFixedHeight(event.size().height() // 8)
+        self.descr_edit.setFixedHeight(event.size().height() // 12.5)
         return super().resizeEvent(event)
 
     def _find_combobox_match(self, combobox, key, default):
@@ -264,7 +294,7 @@ class GalleryDialog(QWidget):
             combobox.setCurrentIndex(default)
             return False
 
-    def setGallery(self, gallery):
+    def setGallery(self, gallery):  # NOQA
         "To be used for when editing a gallery"
         if isinstance(gallery, gallerydb.Gallery):
             self.gallery = gallery
@@ -278,7 +308,6 @@ class GalleryDialog(QWidget):
             self.rating_box.setValue(gallery.rating)
 
             self.tags_edit.setText(utils.tag_to_string(gallery.tags))
-
 
             if not self._find_combobox_match(self.lang_box, gallery.language, 1):
                 self._find_combobox_match(self.lang_box, app_constants.G_DEF_LANGUAGE, 1)
@@ -360,8 +389,9 @@ class GalleryDialog(QWidget):
         local_layout.addWidget(self.file_exists_lbl)
         self.file_exists_lbl.hide()
 
-    def choose_dir(self, mode):
-        """
+    def choose_dir(self, mode):  # NOQA
+        """choose dir.
+
         Pass which mode to open the folder explorer in:
         'f': directory
         'a': files
@@ -370,8 +400,7 @@ class GalleryDialog(QWidget):
         self.done.show()
         self.file_exists_lbl.hide()
         if mode == 'a':
-            name = QFileDialog.getOpenFileName(self, 'Choose archive',
-                                              filter=utils.FILE_FILTER)
+            name = QFileDialog.getOpenFileName(self, 'Choose archive', filter=utils.FILE_FILTER)
             name = name[0]
         elif mode == 'f':
             name = QFileDialog.getExistingDirectory(self, 'Choose folder')
@@ -409,7 +438,10 @@ class GalleryDialog(QWidget):
             self.done.hide()
         if app_constants.SUBFOLDER_AS_GALLERY:
             if gs > 1:
-                self.file_exists_lbl.setText('<font color="red">More than one galleries detected in source! Use other methods to add.</font>')
+                self.file_exists_lbl.setText(
+                    '<font color="red">More than one galleries detected in source! '
+                    'Use other methods to add.</font>'
+                )
                 self.file_exists_lbl.show()
                 self.done.hide()
 
@@ -417,7 +449,8 @@ class GalleryDialog(QWidget):
         if not self._multiple_galleries:
             if len(self.title_edit.text()) is 0:
                 self.title_edit.setFocus()
-                self.title_edit.setStyleSheet("border-style:outset;border-width:2px;border-color:red;")
+                self.title_edit.setStyleSheet(
+                    "border-style:outset;border-width:2px;border-color:red;")
                 return False
             elif len(self.author_edit.text()) is 0:
                 self.author_edit.setText("Unknown")
@@ -432,7 +465,10 @@ class GalleryDialog(QWidget):
     def reject(self):
         if self.check():
             msgbox = QMessageBox()
-            msgbox.setText("<font color='red'><b>Noo oniichan! You were about to add a new gallery.</b></font>")
+            msgbox.setText(
+                "<font color='red'><b>Noo oniichan! "
+                "You were about to add a new gallery.</b></font>"
+            )
             msgbox.setInformativeText("Do you really want to discard?")
             msgbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msgbox.setDefaultButton(QMessageBox.No)
@@ -441,7 +477,7 @@ class GalleryDialog(QWidget):
         else:
             self.close()
 
-    def web_metadata(self, url, btn_widget, pgr_widget):
+    def web_metadata(self, url, btn_widget, pgr_widget):  # NOQA
         if not self.path_lbl.text():
             return
         self.link_lbl.setText(url)
@@ -460,7 +496,8 @@ class GalleryDialog(QWidget):
                 do_hide()
             else:
                 danger = """QProgressBar::chunk {
-                    background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #FF0350,stop: 0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 );
+                    background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #FF0350,stop:
+                    0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 );
                     border-bottom-right-radius: 5px;
                     border-bottom-left-radius: 5px;
                     border: .px solid black;}"""
@@ -485,14 +522,15 @@ class GalleryDialog(QWidget):
         self._fetch_inst.GALLERY_EMITTER.connect(self.set_web_metadata)
         self._fetch_inst.FINISHED.connect(status)
         self._fetch_thread.start()
-            
+
     def set_web_metadata(self, metadata):
         assert isinstance(metadata, gallerydb.Gallery)
         self.link_lbl.setText(metadata.link)
         self.title_edit.setText(metadata.title)
         self.author_edit.setText(metadata.artist)
-        tags = ""
-        lang = ['English', 'Japanese']
+        # assigned but never used.
+        # tags = ""
+        # lang = ['English', 'Japanese']
         self._find_combobox_match(self.lang_box, metadata.language, 2)
         self.tags_edit.setText(utils.tag_to_string(metadata.tags))
         pub_string = "{}".format(metadata.pub_date)
@@ -500,7 +538,7 @@ class GalleryDialog(QWidget):
         self.pub_edit.setDate(pub_date)
         self._find_combobox_match(self.type_box, metadata.type, 0)
 
-    def make_gallery(self, new_gallery, add_to_model=True, new=False):
+    def make_gallery(self, new_gallery, add_to_model=True, new=False):  # NOQA
         def is_checked(widget):
             return widget.g_check.isChecked()
         if self.check():
@@ -563,14 +601,13 @@ class GalleryDialog(QWidget):
                     self.parent_widget.default_manga_view.replace_gallery([new_gallery], False)
             return new_gallery
 
-
     def link_set(self):
         t = self.link_edit.text()
         self.link_edit.hide()
         self.link_lbl.show()
         self.link_lbl.setText(t)
         self.link_btn2.hide()
-        self.link_btn.show() 
+        self.link_btn.show()
 
     def link_modify(self):
         t = self.link_lbl.text()
@@ -608,5 +645,3 @@ class GalleryDialog(QWidget):
 
     def reject_edit(self):
         self.delayed_close()
-
-

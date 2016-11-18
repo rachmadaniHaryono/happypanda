@@ -539,7 +539,7 @@ class AppWindow(QMainWindow):
             g_popup = io_misc.GalleryPopup((
                 'Fecthing metadata for these galleries failed.' +
                 ' Check happypanda.log for details.', galleries
-                ), self, menu=GalleryContextMenu, app_instance=self)
+            ), self, menu=GalleryContextMenu, app_instance=self)
             errors = {g[0].id: g[1] for g in status}
             for g_item in g_popup.get_all_items():
                 g_item.extra_text.setText(

@@ -28,8 +28,10 @@ log_c = log.critical
 def _get_path():
     """get path."""
     if os.name == 'posix':
-        settings_p = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'settings.ini')
-        phappypanda_p = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.happypanda')
+        settings_p = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), 'settings.ini')
+        phappypanda_p = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.happypanda')
     else:
         settings_p = 'settings.ini'
         phappypanda_p = '.happypanda'
@@ -37,6 +39,7 @@ def _get_path():
 
 
 settings_path, phappypanda_path = _get_path()
+
 
 def _open_settings_path(path):
     if not os.path.isfile(path):
@@ -133,7 +136,8 @@ def get(default, section, key=None, type_class=str, subtype_class=None):
     try:
         value = _get_value(key, section, default, config_var=config)
         try:
-            value = _normalize_value(value, type_class=type_class, subtype_class=subtype_class)
+            value = _normalize_value(
+                value, type_class=type_class, subtype_class=subtype_class)
         except AttributeError:
             pass
         except:
@@ -155,7 +159,7 @@ def set(value, section, key=None):
     if isinstance(value, (list, tuple)):
         val_as_str = ""
         for n, v in enumerate(value):
-            if n == len(value)-1:
+            if n == len(value) - 1:
                 val_as_str += "{}".format(v)
             else:
                 val_as_str += "{}>|<".format(v)
@@ -287,7 +291,8 @@ def win_read(cls, name):
     assert isinstance(name, str)
     props = WinProperties()
     try:
-        props.resize = (int(config[name]['resize.w']), int(config[name]['resize.h']))
+        props.resize = (int(config[name]['resize.w']),
+                        int(config[name]['resize.h']))
         props.pos = (int(config[name]['pos.x']), int(config[name]['pos.y']))
     except KeyError:
         pass
