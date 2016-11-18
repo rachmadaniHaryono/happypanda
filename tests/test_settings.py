@@ -784,7 +784,7 @@ def test_win_save(winprops_arg):
     if winprops_arg == 'winprop':
         winprops_arg = settings.WinProperties()
     settings.config = m_config
-    winprops_arg_is_winprop =  isinstance(winprops_arg, settings.WinProperties)
+    winprops_arg_is_winprop = isinstance(winprops_arg, settings.WinProperties)
     # run
     if winprops_arg is None:
         settings.win_save(m_cls, m_name)
