@@ -292,7 +292,7 @@ class SettingsDialog(QWidget):
             self.search_on_enter.setChecked(True)
         else:
             self.search_every_keystroke.setChecked(True)
-        self.gallery_size.setValue(app_constants.SIZE_FACTOR//10)
+        self.gallery_size.setValue(app_constants.SIZE_FACTOR // 10)
         self.grid_spacing.setValue(app_constants.GRID_SPACING)
         # Visual / Grid View / Colors
         self.grid_label_color.setText(app_constants.GRID_VIEW_LABEL_COLOR)
@@ -1117,7 +1117,7 @@ class SettingsDialog(QWidget):
 
         gallery_size_lbl = QLabel(self)
         self.gallery_size = NoWheelSlider(Qt.Horizontal, self)
-        self.gallery_size.valueChanged.connect(lambda x: gallery_size_lbl.setText(str(x+2)))
+        self.gallery_size.valueChanged.connect(lambda x: gallery_size_lbl.setText(str(x + 2)))
         self.gallery_size.setMinimum(-2)
         self.gallery_size.setMaximum(10)
         self.gallery_size.setSingleStep(1)
@@ -1209,7 +1209,7 @@ class SettingsDialog(QWidget):
         misc_controls_layout.addRow(self.force_high_dpi_support)
 
         external_view_group, external_view_l = groupbox(
-                "External Viewer Arguments", QFormLayout, advanced)
+            "External Viewer Arguments", QFormLayout, advanced)
         misc_controls_layout.addRow(external_view_group)
         external_viewer_info = QLabel(app_constants.EXTERNAL_VIEWER_INFO)
         external_viewer_info.setWordWrap(True)
@@ -1229,7 +1229,8 @@ class SettingsDialog(QWidget):
             'Control the speed when scrolling in grid view. DEFAULT: 7')
         scroll_speed_spin_box.setValue(self.scroll_speed)
 
-        def scroll_speed(v): self.scroll_speed = v
+        def scroll_speed(v):
+            self.scroll_speed = v
         scroll_speed_spin_box.valueChanged[int].connect(scroll_speed)
         misc_gridview_layout.addRow('Scroll speed:', scroll_speed_spin_box)
         # Advanced / Misc / Grid View / cache size
@@ -1241,7 +1242,8 @@ class SettingsDialog(QWidget):
             'Increase the value if you experience lag when scrolling through galleries. '
             'DEFAULT: 200 MiB')
 
-        def cache_size(c): self.cache_size = (self.cache_size[0], c)
+        def cache_size(c):
+            self.cache_size = (self.cache_size[0], c)
         cache_size_spin_box.setValue(self.cache_size[1])
         cache_size_spin_box.valueChanged[int].connect(cache_size)
         misc_gridview_layout.addRow('Cache Size (MiB):', cache_size_spin_box)
@@ -1473,7 +1475,7 @@ class SettingsDialog(QWidget):
         n = l.rowCount()
         items = []
         for x in range(n):
-            item = l.takeAt(x+1)
+            item = l.takeAt(x + 1)
             items.append(item.widget())
         return items
 

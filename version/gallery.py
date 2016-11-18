@@ -1,66 +1,86 @@
-﻿#"""
-#This file is part of Happypanda.
-#Happypanda is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 2 of the License, or
-#any later version.
-#Happypanda is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#You should have received a copy of the GNU General Public License
-#along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
-#"""
+"""gallery module."""
+# """
+# This file is part of Happypanda.
+# Happypanda is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# any later version.
+# Happypanda is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
+# """
 
-import threading
-import logging
-import os
-import math
-import functools
-import random
-import datetime
-import pickle
 import enum
-import time
-import re as regex
+import logging
+import math
+import pickle
+import random
 
-from PyQt5.QtCore import (Qt, QAbstractListModel, QModelIndex, QVariant,
-                          QSize, QRect, QEvent, pyqtSignal, QThread,
-                          QTimer, QPointF, QSortFilterProxyModel,
-                          QAbstractTableModel, QItemSelectionModel,
-                          QPoint, QRectF, QDate, QDateTime, QObject,
-                          QEvent, QSizeF, QMimeData, QByteArray, QTime)
-from PyQt5.QtGui import (QPixmap, QBrush, QColor, QPainter, 
-                         QPen, QTextDocument,
-                         QMouseEvent, QHelpEvent,
-                         QPixmapCache, QCursor, QPalette, QKeyEvent,
-                         QFont, QTextOption, QFontMetrics, QFontMetricsF,
-                         QTextLayout, QPainterPath, QScrollPrepareEvent,
-                         QWheelEvent, QPolygonF, QLinearGradient)
-from PyQt5.QtWidgets import (QListView, QFrame, QLabel,
-                             QStyledItemDelegate, QStyle,
-                             QMenu, QAction, QToolTip, QVBoxLayout,
-                             QSizePolicy, QTableWidget, QScrollArea,
-                             QHBoxLayout, QFormLayout, QDesktopWidget,
-                             QWidget, QHeaderView, QTableView, QApplication,
-                             QMessageBox, QActionGroup, QScroller, QStackedLayout)
+from PyQt5.QtCore import (
+    pyqtSignal,
+    QAbstractTableModel,
+    QByteArray,
+    QDateTime,
+    QMimeData,
+    QModelIndex,
+    QObject,
+    QPoint,
+    QPointF,
+    QRect,
+    QRectF,
+    QSize,
+    QSortFilterProxyModel,
+    Qt,
+    QTime,
+    QTimer,
+    QVariant,
+)
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QFontMetrics,
+    QLinearGradient,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPixmap,
+    QPixmapCache,
+    QPolygonF,
+    QTextDocument,
+    QTextOption,
+)
+from PyQt5.QtWidgets import (
+    QHeaderView,
+    QListView,
+    QMessageBox,
+    QScroller,
+    QStackedLayout,
+    QStyle,
+    QStyledItemDelegate,
+    QTableView,
+    QWidget,
+)
 
 try:
     import gallerydb
     import app_constants
     import misc
     import gallerydialog
-    import io_misc
     import utils
+    from executors import Executors
 except ImportError:
     from . import (
         gallerydb,
         app_constants,
         misc,
         gallerydialog,
-        io_misc,
         utils,
     )
+    from .executors import Executors
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -70,51 +90,57 @@ log_e = log.error
 log_c = log.critical
 
 # attempt at implementing treemodel
-#class TreeNode:
-#	def __init__(self, parent, row):
-#		self.parent = parent
-#		self.row = row
-#		self.subnodes = self._get_children()
+# class TreeNode:
+#   def __init__(self, parent, row):
+#       self.parent = parent
+#       self.row = row
+#       self.subnodes = self._get_children()
 
-#	def _get_children(self):
-#		raise NotImplementedError()
+#   def _get_children(self):
+#       raise NotImplementedError()
 
-#class GalleryInfoModel(QAbstractItemModel):
-#	def __init__(self, parent=None):
-#		super().__init__(parent)
-#		self.root_nodes = self._get_root_nodes()
+# class GalleryInfoModel(QAbstractItemModel):
+#   def __init__(self, parent=None):
+#       super().__init__(parent)
+#       self.root_nodes = self._get_root_nodes()
 
-#	def _get_root_nodes(self):
-#		raise NotImplementedError()
+#   def _get_root_nodes(self):
+#       raise NotImplementedError()
 
-#	def index(self, row, column, parent):
-#		if not parent.isValid():
-#			return self.createIndex(row, column, self.root_nodes[row])
-#		parent_node = parent.internalPointer()
-#		return self.createIndex(row, column, parent_node[row])
+#   def index(self, row, column, parent):
+#       if not parent.isValid():
+#           return self.createIndex(row, column, self.root_nodes[row])
+#       parent_node = parent.internalPointer()
+#       return self.createIndex(row, column, parent_node[row])
 
-#	def parent(self, index):
-#		if not index.isValid():
-#			return QModelIndex()
+#   def parent(self, index):
+#       if not index.isValid():
+#           return QModelIndex()
 
-#		node = index.internalPointer()
-#		if not node.parent:
-#			return QModelIndex()
-#		else:
-#			return self.createIndex(node.parent.row, 0, node.parent)
+#       node = index.internalPointer()
+#       if not node.parent:
+#           return QModelIndex()
+#       else:
+#           return self.createIndex(node.parent.row, 0, node.parent)
 
-#	def reset(self):
-#		self.root_nodes = self._get_root_nodes()
-#		super().resetInternalData()
+#   def reset(self):
+#       self.root_nodes = self._get_root_nodes()
+#       super().resetInternalData()
 
-#	def rowCount(self, parent = QModelIndex()):
-#		if not parent.isValid():
-#			return len(self.root_nodes)
-#		node = parent.internalPointer()
-#		return len(node.subnodes)
+#   def rowCount(self, parent = QModelIndex()):
+#       if not parent.isValid():
+#           return len(self.root_nodes)
+#       node = parent.internalPointer()
+#       return len(node.subnodes)
+
+
 class GallerySearch(QObject):
+    """gallery search."""
+
     FINISHED = pyqtSignal()
+
     def __init__(self, data):
+        """init func."""
         super().__init__()
         self._data = data
         self.result = {}
@@ -147,14 +173,14 @@ class GallerySearch(QObject):
                 if not gallery.fav:
                     continue
             if self._gallery_list:
-                if not gallery in self._gallery_list:
+                if gallery not in self._gallery_list:
                     continue
             all_terms = {t: False for t in terms}
             allow = False
             if utils.all_opposite(terms):
                 self.result[gallery.id] = True
                 continue
-            
+
             for t in terms:
                 if gallery.contains(t, args):
                     all_terms[t] = True
@@ -164,7 +190,10 @@ class GallerySearch(QObject):
 
             self.result[gallery.id] = allow
 
+
 class SortFilterModel(QSortFilterProxyModel):
+    """sort filter model."""
+
     ROWCOUNT_CHANGE = pyqtSignal()
     _DO_SEARCH = pyqtSignal(str, object)
     _CHANGE_SEARCH_DATA = pyqtSignal(list)
@@ -178,6 +207,7 @@ class SortFilterModel(QSortFilterProxyModel):
     CAT_VIEW, FAV_VIEW = range(2)
 
     def __init__(self, parent):
+        """init func."""
         super().__init__(parent)
         self.parent_widget = parent
         self._data = app_constants.GALLERY_DATA
@@ -195,6 +225,7 @@ class SortFilterModel(QSortFilterProxyModel):
         self.enable_drag = False
 
     def navigate_history(self, direction=PREV):
+        """navigate history."""
         new_term = ''
         if self.terms_history:
             if direction == self.NEXT:
@@ -275,7 +306,7 @@ class SortFilterModel(QSortFilterProxyModel):
                 else:
                     return True
         return False
-    
+
     def change_model(self, model):
         self.setSourceModel(model)
         self._data = self.sourceModel()._data
@@ -299,7 +330,7 @@ class SortFilterModel(QSortFilterProxyModel):
             return False
         if action == Qt.IgnoreAction:
             return True
-        
+
         # if the drop occured on an item
         if not index.isValid():
             return False
@@ -313,11 +344,15 @@ class SortFilterModel(QSortFilterProxyModel):
 
         txt = 'galleries' if len(g_list) > 1 else 'gallery'
         msg = QMessageBox(self.parent_widget)
-        msg.setText("Are you sure you want to merge the galleries into this gallery as chapter(s)?".format(txt))
+        msg.setText(
+            "Are you sure you want to merge the galleries into this gallery as chapter(s)?".format(
+                txt
+            )
+        )
         msg.setStandardButtons(msg.Yes | msg.No)
-        if msg.exec() == msg.No:
+        if msg.exec_() == msg.No:
             return False
-        
+
         # TODO: finish this
 
         return True
@@ -330,14 +365,14 @@ class SortFilterModel(QSortFilterProxyModel):
         g_list = []
         for idx in index_list:
             g = idx.data(GalleryModel.GALLERY_ROLE)
-            if g != None:
+            if g is not None:
                 g_list.append(g)
         data.setData("list/gallery", QByteArray(pickle.dumps(g_list)))
         return data
 
     def flags(self, index):
         default_flags = super().flags(index)
-        
+
         if self.enable_drag:
             if (index.isValid()):
                 return Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | default_flags
@@ -348,7 +383,10 @@ class SortFilterModel(QSortFilterProxyModel):
     def supportedDragActions(self):
         return Qt.ActionMask
 
+
 class StarRating():
+    """star rating."""
+
     # enum EditMode
     Editable, ReadOnly = range(2)
 
@@ -411,10 +449,10 @@ class StarRating():
 
         painter.restore()
 
+
 class GalleryModel(QAbstractTableModel):
-    """
-    Model for Model/View/Delegate framework
-    """
+    """Model for Model/View/Delegate framework."""
+
     GALLERY_ROLE = Qt.UserRole + 1
     ARTIST_ROLE = Qt.UserRole + 2
     FAV_ROLE = Qt.UserRole + 3
@@ -452,21 +490,20 @@ class GalleryModel(QAbstractTableModel):
         self._PUB_DATE = app_constants.PUB_DATE
 
         self._data = data
-        self._data_count = 0 # number of items added to model
+        self._data_count = 0  # number of items added to model
         self._gallery_to_add = []
         self._gallery_to_remove = []
 
     def status_b_msg(self, msg):
         self.STATUSBAR_MSG.emit(msg)
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.DisplayRole):  # NOQA
         if not index.isValid():
             return QVariant()
-        if index.row() >= len(self._data) or \
-            index.row() < 0:
+        if index.row() >= len(self._data) or index.row() < 0:
             return QVariant()
 
-        current_row = index.row() 
+        current_row = index.row()
         current_gallery = self._data[current_row]
         current_column = index.column()
 
@@ -520,10 +557,11 @@ class GalleryModel(QAbstractTableModel):
         if role == Qt.DecorationRole:
             pixmap = current_gallery.profile
             return pixmap
-        
+
         if role == Qt.BackgroundRole:
             bg_color = QColor(242, 242, 242)
-            bg_brush = QBrush(bg_color)
+            # assigned but never used.
+            # bg_brush = QBrush(bg_color)
             return bg_color
 
         if app_constants.GRID_TOOLTIP and role == Qt.ToolTipRole:
@@ -555,7 +593,11 @@ class GalleryModel(QAbstractTableModel):
                 add_tips.append(utils.tag_to_string(current_gallery.tags))
             if app_constants.TOOLTIP_LAST_READ:
                 add_bold.append('<b>Last read:</b>')
-                add_tips.append('{} ago'.format(utils.get_date_age(current_gallery.last_read)) if current_gallery.last_read else "Never!")
+                add_tips.append(
+                    '{} ago'.format(
+                        utils.get_date_age(current_gallery.last_read)
+                    ) if current_gallery.last_read else "Never!"
+                )
             if app_constants.TOOLTIP_TIMES_READ:
                 add_bold.append('<b>Times read:</b>')
                 add_tips.append(current_gallery.times_read)
@@ -583,7 +625,7 @@ class GalleryModel(QAbstractTableModel):
             date_added = "{}".format(current_gallery.date_added)
             qdate_added = QDateTime.fromString(date_added, "yyyy-MM-dd HH:mm:ss")
             return qdate_added
-        
+
         if role == self.PUB_DATE_ROLE:
             if current_gallery.pub_date:
                 pub_date = "{}".format(current_gallery.pub_date)
@@ -615,7 +657,7 @@ class GalleryModel(QAbstractTableModel):
     def columnCount(self, parent=QModelIndex()):
         return len(app_constants.COLUMNS)
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.DisplayRole):  # NOQA
         if role == Qt.TextAlignmentRole:
             return Qt.AlignLeft
         if role != Qt.DisplayRole:
@@ -644,7 +686,6 @@ class GalleryModel(QAbstractTableModel):
             elif section == self._PUB_DATE:
                 return 'Published'
         return section + 1
-
 
     def insertRows(self, position, rows, index=QModelIndex()):
         self._data_count += rows
@@ -675,21 +716,23 @@ class GalleryModel(QAbstractTableModel):
         self.endRemoveRows()
         return True
 
+
 class GridDelegate(QStyledItemDelegate):
-    "A custom delegate for the model/view framework"
+    """A custom delegate for the model/view framework."""
 
     POPUP = pyqtSignal()
     CONTEXT_ON = False
 
     def __init__(self, app_inst, parent):
         super().__init__(parent)
-        QPixmapCache.setCacheLimit(app_constants.THUMBNAIL_CACHE_SIZE[0] * app_constants.THUMBNAIL_CACHE_SIZE[1])
+        QPixmapCache.setCacheLimit(
+            app_constants.THUMBNAIL_CACHE_SIZE[0] * app_constants.THUMBNAIL_CACHE_SIZE[1])
         self._painted_indexes = {}
         self.view = parent
         self.parent_widget = app_inst
         self._paint_level = 0
 
-        #misc.FileIcon.refresh_default_icon()
+        # misc.FileIcon.refresh_default_icon()
         self.file_icons = misc.FileIcon()
         if app_constants.USE_EXTERNAL_VIEWER:
             self.external_icon = self.file_icons.get_external_file_icon()
@@ -697,7 +740,7 @@ class GridDelegate(QStyledItemDelegate):
             self.external_icon = self.file_icons.get_default_file_icon()
 
         self.font_size = app_constants.GALLERY_FONT[1]
-        self.font_name = 0 # app_constants.GALLERY_FONT[0]
+        self.font_name = 0  # app_constants.GALLERY_FONT[0]
         if not self.font_name:
             self.font_name = QWidget().font().family()
         self.title_font = QFont()
@@ -729,7 +772,7 @@ class GridDelegate(QStyledItemDelegate):
         self._paint_level += 1
         self.view.update()
 
-    def paint(self, painter, option, index):
+    def paint(self, painter, option, index):  # NOQA
         assert isinstance(painter, QPainter)
         rec = option.rect.getRect()
         x = rec[0]
@@ -737,8 +780,8 @@ class GridDelegate(QStyledItemDelegate):
         w = rec[2]
         h = rec[3]
         if self._paint_level:
-            #if app_constants.HIGH_QUALITY_THUMBS:
-            #	painter.setRenderHint(QPainter.SmoothPixmapTransform)
+            # if app_constants.HIGH_QUALITY_THUMBS:
+            #   painter.setRenderHint(QPainter.SmoothPixmapTransform)
             painter.setRenderHint(QPainter.Antialiasing)
             gallery = index.data(Qt.UserRole + 1)
             star_rating = index.data(GalleryModel.RATING_ROLE)
@@ -748,7 +791,7 @@ class GridDelegate(QStyledItemDelegate):
             artist_color = app_constants.GRID_VIEW_ARTIST_COLOR
             label_color = app_constants.GRID_VIEW_LABEL_COLOR
             # Enable this to see the defining box
-            #painter.drawRect(option.rect)
+            # painter.drawRect(option.rect)
             # define font size
             if 20 > len(title) > 15:
                 title_size = "font-size:{}px;".format(self.font_size)
@@ -808,16 +851,18 @@ class GridDelegate(QStyledItemDelegate):
             </div>
             </center>
             </body>
-            """.format(title_size, artist_size, title, artist, title_color, artist_color,
-              130 + app_constants.SIZE_FACTOR, 1 + app_constants.SIZE_FACTOR))
+            """.format(
+                title_size, artist_size, title, artist, title_color, artist_color,
+                130 + app_constants.SIZE_FACTOR, 1 + app_constants.SIZE_FACTOR)
+            )
             text_area.setTextWidth(w)
 
-            #chapter_area = QTextDocument()
-            #chapter_area.setDefaultFont(option.font)
-            #chapter_area.setHtml("""
-            #<font color="black">{}</font>
-            #""".format("chapter"))
-            #chapter_area.setTextWidth(w)
+            # chapter_area = QTextDocument()
+            # chapter_area.setDefaultFont(option.font)
+            # chapter_area.setHtml("""
+            # <font color="black">{}</font>
+            # """.format("chapter"))
+            # chapter_area.setTextWidth(w)
             def center_img(width):
                 new_x = x
                 if width < w:
@@ -827,11 +872,11 @@ class GridDelegate(QStyledItemDelegate):
                 return new_x
 
             def img_too_big(start_x):
-                txt_layout = misc.text_layout("Thumbnail regeneration needed!", w, self.title_font, self.title_font_m)
+                txt_layout = misc.text_layout(
+                    "Thumbnail regeneration needed!", w, self.title_font, self.title_font_m)
 
                 clipping = QRectF(x, y + h // 4, w, app_constants.GRIDBOX_LBL_H - 10)
-                txt_layout.draw(painter, QPointF(x, y + h // 4),
-                      clip=clipping)
+                txt_layout.draw(painter, QPointF(x, y + h // 4), clip=clipping)
 
             loaded_image = gallery.get_profile(app_constants.ProfileType.Default)
             if loaded_image and self._paint_level > 0 and self.view.scroll_speed < 600:
@@ -843,12 +888,10 @@ class GridDelegate(QStyledItemDelegate):
                     if self.image.width() > w or self.image.height() > h:
                         img_too_big(img_x)
                     else:
-                        if self.image.height() < self.image.width(): #to keep aspect ratio
-                            painter.drawPixmap(QPoint(img_x,y),
-                                    self.image)
+                        if self.image.height() < self.image.width():  # to keep aspect ratio
+                            painter.drawPixmap(QPoint(img_x, y), self.image)
                         else:
-                            painter.drawPixmap(QPoint(img_x,y),
-                                    self.image)
+                            painter.drawPixmap(QPoint(img_x, y), self.image)
                 else:
                     self.image = QPixmap.fromImage(loaded_image)
                     img_x = center_img(self.image.width())
@@ -856,16 +899,14 @@ class GridDelegate(QStyledItemDelegate):
                     if self.image.width() > w or self.image.height() > h:
                         img_too_big(img_x)
                     else:
-                        if self.image.height() < self.image.width(): #to keep aspect ratio
-                            painter.drawPixmap(QPoint(img_x,y),
-                                    self.image)
+                        if self.image.height() < self.image.width():  # to keep aspect ratio
+                            painter.drawPixmap(QPoint(img_x, y), self.image)
                         else:
-                            painter.drawPixmap(QPoint(img_x,y),
-                                    self.image)
+                            painter.drawPixmap(QPoint(img_x, y), self.image)
             else:
 
                 painter.save()
-                painter.setPen(QColor(164,164,164,200))
+                painter.setPen(QColor(164, 164, 164, 200))
                 if gallery.profile:
                     thumb_text = "Loading..."
                 else:
@@ -873,8 +914,7 @@ class GridDelegate(QStyledItemDelegate):
                 txt_layout = misc.text_layout(thumb_text, w, self.title_font, self.title_font_m)
 
                 clipping = QRectF(x, y + h // 4, w, app_constants.GRIDBOX_LBL_H - 10)
-                txt_layout.draw(painter, QPointF(x, y + h // 4),
-                      clip=clipping)
+                txt_layout.draw(painter, QPointF(x, y + h // 4), clip=clipping)
                 painter.restore()
 
             # draw ribbon type
@@ -902,14 +942,16 @@ class GridDelegate(QStyledItemDelegate):
                 rib_side_1 = QPointF(x, y + star_ribbon_l)
                 rib_top_2 = QPointF(x + star_ribbon_l + star_ribbon_w, y)
                 rib_side_2 = QPointF(x, y + star_ribbon_l + star_ribbon_w)
-                rib_star_mid_1 = QPointF((rib_top_1.x() + rib_side_1.x()) / 2, (rib_top_1.y() + rib_side_1.y()) / 2)
+                rib_star_mid_1 = QPointF(
+                    (rib_top_1.x() + rib_side_1.x()) / 2, (rib_top_1.y() + rib_side_1.y()) / 2)
                 rib_star_factor = star_ribbon_l / 4
                 rib_star_p1_1 = rib_star_mid_1 + QPointF(rib_star_factor, -rib_star_factor)
                 rib_star_p1_2 = rib_star_p1_1 + QPointF(-rib_star_factor, -rib_star_factor)
                 rib_star_p1_3 = rib_star_mid_1 + QPointF(-rib_star_factor, rib_star_factor)
                 rib_star_p1_4 = rib_star_p1_3 + QPointF(-rib_star_factor, -rib_star_factor)
 
-                crown_1 = QPolygonF([rib_star_p1_1, rib_star_p1_2, rib_star_mid_1, rib_star_p1_4, rib_star_p1_3])
+                crown_1 = QPolygonF(
+                    [rib_star_p1_1, rib_star_p1_2, rib_star_mid_1, rib_star_p1_4, rib_star_p1_3])
                 painter.setBrush(QBrush(QColor(255, 255, 0, 200)))
                 painter.drawPolygon(crown_1)
 
@@ -920,7 +962,10 @@ class GridDelegate(QStyledItemDelegate):
                 ribbon_path.closeSubpath()
                 painter.drawPath(ribbon_path)
                 painter.setPen(QColor(255, 0, 0, 100))
-                painter.drawPolyline(rib_top_1, rib_star_p1_1, rib_star_p1_2, rib_star_mid_1, rib_star_p1_4, rib_star_p1_3, rib_side_1)
+                painter.drawPolyline(
+                    rib_top_1, rib_star_p1_1, rib_star_p1_2, rib_star_mid_1, rib_star_p1_4,
+                    rib_star_p1_3, rib_side_1
+                )
                 painter.drawLine(rib_top_1, rib_top_2)
                 painter.drawLine(rib_top_2, rib_side_2)
                 painter.drawLine(rib_side_1, rib_side_2)
@@ -932,7 +977,6 @@ class GridDelegate(QStyledItemDelegate):
                         self.external_icon = self.file_icons.get_external_file_icon()
                     else:
                         self.external_icon = self.file_icons.get_default_file_icon()
-            
 
                 type_w = painter.fontMetrics().width(gallery.file_type)
                 type_h = painter.fontMetrics().height()
@@ -952,20 +996,24 @@ class GridDelegate(QStyledItemDelegate):
                     painter.save()
                     painter.setPen(QPen(Qt.white))
                     painter.fillRect(type_rect, type_color)
-                    painter.drawText(type_p.x(), type_p.y() + painter.fontMetrics().height() - 4, gallery.file_type)
+                    painter.drawText(
+                        type_p.x(),
+                        type_p.y() + painter.fontMetrics().height() - 4,
+                        gallery.file_type
+                    )
                     painter.restore()
-                    
-                star_start_x = type_rect.x()+type_rect.width() if app_constants.DISPLAY_GALLERY_TYPE else x
+
+                star_start_x = (
+                    type_rect.x() + type_rect.width() if app_constants.DISPLAY_GALLERY_TYPE else x)
                 star_width = star_rating.sizeHint().width()
-                star_start_x += ((x+w-star_start_x)-(star_width))/2
-                star_rating.paint(painter,
-                    QRect(star_start_x, type_rect.y(), star_width, type_rect.height()))
+                star_start_x += ((x + w - star_start_x) - (star_width)) / 2
+                star_rating.paint(
+                    painter, QRect(star_start_x, type_rect.y(), star_width, type_rect.height()))
 
-                #if app_constants.USE_EXTERNAL_PROG_ICO:
-                #	if self.external_icon and not self.external_icon.isNull():
-                #		self.external_icon.paint(painter, QRect(x+w-30,
-                #		y+app_constants.THUMB_H_SIZE-28, 28, 28))
-
+                # if app_constants.USE_EXTERNAL_PROG_ICO:
+                #   if self.external_icon and not self.external_icon.isNull():
+                #       self.external_icon.paint(painter, QRect(x+w-30,
+                #       y+app_constants.THUMB_H_SIZE-28, 28, 28))
 
             if gallery.state == app_constants.GalleryState.New:
                 painter.save()
@@ -976,22 +1024,30 @@ class GridDelegate(QStyledItemDelegate):
                 gradient.setColorAt(0, QColor(255, 255, 255, 0))
                 gradient.setColorAt(1, QColor(0, 255, 0, 150))
                 painter.setBrush(QBrush(gradient))
-                painter.drawRoundedRect(QRectF(x, y + app_constants.THUMB_H_SIZE / 2, w, app_constants.THUMB_H_SIZE / 2), 2, 2)
+                painter.drawRoundedRect(
+                    QRectF(
+                        x,
+                        y + app_constants.THUMB_H_SIZE / 2,
+                        w,
+                        app_constants.THUMB_H_SIZE / 2
+                    ),
+                    2,
+                    2
+                )
                 painter.restore()
 
             def draw_text_label(lbl_h):
-                #draw the label for text
+                # draw the label for text
                 painter.save()
                 painter.translate(x, y + app_constants.THUMB_H_SIZE)
-                box_color = QBrush(QColor(label_color))#QColor(0,0,0,123))
+                box_color = QBrush(QColor(label_color))  # QColor(0,0,0,123))
                 painter.setBrush(box_color)
-                rect = QRect(0, 0, w, lbl_h) #x, y, width, height
+                rect = QRect(0, 0, w, lbl_h)  # x, y, width, height
                 painter.fillRect(rect, box_color)
                 painter.restore()
                 return rect
 
-            if option.state & QStyle.State_MouseOver or \
-                option.state & QStyle.State_Selected:
+            if option.state & QStyle.State_MouseOver or option.state & QStyle.State_Selected:
                 title_layout = misc.text_layout(title, w, self.title_font, self.title_font_m)
                 artist_layout = misc.text_layout(artist, w, self.artist_font, self.artist_font_m)
                 t_h = title_layout.boundingRect().height()
@@ -1002,14 +1058,15 @@ class GridDelegate(QStyledItemDelegate):
                 else:
                     lbl_rect = draw_text_label(app_constants.GRIDBOX_LBL_H)
 
-                clipping = QRectF(x, y + app_constants.THUMB_H_SIZE, w, app_constants.GRIDBOX_LBL_H - 10)
+                clipping = QRectF(
+                    x, y + app_constants.THUMB_H_SIZE, w, app_constants.GRIDBOX_LBL_H - 10)
                 painter.setPen(QColor(title_color))
-                title_layout.draw(painter, QPointF(x, y + app_constants.THUMB_H_SIZE),
-                      clip=clipping)
+                title_layout.draw(
+                    painter, QPointF(x, y + app_constants.THUMB_H_SIZE), clip=clipping)
                 painter.setPen(QColor(artist_color))
-                artist_layout.draw(painter, QPointF(x, y + app_constants.THUMB_H_SIZE + t_h),
-                       clip=clipping)
-                #painter.fillRect(option.rect, QColor)
+                artist_layout.draw(
+                    painter, QPointF(x, y + app_constants.THUMB_H_SIZE + t_h), clip=clipping)
+                # painter.fillRect(option.rect, QColor)
             else:
                 if app_constants.GALLERY_FONT_ELIDE:
                     lbl_rect = draw_text_label(self.text_label_h)
@@ -1019,48 +1076,52 @@ class GridDelegate(QStyledItemDelegate):
                 painter.save()
                 alignment = QTextOption(Qt.AlignCenter)
                 alignment.setUseDesignMetrics(True)
-                title_rect = QRectF(0,0,w, self.title_font_m.height())
-                artist_rect = QRectF(0,self.artist_font_m.height(),w,
-                         self.artist_font_m.height())
+                title_rect = QRectF(0, 0, w, self.title_font_m.height())
+                artist_rect = QRectF(
+                    0, self.artist_font_m.height(), w, self.artist_font_m.height())
                 painter.translate(x, y + app_constants.THUMB_H_SIZE)
                 if app_constants.GALLERY_FONT_ELIDE:
                     painter.setFont(self.title_font)
                     painter.setPen(QColor(title_color))
-                    painter.drawText(title_rect,
-                             self.title_font_m.elidedText(title, Qt.ElideRight, w - 10),
-                             alignment)
-                
+                    painter.drawText(
+                        title_rect,
+                        self.title_font_m.elidedText(title, Qt.ElideRight, w - 10),
+                        alignment
+                    )
+
                     painter.setPen(QColor(artist_color))
                     painter.setFont(self.artist_font)
                     alignment.setWrapMode(QTextOption.NoWrap)
-                    painter.drawText(artist_rect,
-                                self.title_font_m.elidedText(artist, Qt.ElideRight, w - 10),
-                                alignment)
+                    painter.drawText(
+                        artist_rect,
+                        self.title_font_m.elidedText(artist, Qt.ElideRight, w - 10),
+                        alignment
+                    )
                 else:
                     text_area.setDefaultFont(QFont(self.font_name))
                     text_area.drawContents(painter)
-                ##painter.resetTransform()
+                # #painter.resetTransform()
                 painter.restore()
 
             if option.state & QStyle.State_Selected:
                 painter.save()
                 selected_rect = QRectF(x, y, w, lbl_rect.height() + app_constants.THUMB_H_SIZE)
                 painter.setPen(Qt.NoPen)
-                painter.setBrush(QBrush(QColor(164,164,164,120)))
+                painter.setBrush(QBrush(QColor(164, 164, 164, 120)))
                 painter.drawRoundedRect(selected_rect, 5, 5)
-                #painter.fillRect(selected_rect, QColor(164,164,164,120))
+                # painter.fillRect(selected_rect, QColor(164,164,164,120))
                 painter.restore()
 
             def warning(txt):
                 painter.save()
                 selected_rect = QRectF(x, y, w, lbl_rect.height() + app_constants.THUMB_H_SIZE)
                 painter.setPen(Qt.NoPen)
-                painter.setBrush(QBrush(QColor(255,0,0,120)))
+                painter.setBrush(QBrush(QColor(255, 0, 0, 120)))
                 p_path = QPainterPath()
                 p_path.setFillRule(Qt.WindingFill)
-                p_path.addRoundedRect(selected_rect, 5,5)
-                p_path.addRect(x,y, 20, 20)
-                p_path.addRect(x + w - 20,y, 20, 20)
+                p_path.addRoundedRect(selected_rect, 5, 5)
+                p_path.addRect(x, y, 20, 20)
+                p_path.addRect(x + w - 20, y, 20, 20)
                 painter.drawPath(p_path.simplified())
                 painter.setPen(QColor("white"))
                 txt_layout = misc.text_layout(txt, w, self.title_font, self.title_font_m)
@@ -1072,7 +1133,6 @@ class GridDelegate(QStyledItemDelegate):
             elif gallery.dead_link:
                 warning("Cannot find gallery source!")
 
-
             if app_constants.DEBUG or self.view.view_type == app_constants.ViewType.Duplicate:
                 painter.save()
                 painter.setPen(QPen(Qt.white))
@@ -1082,19 +1142,19 @@ class GridDelegate(QStyledItemDelegate):
                 type_p = QPoint(x + 4, y + 50 - type_h - 5)
                 type_rect = QRect(type_p.x() - 2, type_p.y() - 1, type_w + 4, type_h + 1)
                 painter.fillRect(type_rect, QColor(239, 0, 0, 200))
-                painter.drawText(type_p.x(), type_p.y() + painter.fontMetrics().height() - 4, id_txt)
+                painter.drawText(
+                    type_p.x(), type_p.y() + painter.fontMetrics().height() - 4, id_txt)
                 painter.restore()
 
             if option.state & QStyle.State_Selected:
                 painter.setPen(QPen(option.palette.highlightedText().color()))
         else:
-            painter.fillRect(option.rect, QColor(164,164,164,100))
-            painter.setPen(QColor(164,164,164,200))
+            painter.fillRect(option.rect, QColor(164, 164, 164, 100))
+            painter.setPen(QColor(164, 164, 164, 200))
             txt_layout = misc.text_layout("Fetching...", w, self.title_font, self.title_font_m)
 
             clipping = QRectF(x, y + h // 4, w, app_constants.GRIDBOX_LBL_H - 10)
-            txt_layout.draw(painter, QPointF(x, y + h // 4),
-                    clip=clipping)
+            txt_layout.draw(painter, QPointF(x, y + h // 4), clip=clipping)
 
     def _ribbon_color(self, gallery_type):
         if gallery_type:
@@ -1121,10 +1181,9 @@ class GridDelegate(QStyledItemDelegate):
     def sizeHint(self, option, index):
         return QSize(self.W, self.H)
 
+
 class MangaView(QListView):
-    """
-    Grid View
-    """
+    """Grid View."""
 
     STATUS_BAR_MSG = pyqtSignal(str)
 
@@ -1161,10 +1220,10 @@ class MangaView(QListView):
         self.sort_model.sort(0)
         self.setModel(self.sort_model)
         self.doubleClicked.connect(lambda idx: idx.data(Qt.UserRole + 1).chapters[0].open())
-        self.setViewportMargins(0,0,0,0)
+        self.setViewportMargins(0, 0, 0, 0)
 
         self.gallery_window = misc.GalleryMetaWindow(parent if parent else self)
-        self.gallery_window.arrow_size = (10,10,)
+        self.gallery_window.arrow_size = (10, 10,)
         self.clicked.connect(lambda idx: self.gallery_window.show_gallery(idx, self))
 
         self.current_sort = app_constants.CURRENT_SORT
@@ -1179,14 +1238,14 @@ class MangaView(QListView):
                     print(g)
                 except:
                     print("{}".format(g).encode(errors='ignore'))
-                #log_d(gallerydb.HashDB.gen_gallery_hash(g, 0, 'mid')['mid'])
+                # log_d(gallerydb.HashDB.gen_gallery_hash(g, 0, 'mid')['mid'])
 
             self.clicked.connect(debug_print)
 
         self.k_scroller = QScroller.scroller(self)
         self._scroll_speed_timer = QTimer(self)
         self._scroll_speed_timer.timeout.connect(self._calculate_scroll_speed)
-        self._scroll_speed_timer.setInterval(500) # ms
+        self._scroll_speed_timer.setInterval(500)  # ms
         self._old_scroll_value = 0
         self._scroll_zero_once = True
         self._scroll_speed = 0
@@ -1200,7 +1259,7 @@ class MangaView(QListView):
         new_value = self.verticalScrollBar().value()
         self._scroll_speed = abs(self._old_scroll_value - new_value)
         self._old_scroll_value = new_value
-        
+
         if self.verticalScrollBar().value() in (0, self.verticalScrollBar().maximum()):
             self._scroll_zero_once = True
 
@@ -1211,7 +1270,6 @@ class MangaView(QListView):
         # update view if not scrolling
         if new_value < 400 and self._old_scroll_value > 400:
             self.update()
-
 
     def get_visible_indexes(self, column=0):
         "find all galleries in viewport"
@@ -1224,8 +1282,8 @@ class MangaView(QListView):
             idx_rect = self.visualRect(idx)
             return region.contains(idx_rect) or region.intersects(idx_rect)
 
-        #get first index
-        first_idx = self.indexAt(QPoint(gridW // 2, 0)) # to get indexes on the way out of view
+        # get first index
+        first_idx = self.indexAt(QPoint(gridW // 2, 0))  # to get indexes on the way out of view
         if not first_idx.isValid():
             first_idx = self.indexAt(QPoint(gridW // 2, gridH // 2))
 
@@ -1235,7 +1293,7 @@ class MangaView(QListView):
             while(idx_is_visible(nxt_idx)):
                 idx_found.append(nxt_idx)
                 nxt_idx = nxt_idx.sibling(nxt_idx.row() + 1, column)
-            
+
         return idx_found
 
     def wheelEvent(self, event):
@@ -1264,13 +1322,13 @@ class MangaView(QListView):
         gallery = index.data(Qt.UserRole + 1)
         if gallery.fav == 1:
             gallery.fav = 0
-            #self.model().replaceRows([gallery], index.row(), 1, index)
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, gallery.id, {'fav':0})
+            # self.model().replaceRows([gallery], index.row(), 1, index)
+            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, gallery.id, {'fav': 0})
             self.gallery_model.CUSTOM_STATUS_MSG.emit("Unfavorited")
         else:
             gallery.fav = 1
-            #self.model().replaceRows([gallery], index.row(), 1, index)
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, gallery.id, {'fav':1})
+            # self.model().replaceRows([gallery], index.row(), 1, index)
+            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, gallery.id, {'fav': 1})
             self.gallery_model.CUSTOM_STATUS_MSG.emit("Favorited")
 
     def del_chapter(self, index, chap_numb):
@@ -1281,10 +1339,9 @@ class MangaView(QListView):
             msgbox = QMessageBox(self)
             msgbox.setText('Are you sure you want to delete:')
             msgbox.setIcon(msgbox.Question)
-            msgbox.setInformativeText('Chapter {} of {}'.format(chap_numb + 1,
-                                                          gallery.title))
+            msgbox.setInformativeText('Chapter {} of {}'.format(chap_numb + 1, gallery.title))
             msgbox.setStandardButtons(msgbox.Yes | msgbox.No)
-            if msgbox.exec() == msgbox.Yes:
+            if msgbox.exec_() == msgbox.Yes:
                 gallery.chapters.pop(chap_numb, None)
                 self.gallery_model.replaceRows([gallery], index.row())
                 gallerydb.execute(gallerydb.ChapterDB.del_chapter, True, gallery.id, chap_numb)
@@ -1323,7 +1380,10 @@ class MangaView(QListView):
         super().updateGeometries()
         self.verticalScrollBar().setSingleStep(app_constants.SCROLL_SPEED)
 
+
 class MangaTableView(QTableView):
+    """manga table view."""
+
     STATUS_BAR_MSG = pyqtSignal(str)
 
     def __init__(self, v_type, parent=None):
@@ -1352,25 +1412,25 @@ class MangaTableView(QTableView):
         palette.setColor(palette.Highlight, QColor(88, 88, 88, 70))
         palette.setColor(palette.HighlightedText, QColor('black'))
         self.setPalette(palette)
-        self.setIconSize(QSize(0,0))
+        self.setIconSize(QSize(0, 0))
         self.doubleClicked.connect(lambda idx: idx.data(Qt.UserRole + 1).chapters[0].open())
         self.grabGesture(Qt.SwipeGesture)
         self.k_scroller = QScroller.scroller(self)
 
     # display tooltip only for elided text
-    #def viewportEvent(self, event):
-    #	if event.type() == QEvent.ToolTip:
-    #		h_event = QHelpEvent(event)
-    #		index = self.indexAt(h_event.pos())
-    #		if index.isValid():
-    #			size_hint = self.itemDelegate(index).sizeHint(self.viewOptions(),
-    #											  index)
-    #			rect = QRect(0, 0, size_hint.width(), size_hint.height())
-    #			rect_visual = self.visualRect(index)
-    #			if rect.width() <= rect_visual.width():
-    #				QToolTip.hideText()
-    #				return True
-    #	return super().viewportEvent(event)
+    # def viewportEvent(self, event):
+    #   if event.type() == QEvent.ToolTip:
+    #       h_event = QHelpEvent(event)
+    #       index = self.indexAt(h_event.pos())
+    #       if index.isValid():
+    #           size_hint = self.itemDelegate(index).sizeHint(self.viewOptions(),
+    #                                             index)
+    #           rect = QRect(0, 0, size_hint.width(), size_hint.height())
+    #           rect_visual = self.visualRect(index)
+    #           if rect.width() <= rect_visual.width():
+    #               QToolTip.hideText()
+    #               return True
+    #   return super().viewportEvent(event)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return:
@@ -1387,10 +1447,9 @@ class MangaTableView(QTableView):
     def contextMenuEvent(self, event):
         CommonView.contextMenuEvent(self, event)
 
+
 class CommonView:
-    """
-    Contains identical view implentations
-    """
+    """Contains identical view implentations"""
 
     @staticmethod
     def remove_selected(view_cls, source=False):
@@ -1404,15 +1463,19 @@ class CommonView:
 
     @staticmethod
     def remove_gallery(view_cls, index_list, local=False):
-        #view_cls.sort_model.setDynamicSortFilter(False)
+        # view_cls.sort_model.setDynamicSortFilter(False)
         msgbox = QMessageBox(view_cls)
         msgbox.setIcon(msgbox.Question)
         msgbox.setStandardButtons(msgbox.Yes | msgbox.No)
         if len(index_list) > 1:
             if not local:
-                msg = 'Are you sure you want to remove {} selected galleries?'.format(len(index_list))
+                msg = 'Are you sure you want to remove {} selected galleries?'.format(
+                    len(index_list))
             else:
-                msg = 'Are you sure you want to remove {} selected galleries and their files/directories?'.format(len(index_list))
+                msg = (
+                    'Are you sure you want to remove {} selected galleries and '
+                    'their files/directories?'.format(len(index_list))
+                )
 
             msgbox.setText(msg)
         else:
@@ -1423,26 +1486,28 @@ class CommonView:
             msgbox.setText(msg)
 
         if msgbox.exec() == msgbox.Yes:
-            #view_cls.setUpdatesEnabled(False)
+            # view_cls.setUpdatesEnabled(False)
             gallery_list = []
             gallery_db_list = []
             log_i('Removing {} galleries'.format(len(index_list)))
             for index in index_list:
                 gallery = index.data(Qt.UserRole + 1)
                 gallery_list.append(gallery)
-                log_i('Attempt to remove: {} by {}'.format(gallery.title.encode(errors="ignore"),
-                                            gallery.artist.encode(errors="ignore")))
+                log_i('Attempt to remove: {} by {}'.format(
+                    gallery.title.encode(errors="ignore"), gallery.artist.encode(errors="ignore"))
+                )
                 if gallery.id:
                     gallery_db_list.append(gallery)
-            gallerydb.execute(gallerydb.GalleryDB.del_gallery, True, gallery_db_list, local=local, priority=0)
+            gallerydb.execute(
+                gallerydb.GalleryDB.del_gallery, True, gallery_db_list, local=local, priority=0)
 
             rows = len(gallery_list)
             view_cls.gallery_model._gallery_to_remove.extend(gallery_list)
             view_cls.gallery_model.removeRows(view_cls.gallery_model.rowCount() - rows, rows)
 
-            #view_cls.STATUS_BAR_MSG.emit('Gallery removed!')
-            #view_cls.setUpdatesEnabled(True)
-        #view_cls.sort_model.setDynamicSortFilter(True)
+            # view_cls.STATUS_BAR_MSG.emit('Gallery removed!')
+            # view_cls.setUpdatesEnabled(True)
+        # view_cls.sort_model.setDynamicSortFilter(True)
 
     @staticmethod
     def find_index(view_cls, gallery_id, sort_model=False):
@@ -1493,7 +1558,7 @@ class CommonView:
         view_cls.setAutoScroll(True)
         view_cls.update()
 
-    @staticmethod
+    @staticmethod  # NOQA
     def contextMenuEvent(view_cls, event):
         grid_view = False
         table_view = False
@@ -1524,12 +1589,13 @@ class CommonView:
                     view_cls.gallery_window.hide_animation.start()
                 view_cls.manga_delegate.CONTEXT_ON = True
             if selected:
-                menu = misc.GalleryMenu(view_cls, index, view_cls.sort_model,
-                               view_cls.parent_widget, select_indexes)
+                menu = misc.GalleryMenu(
+                    view_cls, index, view_cls.sort_model, view_cls.parent_widget, select_indexes)
             else:
-                menu = misc.GalleryMenu(view_cls, index, view_cls.sort_model,
-                               view_cls.parent_widget)
-            menu.delete_galleries.connect(lambda s: CommonView.remove_gallery(view_cls, select_indexes, s))
+                menu = misc.GalleryMenu(
+                    view_cls, index, view_cls.sort_model, view_cls.parent_widget)
+            menu.delete_galleries.connect(
+                lambda s: CommonView.remove_gallery(view_cls, select_indexes, s))
             menu.edit_gallery.connect(CommonView.spawn_dialog)
             handled = True
 
@@ -1547,10 +1613,12 @@ class CommonView:
         dialog = gallerydialog.GalleryDialog(app_inst, gallery)
         dialog.show()
 
+
 class MangaViews:
+    """manga views."""
 
     manga_views = []
-    
+
     @enum.unique
     class View(enum.Enum):
         List = 1
@@ -1569,12 +1637,12 @@ class MangaViews:
         elif v_type == app_constants.ViewType.Duplicate:
             model = GalleryModel([], parent)
 
-        #list view
+        # list view
         self.list_view = MangaView(model, v_type, parent=parent)
         self.list_view.sort_model.setup_search()
         self.sort_model = self.list_view.sort_model
         self.gallery_model = self.list_view.gallery_model
-        #table view
+        # table view
         self.table_view = MangaTableView(v_type, parent)
         self.table_view.gallery_model = self.gallery_model
         self.table_view.sort_model = self.sort_model
@@ -1603,13 +1671,15 @@ class MangaViews:
         if self._delete_proxy_model:
             gs = [g for g in self.gallery_model._gallery_to_remove]
             self._delete_proxy_model._gallery_to_remove = gs
-            self._delete_proxy_model.removeRows(self._delete_proxy_model.rowCount() - len(gs), len(gs))
+            self._delete_proxy_model.removeRows(
+                self._delete_proxy_model.rowCount() - len(gs), len(gs))
 
     def set_delete_proxy(self, other_model):
         self._delete_proxy_model = other_model
-        self.gallery_model.rowsAboutToBeRemoved.connect(self._delegate_delete, Qt.DirectConnection)
+        self.gallery_model.rowsAboutToBeRemoved.connect(
+            self._delegate_delete, Qt.DirectConnection)
 
-    def add_gallery(self, gallery, db=False, record_time=False):
+    def add_gallery(self, gallery, db=False, record_time=False):  # NOQA
         if isinstance(gallery, (list, tuple)):
             for g in gallery:
                 g.view = self.view_type
@@ -1638,33 +1708,35 @@ class MangaViews:
                 if not gallery.profile:
                     Executors.generate_thumbnail(gallery, on_method=gallery.set_profile)
         self.list_view.gallery_model.insertRows(self.list_view.gallery_model.rowCount(), rows)
-        
+
     def replace_gallery(self, list_of_gallery, db_optimize=True):
         "Replaces the view and DB with given list of gallery, at given position"
-        assert isinstance(list_of_gallery, (list, gallerydb.Gallery)), "Please pass a gallery to replace with"
+        assert isinstance(
+            list_of_gallery, (list, gallerydb.Gallery)), "Please pass a gallery to replace with"
         if isinstance(list_of_gallery, gallerydb.Gallery):
             list_of_gallery = [list_of_gallery]
         log_d('Replacing {} galleries'.format(len(list_of_gallery)))
         if db_optimize:
             gallerydb.execute(gallerydb.GalleryDB.begin, True)
         for gallery in list_of_gallery:
-            kwdict = {'title':gallery.title,
-             'profile':gallery.profile,
-             'artist':gallery.artist,
-             'info':gallery.info,
-             'type':gallery.type,
-             'language':gallery.language,
-             'rating':gallery.rating,
-             'status':gallery.status,
-             'pub_date':gallery.pub_date,
-             'tags':gallery.tags,
-             'link':gallery.link,
-             'series_path':gallery.path,
-             'chapters':gallery.chapters,
-             'exed':gallery.exed}
+            kwdict = {
+                'title': gallery.title,
+                'profile': gallery.profile,
+                'artist': gallery.artist,
+                'info': gallery.info,
+                'type': gallery.type,
+                'language': gallery.language,
+                'rating': gallery.rating,
+                'status': gallery.status,
+                'pub_date': gallery.pub_date,
+                'tags': gallery.tags,
+                'link': gallery.link,
+                'series_path': gallery.path,
+                'chapters': gallery.chapters,
+                'exed': gallery.exed
+            }
 
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery,
-                             True, gallery.id, **kwdict)
+            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, gallery.id, **kwdict)
         if db_optimize:
             gallerydb.execute(gallerydb.GalleryDB.end, True)
 
@@ -1683,8 +1755,7 @@ class MangaViews:
             return self.table_view
 
     def fav_is_current(self):
-        if self.table_view.sort_model.current_view == \
-            self.table_view.sort_model.CAT_VIEW:
+        if self.table_view.sort_model.current_view == self.table_view.sort_model.CAT_VIEW:
             return False
         return True
 

@@ -105,8 +105,10 @@ class ToolbarTabManager(QObject):
         b.selected = True
         self._last_selected = b
         self.parent_widget.current_manga_view = b.view
-        b.view.list_view.sort_model.rowsInserted.connect(self.parent_widget.stat_row_info)
-        b.view.list_view.sort_model.rowsRemoved.connect(self.parent_widget.stat_row_info)
+        b.view.list_view.sort_model.rowsInserted.connect(
+            self.parent_widget.stat_row_info)
+        b.view.list_view.sort_model.rowsRemoved.connect(
+            self.parent_widget.stat_row_info)
         b.view.show()
 
     def addTab(  # NOQA
@@ -122,11 +124,13 @@ class ToolbarTabManager(QObject):
             t.select.connect(self._manage_selected)
             t.close_tab.connect(self.removeTab)
             if self.library_btn:
-                t.view = gallery.MangaViews(view_type, self.parent_widget, allow_sidebarwidget)
+                t.view = gallery.MangaViews(
+                    view_type, self.parent_widget, allow_sidebarwidget)
                 t.view.hide()
                 t.close_tab.connect(lambda: self.library_btn.click())
                 if not allow_sidebarwidget:
-                    t.clicked.connect(self.parent_widget.sidebar_list.arrow_handle.click)
+                    t.clicked.connect(
+                        self.parent_widget.sidebar_list.arrow_handle.click)
             else:
                 t.view = self.parent_widget.default_manga_view
             if delegate_paint:
@@ -165,7 +169,7 @@ class NoTooltipModel(QIdentityProxyModel):
             return None
         if role == Qt.DecorationRole:
             return QPixmap(app_constants.GARTIST_PATH)
-        return self.sourceModel().data(index,  role)
+        return self.sourceModel().data(index, role)
 
 
 class UniqueInfoModel(QSortFilterProxyModel):
@@ -226,7 +230,8 @@ class GalleryArtistsList(QListView):
     def __init__(self, gallerymodel, parent=None):
         """init func."""
         super().__init__(parent)
-        self.g_artists_model = UniqueInfoModel(gallerymodel, gallerymodel.ARTIST_ROLE, self)
+        self.g_artists_model = UniqueInfoModel(
+            gallerymodel, gallerymodel.ARTIST_ROLE, self)
         self.setModel(self.g_artists_model)
         self.setModelColumn(app_constants.ARTIST)
         self.g_artists_model.setSortRole(gallerymodel.ARTIST_ROLE)
@@ -260,7 +265,8 @@ class TagsTreeView(QTreeWidget):
         self.setSelectionBehavior(self.SelectItems)
         self.setSelectionMode(self.ExtendedSelection)
         self.clipboard = QApplication.clipboard()
-        self.itemDoubleClicked.connect(lambda i: self.search_tags([i]) if i.parent() else None)
+        self.itemDoubleClicked.connect(
+            lambda i: self.search_tags([i]) if i.parent() else None)
 
     def _convert_to_str(self, items):
         """convert to str."""
@@ -292,7 +298,8 @@ class TagsTreeView(QTreeWidget):
 
     def create_list(self, items):
         """create list."""
-        g_list = gallerydb.GalleryList("New List", filter=self._convert_to_str(items))
+        g_list = gallerydb.GalleryList(
+            "New List", filter=self._convert_to_str(items))
         g_list.add_to_db()
 
         self.NEW_LIST.emit(g_list.name, g_list)
@@ -335,8 +342,10 @@ class TagsTreeView(QTreeWidget):
             if not contains_ns:
                 search_act = menu.addAction('Search')
                 search_act.triggered.connect(lambda: self.search_tags(s_items))
-                create_list_filter_act = menu.addAction('Create list with selected')
-                create_list_filter_act.triggered.connect(lambda: self.create_list(s_items))
+                create_list_filter_act = menu.addAction(
+                    'Create list with selected')
+                create_list_filter_act.triggered.connect(
+                    lambda: self.create_list(s_items))
             handled = True
 
         if handled:
@@ -417,7 +426,8 @@ class GalleryListEdit(misc.BasePopup):
         self.gallery_list.regex = self.regex.isChecked()
         self.gallery_list.case = self.case.isChecked()
         self.gallery_list.strict = self.strict.isChecked()
-        gallerydb.execute(gallerydb.ListDB.modify_list, True, self.gallery_list)
+        gallerydb.execute(gallerydb.ListDB.modify_list,
+                          True, self.gallery_list)
         self.apply.emit()
         self.hide()
 
@@ -437,13 +447,15 @@ class GalleryListContextMenu(QMenu):
 
     def edit_list(self):
         """edit list."""
-        self.parent_widget.gallery_list_edit.set_list(self.gallery_list, self.item)
+        self.parent_widget.gallery_list_edit.set_list(
+            self.gallery_list, self.item)
         self.parent_widget.gallery_list_edit.show()
 
     def remove_list(self):
         """remove list."""
         self.parent_widget.takeItem(self.parent_widget.row(self.item))
-        gallerydb.execute(gallerydb.ListDB.remove_list, True, self.gallery_list)
+        gallerydb.execute(gallerydb.ListDB.remove_list,
+                          True, self.gallery_list)
         self.parent_widget.GALLERY_LIST_REMOVED.emit()
 
     def clear_list(self):
@@ -543,7 +555,8 @@ class GalleryLists(QListWidget):
         if item:
             self._reset_selected()
             if item.item.filter:
-                app_constants.NOTIF_BUBBLE.update_text(item.item.name, "Updating list..", 5)
+                app_constants.NOTIF_BUBBLE.update_text(
+                    item.item.name, "Updating list..", 5)
                 gallerydb.execute(item.item.scan, True)
             self.GALLERY_LIST_CLICKED.emit(item.item)
             item.setFont(self._font_selected)
@@ -598,7 +611,8 @@ class SideBarWidget(QFrame):
         self.show_all_galleries_btn = QPushButton("Show all galleries")
         self.show_all_galleries_btn.clicked.connect(
             lambda: parent.manga_list_view.sort_model.set_gallery_list())
-        self.show_all_galleries_btn.clicked.connect(self.show_all_galleries_btn.hide)
+        self.show_all_galleries_btn.clicked.connect(
+            self.show_all_galleries_btn.hide)
         self.show_all_galleries_btn.hide()
         self.main_layout.addWidget(self.show_all_galleries_btn)
         self.main_buttons_layout = QHBoxLayout()
@@ -632,9 +646,11 @@ class SideBarWidget(QFrame):
         create_new_list_btn = QPushButton()
         create_new_list_btn.setIcon(QIcon(app_constants.PLUS_PATH))
         create_new_list_btn.setIconSize(QSize(15, 15))
-        create_new_list_btn.clicked.connect(lambda: self.lists.create_new_list())
+        create_new_list_btn.clicked.connect(
+            lambda: self.lists.create_new_list())
         create_new_list_btn.adjustSize()
-        create_new_list_btn.setFixedSize(create_new_list_btn.width(), create_new_list_btn.height())
+        create_new_list_btn.setFixedSize(
+            create_new_list_btn.width(), create_new_list_btn.height())
         create_new_list_btn.setToolTip("Create a new list!")
         lists_l = QVBoxLayout(gallery_lists_dummy)
         lists_l.setContentsMargins(0, 0, 0, 0)
@@ -642,32 +658,39 @@ class SideBarWidget(QFrame):
         lists_l.addWidget(self.lists)
         lists_l.addWidget(create_new_list_btn)
         lists_index = self.stacked_layout.addWidget(gallery_lists_dummy)
-        self.lists.GALLERY_LIST_CLICKED.connect(parent.manga_list_view.sort_model.set_gallery_list)
-        self.lists.GALLERY_LIST_CLICKED.connect(self.show_all_galleries_btn.show)
-        self.lists.GALLERY_LIST_REMOVED.connect(self.show_all_galleries_btn.click)
+        self.lists.GALLERY_LIST_CLICKED.connect(
+            parent.manga_list_view.sort_model.set_gallery_list)
+        self.lists.GALLERY_LIST_CLICKED.connect(
+            self.show_all_galleries_btn.show)
+        self.lists.GALLERY_LIST_REMOVED.connect(
+            self.show_all_galleries_btn.click)
         self.lists_btn.clicked.connect(
             lambda: self.stacked_layout.setCurrentIndex(lists_index))
         self.show_all_galleries_btn.clicked.connect(self.lists.clearSelection)
         self.show_all_galleries_btn.clicked.connect(self.lists._reset_selected)
 
         # artists
-        self.artists_list = GalleryArtistsList(parent.manga_list_view.gallery_model, self)
+        self.artists_list = GalleryArtistsList(
+            parent.manga_list_view.gallery_model, self)
         self.artists_list.artist_clicked.connect(
             lambda a: parent.search('artist:"{}"'.format(a)))
         artists_list_index = self.stacked_layout.addWidget(self.artists_list)
         self.artist_btn.clicked.connect(
             lambda: self.stacked_layout.setCurrentIndex(artists_list_index))
-        self.show_all_galleries_btn.clicked.connect(self.artists_list.clearSelection)
+        self.show_all_galleries_btn.clicked.connect(
+            self.artists_list.clearSelection)
 
         # ns_tags
         self.tags_tree = TagsTreeView(self)
         self.tags_tree.TAG_SEARCH.connect(parent.search)
         self.tags_tree.NEW_LIST.connect(self.lists.create_new_list)
         self.tags_tree.setHeaderHidden(True)
-        self.show_all_galleries_btn.clicked.connect(self.tags_tree.clearSelection)
+        self.show_all_galleries_btn.clicked.connect(
+            self.tags_tree.clearSelection)
         self.tags_layout = QVBoxLayout(self.tags_tree)
         ns_tags_index = self.stacked_layout.addWidget(self.tags_tree)
-        self.ns_tags_btn.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(ns_tags_index))
+        self.ns_tags_btn.clicked.connect(
+            lambda: self.stacked_layout.setCurrentIndex(ns_tags_index))
 
         self.slide_animation = misc.create_animation(self, "maximumSize")
         self.slide_animation.stateChanged.connect(self._slide_hide)
@@ -689,7 +712,8 @@ class SideBarWidget(QFrame):
 
     def slide(self, state):
         """slide."""
-        self.slide_animation.setEndValue(QSize(self.arrow_handle.width() * 2, self.height()))
+        self.slide_animation.setEndValue(
+            QSize(self.arrow_handle.width() * 2, self.height()))
 
         if state:
             self.slide_animation.setDirection(self.slide_animation.Forward)
