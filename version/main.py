@@ -334,14 +334,14 @@ def start(test=False):
     Returns:
         int: Return code.
     """
-    app_constants.APP_RESTART_CODE = -123456789
     args = parse_args()
     program = Program(args=args, test=test)
     return program.run()
 
 
 if __name__ == '__main__':
-    current_exit_code = 0
+    app_constants.APP_RESTART_CODE = -1
+    current_exit_code = app_constants.APP_RESTART_CODE
     while current_exit_code == app_constants.APP_RESTART_CODE:
         current_exit_code = start()
     sys.exit(current_exit_code)
