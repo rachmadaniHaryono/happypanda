@@ -55,7 +55,11 @@ try:
     import utils
     import misc
     import gallery
+    from arrow_handle_widget import ArrowHandleWidget
+    from custom_list_item import CustomListItem
 except ImportError:
+    from .arrow_handle_widget import ArrowHandleWidget
+    from .custom_list_item import CustomListItem
     from . import (
         gallerydb,
         app_constants,
@@ -467,7 +471,7 @@ class GalleryListContextMenu(QMenu):
 class GalleryLists(QListWidget):
     """gallery list."""
 
-    CREATE_LIST_TYPE = misc.CustomListItem.UserType + 1
+    CREATE_LIST_TYPE = CustomListItem.UserType + 1
     GALLERY_LIST_CLICKED = pyqtSignal(gallerydb.GalleryList)
     GALLERY_LIST_REMOVED = pyqtSignal()
 
@@ -539,7 +543,7 @@ class GalleryLists(QListWidget):
 
     def create_new_list(self, name=None, gallery_list=None):
         """create new list."""
-        new_item = misc.CustomListItem()
+        new_item = CustomListItem()
         self._in_proccess_item = new_item
         new_item.setFlags(new_item.flags() | Qt.ItemIsEditable)
         new_item.setIcon(QIcon(app_constants.LIST_PATH))
@@ -602,7 +606,7 @@ class SideBarWidget(QFrame):
         self.main_layout = QVBoxLayout(self._d_widget)
         self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.arrow_handle = misc.ArrowHandle(self)
+        self.arrow_handle = ArrowHandleWidget(self)
         self.arrow_handle.CLICKED.connect(self.slide)
 
         self._widget_layout.addWidget(self.arrow_handle)

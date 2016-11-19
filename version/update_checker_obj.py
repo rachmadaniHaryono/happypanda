@@ -28,7 +28,7 @@ log_e = log.error
 log_c = log.critical
 
 
-class UpdateChecker(QObject):
+class UpdateCheckerObject(QObject):
     """update checker class."""
 
     UPDATE_CHECK = pyqtSignal(str)

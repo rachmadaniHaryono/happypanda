@@ -44,29 +44,30 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPalette, QPixmapCache
 
 try:
-    from misc import FlowLayout, Spacer, PathLineEdit, AppDialog
-    import misc
-    import settings
+    from import_export_obj import ImportExportObject
+    from path_line_edit import PathLineEdit
+    from misc import FlowLayout, Spacer, AppDialog
     import app_constants
     import gallerydb
-    import utils
-    import io_misc
+    import misc
     import pewnet
+    import settings
+    import utils
 except ImportError:
+    from .import_export_obj import ImportExportObject
+    from .path_line_edit import PathLineEdit
     from .misc import (
+        AppDialog,
         FlowLayout,
         Spacer,
-        PathLineEdit,
-        AppDialog,
     )
     from . import (
-        misc,
-        settings,
         app_constants,
         gallerydb,
-        utils,
-        io_misc,
+        misc,
         pewnet,
+        settings,
+        utils,
     )
 
 log = logging.getLogger(__name__)
@@ -1339,7 +1340,7 @@ class SettingsDialog(QWidget):
             if confirm_msg.exec_() == QMessageBox.Yes:
                 app_popup = AppDialog(self.parent_widget)
                 app_popup.info_lbl.setText("Exporting database...")
-                app_popup.export_instance = io_misc.ImportExport()
+                app_popup.export_instance = ImportExportObject()
                 app_popup.export_instance.moveToThread(app_constants.GENERAL_THREAD)
                 app_popup.export_instance.finished.connect(app_popup.export_instance.deleteLater)
                 app_popup.export_instance.finished.connect(app_popup.close)
@@ -1360,7 +1361,7 @@ class SettingsDialog(QWidget):
                 app_popup.restart_info.hide()
                 app_popup.info_lbl.setText("Importing database file...")
                 app_popup.note_info.setText("Application requires a restart after importing")
-                app_popup.import_instance = io_misc.ImportExport()
+                app_popup.import_instance = ImportExportObject()
                 app_popup.import_instance.moveToThread(app_constants.GENERAL_THREAD)
                 app_popup.import_instance.finished.connect(app_popup.import_instance.deleteLater)
                 app_popup.import_instance.finished.connect(app_popup.init_restart)

@@ -22,11 +22,11 @@ from PyQt5.QtCore import (
 )
 
 try:
-    import fetch
+    from fetch_obj import FetchObject
     import app_constants
 except ImportError:
+    from .fetch_obj import FetchObject
     from . import (
-        fetch,
         app_constants
     )
 
@@ -39,7 +39,7 @@ log_e = log.error
 log_c = log.critical
 
 
-class ScanDir(QObject):
+class ScanDirObject(QObject):
     """dir scanner Qobj."""
 
     finished = pyqtSignal()
@@ -47,7 +47,7 @@ class ScanDir(QObject):
     def __init__(self, addition_view, addition_tab, parent=None, app_window=None):
         """init func."""
         if app_window is not None:
-            self.fetch_inst = fetch.Fetch(app_window)
+            self.fetch_inst = FetchObject(app_window)
         else:
             raise NotImplementedError
         super().__init__(parent)

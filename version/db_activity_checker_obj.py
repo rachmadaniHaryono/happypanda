@@ -22,7 +22,7 @@ except ImportError:
     from . import gallerydb
 
 
-class DBActivityChecker(QObject):
+class DBActivityCheckerObject(QObject):
     """db activity checker."""
 
     FINISHED = pyqtSignal()

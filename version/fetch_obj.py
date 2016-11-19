@@ -46,7 +46,7 @@ log_e = log.error
 log_c = log.critical
 
 
-class Fetch(QObject):
+class FetchObject(QObject):
     """ A class containing methods to fetch gallery data.
 
     Should be executed in a new thread.
