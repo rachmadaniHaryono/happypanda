@@ -33,18 +33,18 @@ from PyQt5.QtCore import (
 )
 
 try:
+    from fetch_obj import FetchObject
     import app_constants
-    import utils
-    import gallerydb
-    import fetch
-    import misc
     import database
+    import gallerydb
+    import misc
+    import utils
 except ImportError:
+    from .fetch_obj import FetchObject
     from . import (
         app_constants,
         utils,
         gallerydb,
-        fetch,
         misc,
         database,
     )
@@ -57,8 +57,8 @@ log_e = log.error
 log_c = log.critical
 
 
-class GalleryDialog(QWidget):
-    """ A window for adding/modifying gallery.
+class GalleryDialogWidget(QWidget):
+    """A window for adding/modifying gallery.
 
     Pass a list of QModelIndexes to edit their data
     or pass a path to preset path
@@ -126,13 +126,14 @@ class GalleryDialog(QWidget):
         frect = self.frameGeometry()
         frect.moveCenter(QDesktopWidget().availableGeometry().center())
         self.move(frect.topLeft())
-        self._fetch_inst = fetch.Fetch()
+        self._fetch_inst = FetchObject()
         self._fetch_thread = QThread(self)
         self._fetch_thread.setObjectName("GalleryDialog metadata thread")
         self._fetch_inst.moveToThread(self._fetch_thread)
         self._fetch_thread.started.connect(self._fetch_inst.auto_web_metadata)
 
     def commonUI(self):
+        """common ui."""
         if not self._multiple_galleries:
             f_web = QGroupBox("Metadata from the Web")
             f_web.setCheckable(False)
@@ -281,6 +282,7 @@ class GalleryDialog(QWidget):
         self.title_edit.setFocus()
 
     def resizeEvent(self, event):
+        """resize event."""
         self.tags_edit.setFixedHeight(event.size().height() // 8)
         self.descr_edit.setFixedHeight(event.size().height() // 12.5)
         return super().resizeEvent(event)
@@ -370,7 +372,7 @@ class GalleryDialog(QWidget):
                 self.link_lbl.g_check.setChecked(True)
 
     def newUI(self):
-
+        """new ui."""
         f_local = QGroupBox("Directory/Archive")
         f_local.setCheckable(False)
         self.main_layout.addWidget(f_local)
@@ -446,6 +448,7 @@ class GalleryDialog(QWidget):
                 self.done.hide()
 
     def check(self):
+        """check."""
         if not self._multiple_galleries:
             if len(self.title_edit.text()) is 0:
                 self.title_edit.setFocus()
@@ -463,6 +466,7 @@ class GalleryDialog(QWidget):
         return True
 
     def reject(self):
+        """reject."""
         if self.check():
             msgbox = QMessageBox()
             msgbox.setText(
@@ -472,7 +476,7 @@ class GalleryDialog(QWidget):
             msgbox.setInformativeText("Do you really want to discard?")
             msgbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msgbox.setDefaultButton(QMessageBox.No)
-            if msgbox.exec() == QMessageBox.Yes:
+            if msgbox.exec_() == QMessageBox.Yes:
                 self.close()
         else:
             self.close()
@@ -524,6 +528,7 @@ class GalleryDialog(QWidget):
         self._fetch_thread.start()
 
     def set_web_metadata(self, metadata):
+        """set web metadata."""
         assert isinstance(metadata, gallerydb.Gallery)
         self.link_lbl.setText(metadata.link)
         self.title_edit.setText(metadata.title)
@@ -602,6 +607,7 @@ class GalleryDialog(QWidget):
             return new_gallery
 
     def link_set(self):
+        """link set."""
         t = self.link_edit.text()
         self.link_edit.hide()
         self.link_lbl.show()
@@ -610,6 +616,7 @@ class GalleryDialog(QWidget):
         self.link_btn.show()
 
     def link_modify(self):
+        """link modify."""
         t = self.link_lbl.text()
         self.link_lbl.hide()
         self.link_edit.show()
@@ -626,6 +633,7 @@ class GalleryDialog(QWidget):
             pass
 
     def delayed_close(self):
+        """delayed close."""
         if self._fetch_thread.isRunning():
             self._fetch_thread.finished.connect(self.close)
             self.hide()
@@ -633,10 +641,12 @@ class GalleryDialog(QWidget):
             self.close()
 
     def accept(self):
+        """accept."""
         self.make_gallery(gallerydb.Gallery(), new=True)
         self.delayed_close()
 
     def accept_edit(self):
+        """accept edit."""
         gallerydb.execute(database.db.DBBase.begin, True)
         for g in self._edit_galleries:
             self.make_gallery(g)
@@ -644,4 +654,5 @@ class GalleryDialog(QWidget):
         gallerydb.execute(database.db.DBBase.end, True)
 
     def reject_edit(self):
+        """reject edit."""
         self.delayed_close()

@@ -29,7 +29,7 @@ log_e = log.error
 log_c = log.critical
 
 
-class DuplicateCheck(QObject):
+class DuplicateCheckObject(QObject):
     """duplicate checker."""
 
     found_duplicates = pyqtSignal(tuple)

@@ -61,19 +61,24 @@ try:
     import gallery
     import io_misc
     import settingsdialog
-    import gallerydialog
-    import fetch
+    import fetch_obj
     import gallerydb
     import settings
     import pewnet
     import utils
     import misc_db
     import database
-    from duplicate_check import DuplicateCheck
-    from update_check import UpdateChecker
-    from db_activity_check import DBActivityChecker
-    from scan_dir import ScanDir
+    from completer_popup_view import CompleterPopupView
+    from db_activity_checker_obj import DBActivityCheckerObject
+    from duplicate_check_obj import DuplicateCheckObject
     from gallery_context_menu import GalleryContextMenu
+    from gallery_dialog_widget import GalleryDialogWidget
+    from gallery_downloader_widget import GalleryDownloaderWidget
+    from gallery_list_view_widget import GalleryListViewWidget
+    from gallery_model import GalleryModel
+    from scan_dir_obj import ScanDirObject
+    from update_checker_obj import UpdateCheckerObject
+    from watchers import Watchers
     from misc_app import (
         invoke_first_time_level,
         normalize_first_time,
@@ -91,8 +96,7 @@ except ImportError:
         gallery,
         io_misc,
         settingsdialog,
-        gallerydialog,
-        fetch,
+        fetch_obj,
         gallerydb,
         settings,
         pewnet,
@@ -100,11 +104,17 @@ except ImportError:
         misc_db,
         database,
     )
-    from .duplicate_check import DuplicateCheck
-    from .update_check import UpdateChecker
-    from .db_activity_check import DBActivityChecker
-    from .scan_dir import ScanDir
+    from .completer_popup_view import CompleterPopupView
+    from .db_activity_checker_obj import DBActivityCheckerObject
+    from .duplicate_check_obj import DuplicateCheckObject
     from .gallery_context_menu import GalleryContextMenu
+    from .gallery_dialog_widget import GalleryDialogWidget
+    from .gallery_downloader_widget import GalleryDownloaderWidget
+    from .gallery_list_view_widget import GalleryListViewWidget
+    from .gallery_model import GalleryModel
+    from .scan_dir_obj import ScanDirObject
+    from .update_checker_obj import UpdateCheckerObject
+    from .watchers import Watchers
     from .misc_app import (
         invoke_first_time_level,
         normalize_first_time,
@@ -165,11 +175,11 @@ class AppWindow(QMainWindow):
         graphics_blur(:class:`PyQt5.QtWidgets.QGraphicsBlurEffect`):Effect used on main window.
         grid_toggle(:class:`PyQt5.QtWidgets.QToolButton`):Toggle for grid.
         toolbar(:class:`PyQt5.widget.QToolBar`):Toolbar for window.
-        get_metadata_fetch_instance(:class:`fetch.Fetch`):Fetch instance
-        g_populate_inst(:class:`.fetch.Fetch`):Fetch instance to populate gallery.
+        get_metadata_fetch_instance(:class:`fetch_obj.FetchObject`):Fetch instance
+        g_populate_inst(:class:`.fetch_obj.FetchObject`):Fetch instance to populate gallery.
         admin_db(:class:`.gallerydb.AdminDB`):Admin for db.
         db_startup(:class:`.gallerydb.DatabaseStartup`):Database startup instance.
-        watchers(:class:`.io_misc.Watchers`):Watcher for window.
+        watchers(:class:`.watchers.Watchers`):Watcher for window.
         populate_msg_box(:class:`.misc.BasePopup`):Message box when populating gallery.
         search_bar(:class:`.misc.LineEdit`):Search bar
         notification_bar(:class:`.misc.NotificationOverlay`):Notification bar.
@@ -181,7 +191,7 @@ class AppWindow(QMainWindow):
 
     move_listener = pyqtSignal()
     db_startup_invoker = pyqtSignal(list)
-    duplicate_check_invoker = pyqtSignal(gallery.GalleryModel)
+    duplicate_check_invoker = pyqtSignal(GalleryModel)
     admin_db_method_invoker = pyqtSignal(object)
     db_activity_checker = pyqtSignal()
     graphics_blur = QGraphicsBlurEffect()
@@ -252,7 +262,7 @@ class AppWindow(QMainWindow):
         """remove gallery.
 
         Args:
-            g(:class:`.gallery.GalleryMode`):Gallery to be removed.
+            g(:class:`.gallery_model.GalleryMode`):Gallery to be removed.
         """
         index = gallery.CommonView.find_index(self.get_current_view(), g.id, True)
         if index:
@@ -264,11 +274,11 @@ class AppWindow(QMainWindow):
         """update the gallery.
 
         Args:
-            g(:class:`.gallery.GalleryModel`):Updated gallery.
+            g(:class:`.gallery_model.GalleryModel`):Updated gallery.
         """
         index = gallery.CommonView.find_index(self.get_current_view(), g.id)
         if index:
-            gal = index.data(gallery.GalleryModel.GALLERY_ROLE)
+            gal = index.data(GalleryModel.GALLERY_ROLE)
             gal.path = g.path
             gal.chapters = g.chapters
         else:
@@ -280,7 +290,7 @@ class AppWindow(QMainWindow):
 
         Args:
             path(str): Path of the gallery.
-            gallery(:class:`.gallery.GalleryModel`): Object gallery.
+            gallery(:class:`.gallery_model.GalleryModel`): Object gallery.
         """
         d_popup = io_misc.DeletedPopup(path, gallery, self)
         d_popup.UPDATE_SIGNAL.connect(self._update_gallery)
@@ -291,14 +301,14 @@ class AppWindow(QMainWindow):
 
         Args:
             new_path(str): New path for the gallery.
-            gallery(:class:`.gallery.GalleryModel`): Object gallery.
+            gallery(:class:`.gallery_model.GalleryModel`): Object gallery.
         """
         mov_popup = io_misc.MovedPopup(new_path, gallery, self)
         mov_popup.UPDATE_SIGNAL.connect(self._update_gallery)
 
     def init_watchers(self):
         """init watchers."""
-        self.watchers = io_misc.Watchers()
+        self.watchers = Watchers()
         self.watchers.gallery_handler.CREATE_SIGNAL.connect(
             lambda path: self.gallery_populate([path]))
         self.watchers.gallery_handler.MODIFIED_SIGNAL.connect(
@@ -428,7 +438,7 @@ class AppWindow(QMainWindow):
         self._main_layout.addWidget(self.sidebar_list)
         self.current_manga_view = self.default_manga_view
 
-        self.download_window = io_misc.GalleryDownloaderWidget(self)
+        self.download_window = GalleryDownloaderWidget(self)
         self.download_window.hide()
 
         self.init_toolbar()
@@ -474,7 +484,7 @@ class AppWindow(QMainWindow):
 
     def _check_update(self):
         """check update."""
-        self.update_instance = UpdateChecker()
+        self.update_instance = UpdateCheckerObject()
         thread = QThread(self)
         self.update_instance.moveToThread(thread)
         thread.started.connect(self.update_instance.fetch_vs)
@@ -487,7 +497,7 @@ class AppWindow(QMainWindow):
         """web metadata picker.
 
         Args:
-            gallery(gallery.GalleryModel):Gallery object.
+            gallery(:class:`gallery_model.GalleryModel`):Gallery object.
             title_url_list(list of str):List of title url.
             queue:Queue of the picker process.
             parent:Parent window.
@@ -502,9 +512,9 @@ class AppWindow(QMainWindow):
         """get metadata gallery.
 
         Args:
-            gal(:class:`.gallery.GalleryModel`): Single or multiple gallery object.
+            gal(:class:`.gallery_model.GalleryModel`): Single or multiple gallery object.
         Return
-            list of :class:`.gallery.GalleryModel`:Found metadata.
+            list of :class:`.gallery_model.GalleryModel`:Found metadata.
         """
         if gal and not isinstance(gal, list):
             galleries = [gal]
@@ -553,7 +563,7 @@ class AppWindow(QMainWindow):
         """get metadata.
 
         Args:
-            gal(:class:`.gallery.GalleryModel`):Gallery which require metadata.
+            gal(:class:`.gallery_model.GalleryModel`):Gallery which require metadata.
         """
         if not app_constants.GLOBAL_EHEN_LOCK:
             metadata_spinner = misc.Spinner(self)
@@ -561,7 +571,7 @@ class AppWindow(QMainWindow):
             metadata_spinner.set_size(55)
             thread = QThread(self)
             thread.setObjectName('App.get_metadata')
-            self.get_metadata_fetch_instance = fetch.Fetch()
+            self.get_metadata_fetch_instance = fetch_obj.FetchObject()
             galleries = self.get_metadata_gallery(gal)
             if not galleries:
                 return
@@ -920,7 +930,7 @@ class AppWindow(QMainWindow):
 
         if app_constants.SEARCH_AUTOCOMPLETE:
             completer = QCompleter(self)
-            completer_view = misc.CompleterPopupView()
+            completer_view = CompleterPopupView()
             completer.setPopup(completer_view)
             completer_view._setup()
             completer.setModel(self.manga_list_view.gallery_model)
@@ -1034,7 +1044,7 @@ class AppWindow(QMainWindow):
             mixed(bool):Mix the gallery or not.
         """
         if mixed:
-            gallery_view = misc.GalleryListView(self, True)
+            gallery_view = GalleryListViewWidget(self, True)
             gallery_view.SERIES.connect(self.gallery_populate)
             gallery_view.show()
         else:
@@ -1061,7 +1071,7 @@ class AppWindow(QMainWindow):
             data_thread = QThread(self)
             data_thread.setObjectName('General gallery populate')
             self.addition_tab.click()
-            self.g_populate_inst = fetch.Fetch()
+            self.g_populate_inst = fetch_obj.FetchObject()
             self.g_populate_inst.series_path = path
             self._g_populate_count = 0
 
@@ -1088,7 +1098,7 @@ class AppWindow(QMainWindow):
                 """Skipped galleries.
 
                 Args:
-                    s_list(:class:`.gallery.GalleryModel`):List of skipped gallery.
+                    s_list(:class:`.gallery_model.GalleryModel`):List of skipped gallery.
                 """
                 msg_box = QMessageBox(self)
                 msg_box.setIcon(QMessageBox.Question)
@@ -1159,7 +1169,7 @@ class AppWindow(QMainWindow):
                 new_gall_spinner.show()
 
                 thread = QThread(self)
-                scan_inst = ScanDir(
+                scan_inst = ScanDirObject(
                     self.addition_tab.view, self.addition_tab, app_window=self)
                 scan_inst.moveToThread(thread)
 
@@ -1221,7 +1231,7 @@ class AppWindow(QMainWindow):
             f_item_l = len(f_item) < 2
             subfolder_as_c = not app_constants.SUBFOLDER_AS_GALLERY
             if l and subfolder_as_c or l and f_item_l:
-                g_d = gallerydialog.GalleryDialog(self, acceptable[0])
+                g_d = GalleryDialogWidget(self, acceptable[0])
                 g_d.show()
             else:
                 self.gallery_populate(acceptable, True)
@@ -1295,7 +1305,7 @@ class AppWindow(QMainWindow):
 
         # check if there is db activity
         if not gallerydb.method_queue.empty():
-            db_activity = DBActivityChecker()
+            db_activity = DBActivityCheckerObject()
             db_spinner = misc.Spinner(self)
             self.db_activity_checker.connect(db_activity.check)
             db_activity.moveToThread(app_constants.GENERAL_THREAD)
@@ -1339,7 +1349,7 @@ class AppWindow(QMainWindow):
         dup_tab = self.tab_manager.addTab("Duplicate", app_constants.ViewType.Duplicate)
         dup_tab.view.set_delete_proxy(self.default_manga_view.gallery_model)
 
-        self._d_checker = DuplicateCheck(notifbar=notifbar)
+        self._d_checker = DuplicateCheckObject(notifbar=notifbar)
         self._d_checker.moveToThread(app_constants.GENERAL_THREAD)
         self._d_checker.found_duplicates.connect(
             lambda t: dup_tab.view.add_gallery(t, record_time=True))
