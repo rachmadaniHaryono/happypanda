@@ -1,4 +1,4 @@
-﻿"""gallery db module."""
+"""gallery db module."""
 # """
 # This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
@@ -26,30 +26,28 @@ from PyQt5.QtCore import QObject, pyqtSignal, QTime
 
 try:
     from utils import (
-        ArchiveFile,
         IMG_FILES,
         delete_path,
         generate_img_hash,
     )
-    from database import db_constants
+    from archive_file import ArchiveFile
     from database import db
+    from database import db_constants
     from database.db import DBBase
     from executors import Executors
-
     import app_constants
     import utils
 except ImportError:
     from .utils import (
-        ArchiveFile,
         IMG_FILES,
         delete_path,
         generate_img_hash,
     )
-    from .database import db_constants
+    from .archive_file import ArchiveFile
     from .database import db
+    from .database import db_constants
     from .database.db import DBBase
     from .executors import Executors
-
     from . import (
         app_constants,
         utils,
@@ -197,7 +195,7 @@ def gallery_map(row, gallery, chapters=True, tags=True, hashes=True):
 
 
 def default_chap_exec(gallery_or_id, chap, only_values=False):
-    "Pass a Gallery object or gallery id and a Chapter object"
+    """Pass a Gallery object or gallery id and a Chapter object."""
     if isinstance(gallery_or_id, Gallery):
         gid = gallery_or_id.id
         in_archive = gallery_or_id.is_archive
@@ -285,12 +283,13 @@ class GalleryDB(DBBase):
         clear_thumb -> Deletes a thumbnail
         clear_thumb_dir -> Dletes everything in the thumbnail directory
     """
+
     def __init__(self):
         raise Exception("GalleryDB should not be instantiated")
 
     @staticmethod
     def rebuild_thumb(gallery):
-        "Rebuilds gallery thumbnail"
+        """Rebuild gallery thumbnail."""
         try:
             log_i('Recreating thumb {}'.format(gallery.title.encode(errors='ignore')))
             if gallery.profile:
@@ -304,16 +303,16 @@ class GalleryDB(DBBase):
 
     @staticmethod
     def clear_thumb(path):
-        "Deletes a thumbnail"
+        """Delete a thumbnail."""
         try:
             if os.path.samefile(path, app_constants.NO_IMAGE_PATH):
                 return
-        except FileNotFoundError:
+        except FileNotFoundError:  # NOQA
             pass
 
         try:
             os.unlink(path)
-        except FileNotFoundError:
+        except FileNotFoundError:  # NOQA
             pass
         except:
             log.exception(
@@ -321,14 +320,14 @@ class GalleryDB(DBBase):
 
     @staticmethod
     def clear_thumb_dir():
-        "Deletes everything in the thumbnail directory"
+        """Delete everything in the thumbnail directory."""
         if os.path.exists(db_constants.THUMBNAIL_PATH):
             for thumbfile in scandir.scandir(db_constants.THUMBNAIL_PATH):
                 GalleryDB.clear_thumb(thumbfile.path)
 
     @staticmethod
     def rebuild_gallery(gallery, thumb=False):
-        "Rebuilds the galleries in DB"
+        """Rebuild the galleries in DB."""
         try:
             log_i('Rebuilding {}'.format(gallery.title.encode(errors='ignore')))
             log_i("Rebuilding gallery {}".format(gallery.id))
@@ -388,7 +387,7 @@ class GalleryDB(DBBase):
             path_in_archive=None,
             view=None
     ):
-        """Modifies gallery with given gallery id"""
+        """Modify gallery with given gallery id."""
         assert isinstance(series_id, int)
         assert not isinstance(series_id, bool)
         executing = []
@@ -472,8 +471,8 @@ class GalleryDB(DBBase):
 
     @classmethod
     def get_all_gallery(cls, chapters=True, tags=True, hashes=True):
-        """
-        Careful, might crash with very large libraries i think...
+        """Careful, might crash with very large libraries i think...
+
         Returns a list of all galleries (<Gallery> class) currently in DB
         """
         cursor = cls.execute(cls, 'SELECT * FROM series')
@@ -482,9 +481,7 @@ class GalleryDB(DBBase):
 
     @staticmethod
     def gen_galleries(gallery_dict, chapters=True, tags=True, hashes=True):
-        """
-        Map galleries fetched from DB
-        """
+        """Map galleries fetched from DB."""
         gallery_list = []
         for gallery_row in gallery_dict:
             gallery = Gallery()
@@ -499,7 +496,7 @@ class GalleryDB(DBBase):
 
     @classmethod
     def get_gallery_by_path(cls, path):
-        "Returns gallery with given path"
+        """Return gallery with given path."""
         assert isinstance(path, str), "Provided path is invalid"
         cursor = cls.execute(cls, 'SELECT * FROM series WHERE series_path=?', (str.encode(path),))
         row = cursor.fetchone()
@@ -513,7 +510,7 @@ class GalleryDB(DBBase):
 
     @classmethod
     def get_gallery_by_id(cls, id):
-        "Returns gallery with given id"
+        """Return gallery with given id."""
         assert isinstance(id, int), "Provided ID is invalid"
         cursor = cls.execute(cls, 'SELECT * FROM series WHERE series_id=?', (id,))
         row = cursor.fetchone()
@@ -527,8 +524,10 @@ class GalleryDB(DBBase):
 
     @classmethod
     def add_gallery(cls, object, test_mode=False):
-        "Receives an object of class gallery, and appends it to DB"
-        "Adds gallery of <Gallery> class into database"
+        """"Receive an object of class gallery, and appends it to DB.
+
+        Adds gallery of <Gallery> class into database
+        """
         assert isinstance(object, Gallery), "add_gallery method only accepts gallery items"
         log_i('Recevied gallery: {}'.format(object.path.encode(errors='ignore')))
 
@@ -545,15 +544,13 @@ class GalleryDB(DBBase):
 
     @classmethod
     def gallery_count(cls):
-        """
-        Returns the amount of galleries in db.
-        """
+        """Return the amount of galleries in db."""
         cursor = cls.execute(cls, "SELECT count(*) AS 'size' FROM series")
         return cursor.fetchone()['size']
 
     @classmethod
     def del_gallery(cls, list_of_gallery, local=False):
-        "Deletes all galleries in the list recursively."
+        """Delete all galleries in the list recursively."""
         assert isinstance(
             list_of_gallery, list), "Please provide a valid list of galleries to delete"
         for gallery in list_of_gallery:
@@ -589,8 +586,8 @@ class GalleryDB(DBBase):
 
     @staticmethod
     def check_exists(name, galleries=None, filter=True):
-        """
-        Checks if provided string exists in provided sorted
+        """Check if provided string exists in provided sorted.
+
         list based on path name.
         Note: key will be normcased
         """
@@ -642,8 +639,8 @@ class ChapterDB(DBBase):
 
     @classmethod
     def update_chapter(cls, chapter_container, numbers=[]):
-        """
-        Updates an existing chapter in DB.
+        """Update an existing chapter in DB.
+
         Pass a gallery's ChapterContainer, specify number with a list of ints
         leave empty to update all chapters.
         """
@@ -675,7 +672,7 @@ class ChapterDB(DBBase):
 
     @classmethod
     def add_chapters(cls, gallery_object):
-        "Adds chapters linked to gallery into database"
+        """Add chapters linked to gallery into database."""
         assert isinstance(gallery_object, Gallery), "Parent gallery need to be of class Gallery"
         # assigned but never used.
         # series_id = gallery_object.id
@@ -688,7 +685,7 @@ class ChapterDB(DBBase):
 
     @classmethod
     def add_chapters_raw(cls, series_id, chapters_container):
-        "Adds chapter(s) to a gallery with the received series_id"
+        """Add chapter(s) to a gallery with the received series_id."""
         assert isinstance(
             chapters_container, ChaptersContainer
         ), "chapters_container must be of class ChaptersContainer"
@@ -703,9 +700,7 @@ class ChapterDB(DBBase):
 
     @classmethod
     def get_chapters_for_gallery(cls, series_id):
-        """
-        Returns a ChaptersContainer of chapters matching the received series_id
-        """
+        """Return a ChaptersContainer of chapters matching the received series_id."""
         assert isinstance(series_id, int), "Please provide a valid gallery ID"
         cursor = cls.execute(cls, 'SELECT * FROM chapters WHERE series_id=?', (series_id,))
         rows = cursor.fetchall()
@@ -718,7 +713,8 @@ class ChapterDB(DBBase):
 
     @classmethod
     def get_chapter(cls, series_id, chap_numb):
-        """Returns a ChaptersContainer of chapters matching the recieved chapter_number
+        """Return a ChaptersContainer of chapters matching the recieved chapter_number.
+
         return None for no match
         """
         assert isinstance(chap_numb, int), "Please provide a valid chapter number"
@@ -739,7 +735,7 @@ class ChapterDB(DBBase):
 
     @classmethod
     def get_chapter_id(cls, series_id, chapter_number):
-        "Returns id of the chapter number"
+        """Return id of the chapter number."""
         assert isinstance(
             series_id, int
         ) and isinstance(
@@ -763,20 +759,18 @@ class ChapterDB(DBBase):
 
     @staticmethod
     def chapter_size(gallery_id):
-        """Returns the amount of chapters for the given
-        gallery id
-        """
+        """Return the amount of chapters for the given gallery id."""
         pass
 
     @classmethod
     def del_all_chapters(cls, series_id):
-        "Deletes all chapters with the given series_id"
+        """Delete all chapters with the given series_id."""
         assert isinstance(series_id, int), "Please provide a valid gallery ID"
         cls.execute(cls, 'DELETE FROM chapters WHERE series_id=?', (series_id,))
 
     @classmethod
     def del_chapter(cls, series_id, chap_number):
-        "Deletes chapter with the given number from gallery"
+        """Delete chapter with the given number from gallery."""
         assert isinstance(series_id, int), "Please provide a valid gallery ID"
         assert isinstance(chap_number, int), "Please provide a valid chapter number"
         cls.execute(
@@ -812,12 +806,12 @@ class TagDB(DBBase):
 
     @staticmethod
     def del_tags(list_of_tags_id):
-        "Deletes the tags with corresponding tag_ids from DB"
+        """Delete the tags with corresponding tag_ids from DB."""
         pass
 
     @classmethod
     def del_gallery_mapping(cls, series_id):
-        "Deletes the tags and gallery mappings with corresponding series_ids from DB"
+        """Delete the tags and gallery mappings with corresponding series_ids from DB."""
         assert isinstance(series_id, int), "Please provide a valid gallery id"
 
         # delete all mappings related to the given series_id
@@ -825,7 +819,7 @@ class TagDB(DBBase):
 
     @classmethod  # NOQA
     def get_gallery_tags(cls, series_id):
-        "Returns all tags and namespaces found for the given series_id"
+        """Return all tags and namespaces found for the given series_id."""
         if not isinstance(series_id, int):
             return {}
         cursor = cls.execute(
@@ -873,15 +867,17 @@ class TagDB(DBBase):
 
     @classmethod  # NOQA
     def add_tags(cls, object):
-        "Adds the given dict_of_tags to the given series_id"
+        """Add the given dict_of_tags to the given series_id."""
         assert isinstance(object, Gallery), "Please provide a valid gallery of class gallery"
 
         series_id = object.id
         dict_of_tags = object.tags
 
         def look_exists(tag_or_ns, what):
-            """check if tag or namespace already exists in base
-            returns id, else returns None"""
+            """check if tag or namespace already exists in base.
+
+            returns id, else returns None
+            """
             c = cls.execute(
                 cls, 'SELECT {}_id FROM {}s WHERE {} = ?'.format(what, what, what), (tag_or_ns,))
             try:  # exists
@@ -917,7 +913,7 @@ class TagDB(DBBase):
                 tags_id_list.append(tag_id)
 
             def look_exist_tag_map(tag_id):
-                """Checks DB if the tag_id already exists with the namespace_id
+                """Check DB if the tag_id already exists with the namespace_id.
 
                 returns id else None.
                 """
@@ -965,8 +961,7 @@ class TagDB(DBBase):
 
     @staticmethod
     def modify_tags(series_id, dict_of_tags):
-        "Modifies the given tags"
-
+        """Modify the given tags."""
         # We first delete all mappings
         TagDB.del_gallery_mapping(series_id)
 
@@ -979,12 +974,12 @@ class TagDB(DBBase):
 
     @staticmethod
     def get_tag_gallery(tag):
-        "Returns all galleries with the given tag"
+        """Return all galleries with the given tag."""
         pass
 
     @classmethod
     def get_ns_tags(cls):
-        "Returns a dict of all tags with namespace as key and list of tags as value"
+        """Return a dict of all tags with namespace as key and list of tags as value."""
         cursor = cls.execute(cls, 'SELECT namespace_id, tag_id FROM tags_mappings')
         ns_tags = {}
         ns_id_history = {}  # to avoid unesseccary DB fetching
@@ -1015,31 +1010,27 @@ class TagDB(DBBase):
 
     @staticmethod
     def get_tags_from_namespace(namespace):
-        "Returns a dict with namespace as key and list of tags as value"
+        """Return a dict with namespace as key and list of tags as value."""
         pass
 
     @staticmethod
     def get_ns_tags_to_gallery(ns_tags):
-        """
-        Returns all galleries linked to the namespace tags.
+        """Return all galleries linked to the namespace tags.
+
         Receives a dict like this: {"namespace":["tag1","tag2"]}
         """
         pass
 
     @classmethod
     def get_all_tags(cls):
-        """
-        Returns all tags in database in a list
-        """
+        """Return all tags in database in a list."""
         cursor = cls.execute(cls, 'SELECT tag FROM tags')
         tags = [t['tag'] for t in cursor.fetchall()]
         return tags
 
     @classmethod
     def get_all_ns(cls):
-        """
-        Returns all namespaces in database in a list
-        """
+        """Return all namespaces in database in a list."""
         cursor = cls.execute(cls, 'SELECT namespace FROM namespaces')
         ns = [n['namespace'] for n in cursor.fetchall()]
         return ns
@@ -1050,7 +1041,7 @@ class ListDB(DBBase):
 
     @classmethod
     def init_lists(cls):
-        "Creates and returns lists fetched from DB"
+        """Create and returns lists fetched from DB."""
         lists = []
         c = cls.execute(cls, 'SELECT * FROM list')
         list_rows = c.fetchall()
@@ -1074,7 +1065,7 @@ class ListDB(DBBase):
 
     @classmethod
     def query_gallery(cls, gallery):
-        "Maps gallery to the correct lists"
+        """Map gallery to the correct lists."""
         c = cls.execute(
             cls, 'SELECT list_id FROM series_list_map WHERE series_id=?', (gallery.id,))
         list_rows = [x['list_id'] for x in c.fetchall()]
@@ -1099,7 +1090,7 @@ class ListDB(DBBase):
 
     @classmethod
     def add_list(cls, gallery_list):
-        "Adds a list of GalleryList class to DB"
+        """Add a list of GalleryList class to DB."""
         assert isinstance(gallery_list, GalleryList)
         if gallery_list._id:
             ListDB.modify_list(gallery_list)
@@ -1120,7 +1111,7 @@ class ListDB(DBBase):
 
     @classmethod
     def _g_id_or_list(cls, gallery_or_id_or_list):
-        "Returns gallery ids"
+        """Return gallery ids."""
         if isinstance(gallery_or_id_or_list, (Gallery, int)):
             gallery_or_id_or_list = [gallery_or_id_or_list]
 
@@ -1145,7 +1136,7 @@ class ListDB(DBBase):
 
     @classmethod
     def remove_list(cls, gallery_list):
-        "Deletes list from DB"
+        """Delete list from DB."""
         assert isinstance(gallery_list, GalleryList)
         if gallery_list._id:
             cls.execute(cls, 'DELETE FROM list WHERE list_id=?', (gallery_list._id,))
@@ -1170,7 +1161,9 @@ class ListDB(DBBase):
 
 
 class HashDB(DBBase):
-    """Contains the following methods:
+    """hash database.
+
+    Contains the following methods:
 
     find_gallery -> returns galleries which matches the given list of hashes
     get_gallery_hashes -> returns all hashes with the given gallery id in a list
@@ -1222,7 +1215,7 @@ class HashDB(DBBase):
 
     @classmethod
     def get_gallery_hashes(cls, gallery_id):
-        "Returns all hashes with the given gallery id in a list"
+        """Return all hashes with the given gallery id in a list."""
         cursor = cls.execute(
             cls,
             'SELECT hash FROM hashes WHERE series_id=?',
@@ -1238,9 +1231,7 @@ class HashDB(DBBase):
 
     @classmethod
     def get_gallery_hash(cls, gallery_id, chapter, page=None):
-        """
-        returns hash of chapter. If page is specified, returns hash of chapter page
-        """
+        """return hash of chapter. If page is specified, returns hash of chapter page."""
         assert isinstance(gallery_id, int)
         assert isinstance(chapter, int)
         if page:
@@ -1269,8 +1260,8 @@ class HashDB(DBBase):
 
     @classmethod  # NOQA
     def gen_gallery_hash(cls, gallery, chapter, page=None, color_img=False, _name=None):
-        """
-        Generate hash for a specific chapter.
+        """Generate hash for a specific chapter.
+
         Set page to only generate specific page
         page: 'mid' or number or list of numbers
         color_img: if true then a hash to colored img will be returned if possible
@@ -1323,8 +1314,10 @@ class HashDB(DBBase):
         if not skip_gen or color_img:
 
             def look_exists(page):
-                """check if hash already exists in database
-                returns hash, else returns None"""
+                """check if hash already exists in database.
+
+                returns hash, else returns None
+                """
                 c = cls.execute(
                     cls,
                     'SELECT hash FROM hashes WHERE page=? AND chapter_id=?',
@@ -1357,7 +1350,7 @@ class HashDB(DBBase):
             executing = []
             try:
                 if gallery.is_archive:
-                    raise NotADirectoryError
+                    raise NotADirectoryError  # NOQA
                 imgs = sorted([
                     x.path for x in scandir.scandir(chap.path)
                     if x.path.endswith(utils.IMG_FILES)
@@ -1399,7 +1392,7 @@ class HashDB(DBBase):
                         with open(pages[i], 'rb') as f:
                             hashes[i] = generate_img_hash(f)
 
-            except NotADirectoryError:
+            except NotADirectoryError:  # NOQA
                 # assigned but never used
                 # temp_dir = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
                 is_archive = gallery.is_archive
@@ -1473,12 +1466,12 @@ class HashDB(DBBase):
 
     @classmethod
     def gen_gallery_hashes(cls, gallery):
-        "Generates hashes for gallery's first chapter and inserts them to DB"
+        """Generate hashes for gallery's first chapter and inserts them to DB."""
         return HashDB.gen_gallery_hash(gallery, 0)
 
     @staticmethod
     def rebuild_gallery_hashes(gallery):
-        "Inserts hashes into DB only if it doesnt already exist"
+        """Insert hashes into DB only if it doesnt already exist."""
         assert isinstance(gallery, Gallery)
         hashes = HashDB.get_gallery_hashes(gallery.id)
 
@@ -1488,13 +1481,13 @@ class HashDB(DBBase):
 
     @classmethod
     def del_gallery_hashes(cls, gallery_id):
-        "Deletes all hashes linked to the given gallery id"
+        """Delete all hashes linked to the given gallery id."""
         cls.execute(cls, 'DELETE FROM hashes WHERE series_id=?', (gallery_id,))
 
 
 class GalleryList:
-    """
-    Provides access to lists..
+    """Provides access to lists..
+
     methods:
     - add_gallery <- adds a gallery of Gallery class to list
     - remove_gallery <- removes galleries matching the provided gallery id
@@ -1502,6 +1495,7 @@ class GalleryList:
     - galleries -> returns a list with all galleries in list
     - scan <- scans for galleries matching the listfilter and adds them to gallery
     """
+
     # types
     REGULAR, COLLECTION = range(2)
 
@@ -1521,7 +1515,7 @@ class GalleryList:
         self.add_gallery(list_of_galleries, _db)
 
     def add_gallery(self, gallery_or_list_of, _db=True, _check_filter=True):
-        "add_gallery <- adds a gallery of Gallery class to list"
+        """add_gallery <- adds a gallery of Gallery class to list."""
         assert isinstance(gallery_or_list_of, (Gallery, list))
         if isinstance(gallery_or_list_of, Gallery):
             gallery_or_list_of = [gallery_or_list_of]
@@ -1540,7 +1534,7 @@ class GalleryList:
             execute(ListDB.add_gallery_to_list, True, new_galleries, self)
 
     def remove_gallery(self, gallery_id_or_list_of):
-        "remove_gallery <- removes galleries matching the provided gallery id"
+        """remove_gallery <- removes galleries matching the provided gallery id."""
         if isinstance(gallery_id_or_list_of, int):
             gallery_id_or_list_of = [gallery_id_or_list_of]
         g_ids = gallery_id_or_list_of
@@ -1559,14 +1553,14 @@ class GalleryList:
         execute(ListDB.remove_gallery_from_list, True, g_ids_to_delete, self)
 
     def clear(self):
-        "removes all galleries from the list"
+        """remove all galleries from the list."""
         if self._galleries:
             execute(ListDB.remove_gallery_from_list, True, list(self._galleries), self)
         self._galleries.clear()
         self._ids_chache.clear()
 
     def galleries(self):
-        "returns a list with all galleries in list"
+        """return a list with all galleries in list."""
         return list(self._galleries)
 
     def __contains__(self, g):
@@ -1624,8 +1618,8 @@ class GalleryList:
 
 
 class Gallery:
-    """
-    Base class for a gallery.
+    """Base class for a gallery.
+
     Available data:
     id -> Not to be editied. Do not touch.
     title <- [list of titles] or str
@@ -1737,7 +1731,7 @@ class Gallery:
         return img
 
     def set_profile(self, future):
-        "set with profile with future object"
+        """set with profile with future object."""
         self.profile = future.result()
         if self.id is not None:
             execute(GalleryDB.modify_gallery, True, self.id, profile=self.profile, priority=0)
@@ -1752,12 +1746,12 @@ class Gallery:
         chp_cont.set_parent(self)
         self._chapters = chp_cont
 
-    def merge(galleries):
-        "Merge galleries into this galleries, adding them as chapters"
+    def merge(self):
+        """Merge galleries into this galleries, adding them as chapters."""
         pass
 
     def gen_hashes(self):
-        "Generate hashes while inserting them into DB"
+        """Generate hashes while inserting them into DB."""
         if not self.hashes:
             hash = HashDB.gen_gallery_hashes(self)
             if hash:
@@ -1769,7 +1763,7 @@ class Gallery:
             return True
 
     def validate(self):
-        "Validates gallery, returns status"
+        """Validate gallery, returns status."""
         # TODO: Extend this
         validity = []
         status = False
@@ -1784,8 +1778,8 @@ class Gallery:
         return status
 
     def invalidities(self):
-        """
-        Checks all attributes for invalidities.
+        """Check all attributes for invalidities.
+
         Returns list of string with invalid attribute names
         """
         return []
@@ -2024,7 +2018,8 @@ class Gallery:
 
 
 class Chapter:
-    """
+    """chapter.
+
     Base class for a chapter
     Contains following attributes:
     parent -> The ChapterContainer it belongs in
@@ -2035,6 +2030,7 @@ class Chapter:
     pages -> chapter pages
     in_archive -> 1 if the chapter path is in an archive else 0
     """
+
     def __init__(self, parent, gallery, number=0, path='', pages=0, in_archive=0, title=''):
         self.parent = parent
         self.gallery = gallery
@@ -2092,13 +2088,14 @@ class Chapter:
 
 
 class ChaptersContainer:
-    """ A container for chapters.
+    """A container for chapters.
 
     Acts like a list/dict of chapters.
 
     Iterable returns a ordered list of chapters
     Sets to gallery.chapters
     """
+
     def __init__(self, gallery=None):
         self.parent = None
         self._data = {}
@@ -2114,7 +2111,7 @@ class ChaptersContainer:
             chap.gallery = gallery
 
     def add_chapter(self, chp, overwrite=True, db=False):
-        "Add a chapter of Chapter class to this container"
+        """Add a chapter of Chapter class to this container."""
         assert isinstance(chp, Chapter), "Chapter must be an instantiated Chapter class"
 
         if not overwrite:
@@ -2132,7 +2129,7 @@ class ChaptersContainer:
             pass
 
     def create_chapter(self, number=None):
-        """ create chapter class.
+        """create chapter class.
 
         Creates Chapter class with the next chapter number or
         passed number arg and adds to container
@@ -2153,7 +2150,7 @@ class ChaptersContainer:
         return chp
 
     def update_chapter_pages(self, number):
-        "Returns status on success"
+        """Return status on success."""
         if self.parent.dead_link:
             return False
         chap = self[number]
@@ -2314,7 +2311,7 @@ class AdminDB(QObject):
         return True
 
     def rebuild_database(self):
-        "Rebuilds database"
+        """Rebuild database."""
         log_i("Initiating datbase rebuild")
         utils.backup_database()
         log_i("Getting galleries...")
@@ -2374,11 +2371,13 @@ class AdminDB(QObject):
 
 
 class DatabaseStartup(QObject):
-    """
+    """database startup.
+
     Fetches and emits database records
     START: emitted when fetching from DB occurs
     DONE: emitted when the initial fetching from DB finishes
     """
+
     START = pyqtSignal()
     DONE = pyqtSignal()
     PROGRESS = pyqtSignal(str)

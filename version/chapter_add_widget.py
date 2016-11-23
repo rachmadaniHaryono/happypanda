@@ -25,8 +25,11 @@ try:
     import gallerydb
     from spacer_widget import SpacerWidget
     from path_line_edit import PathLineEdit
+    from archive_file import ArchiveFile
 except ImportError:
     from .spacer_widget import SpacerWidget
+    from .path_line_edit import PathLineEdit
+    from .archive_file import ArchiveFile
     from . import (
         gallerydb,
         utils,
@@ -156,7 +159,7 @@ class ChapterAddWidget(QWidget):
                     chap.pages = len(list(scandir.scandir(p)))
                 elif p.endswith(utils.ARCHIVE_FILES):
                     chap.in_archive = 1
-                    arch = utils.ArchiveFile(p)
+                    arch = ArchiveFile(p)
                     chap.pages = len(arch.dir_contents(''))
                     arch.close()
 

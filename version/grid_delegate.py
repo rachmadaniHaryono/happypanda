@@ -35,12 +35,14 @@ try:
     import app_constants
     import misc
     from gallery_model import GalleryModel
+    from file_icon import FileIcon
 except ImportError:
     from . import (
         app_constants,
         misc,
     )
     from .gallery_model import GalleryModel
+    from .file_icon import FileIcon
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -67,7 +69,7 @@ class GridDelegate(QStyledItemDelegate):
         self._paint_level = 0
 
         # misc.FileIcon.refresh_default_icon()
-        self.file_icons = misc.FileIcon()
+        self.file_icons = FileIcon()
         if app_constants.USE_EXTERNAL_VIEWER:
             self.external_icon = self.file_icons.get_external_file_icon()
         else:

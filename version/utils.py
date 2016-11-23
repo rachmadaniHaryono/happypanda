@@ -18,14 +18,12 @@ import os
 import subprocess
 import sys
 import logging
-import zipfile
 import hashlib
 import shutil
 import uuid
 import re
 import scandir
 import rarfile
-import json
 import send2trash
 import functools
 import time
@@ -37,12 +35,14 @@ from PIL import Image, ImageChops
 
 try:
     import app_constants
-
+    from archive_file import ArchiveFile
     from database import db_constants
+    from gmetafile import GMetafile
 except ImportError:
     from . import app_constants
-
     from .database import db_constants
+    from .archive_file import ArchiveFile
+    from .gmetafile import GMetafile
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -60,137 +60,6 @@ rarfile.UNRAR_TOOL = app_constants.unrar_tool_path
 if not app_constants.unrar_tool_path:
     FILE_FILTER = '*.zip *.cbz'
     ARCHIVE_FILES = ('.zip', '.cbz')
-
-
-class GMetafile:
-    """gmetafile."""
-
-    def __init__(self, path=None, archive=''):
-        """init func."""
-        self.metadata = {
-            "title": '',
-            "artist": '',
-            "type": '',
-            "tags": {},
-            "language": '',
-            "pub_date": '',
-            "link": '',
-            "info": '',
-
-        }
-        self.files = []
-        if path is None:
-            return
-        if archive:
-            zip = ArchiveFile(archive)
-            c = zip.dir_contents(path)
-            for x in c:
-                if x.endswith(app_constants.GALLERY_METAFILE_KEYWORDS):
-                    self.files.append(open(zip.extract(x), encoding='utf-8'))
-        else:
-            for p in scandir.scandir(path):
-                if p.name in app_constants.GALLERY_METAFILE_KEYWORDS:
-                    self.files.append(open(p.path, encoding='utf-8'))
-        if self.files:
-            self.detect()
-        else:
-            log_d('No metafile found...')
-
-    def _eze(self, fp):
-        if not fp.name.endswith('.json'):
-            return
-        j = json.load(fp, encoding='utf-8')
-        eze = ['gallery_info', 'image_api_key', 'image_info']
-        # eze
-        if all(x in j for x in eze):
-            log_i('Detected metafile: eze')
-            ezedata = j['gallery_info']
-            t_parser = title_parser(ezedata['title'])
-            self.metadata['title'] = t_parser['title']
-            self.metadata['type'] = ezedata['category']
-            for ns in ezedata['tags']:
-                self.metadata['tags'][ns.capitalize()] = ezedata['tags'][ns]
-            self.metadata['tags']['default'] = self.metadata[
-                'tags'].pop('Misc', [])
-            self.metadata['artist'] = self.metadata['tags']['Artist'][0].capitalize()\
-                if 'Artist' in self.metadata['tags'] else t_parser['artist']
-            self.metadata['language'] = ezedata['language']
-            d = ezedata['upload_date']
-            # should be zero padded
-            d[1] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1]
-            d[3] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1]
-            self.metadata['pub_date'] = datetime.datetime.strptime(
-                "{} {} {}".format(d[0], d[1], d[3]), "%Y %m %d")
-            l = ezedata['source']
-            self.metadata['link'] = 'http://' + l['site'] + \
-                '.org/g/' + str(l['gid']) + '/' + l['token']
-            return True
-
-    def _hdoujindler(self, fp):  # NOQA
-        """HDoujin Downloader."""
-        if not fp.name.endswith('info.txt'):
-            return
-        lines = fp.readlines()
-        if lines:
-            for line in lines:
-                splitted = line.split(':')
-                if len(splitted) > 1:
-                    other = splitted[1].strip()
-                    if not other:
-                        continue
-                    l = splitted[0].lower()
-                    if "title" == l:
-                        self.metadata['title'] = other
-                    if "artist" == l:
-                        self.metadata['artist'] = other.capitalize()
-                    if "tags" == l:
-                        self.metadata['tags'].update(tag_to_dict(other))
-                    if "description" == l:
-                        self.metadata['info'] = other
-                    if "circle" in l:
-                        if "group" not in self.metadata['tags']:
-                            self.metadata['tags']['group'] = []
-                            self.metadata['tags']['group'].append(
-                                other.strip().lower())
-
-            return True
-
-    def detect(self):
-        """detect."""
-        for fp in self.files:
-            with fp:
-                z = False
-                for x in [self._eze, self._hdoujindler]:
-                    if x(fp):
-                        z = True
-                        break
-                if not z:
-                    log_i('Incompatible metafiles found')
-
-    def update(self, other):
-        """update."""
-        self.metadata.update((x, y) for x, y in other.metadata.items() if y)
-
-    def apply_gallery(self, gallery):
-        """apply_gallery."""
-        log_i('Applying metafile to gallery')
-        if self.metadata['title']:
-            gallery.title = self.metadata['title']
-        if self.metadata['artist']:
-            gallery.artist = self.metadata['artist']
-        if self.metadata['type']:
-            gallery.type = self.metadata['type']
-        if self.metadata['tags']:
-            gallery.tags = self.metadata['tags']
-        if self.metadata['language']:
-            gallery.language = self.metadata['language']
-        if self.metadata['pub_date']:
-            gallery.pub_date = self.metadata['pub_date']
-        if self.metadata['link']:
-            gallery.link = self.metadata['link']
-        if self.metadata['info']:
-            gallery.info = self.metadata['info']
-        return gallery
 
 
 def backup_database(db_path=db_constants.DB_PATH):
@@ -383,166 +252,6 @@ def generate_img_hash(src):
         sha1.update(buffer)
         buffer = src.read(chunk)
     return sha1.hexdigest()
-
-
-class ArchiveFile():
-    """Work with archive files, raises exception if instance fails.
-
-    namelist -> returns a list with all files in archive
-    extract <- Extracts one specific file to given path
-    open -> open the given file in archive, returns bytes
-    close -> close archive
-    """
-
-    zip, rar = range(2)
-
-    def __init__(self, filepath):
-        """__init__."""
-        self.type = 0
-        try:
-            if filepath.endswith(ARCHIVE_FILES):
-                if filepath.endswith(ARCHIVE_FILES[:2]):
-                    self.archive = zipfile.ZipFile(os.path.normcase(filepath))
-                    b_f = self.archive.testzip()
-                    self.type = self.zip
-                elif filepath.endswith(ARCHIVE_FILES[2:]):
-                    self.archive = rarfile.RarFile(os.path.normcase(filepath))
-                    b_f = self.archive.testrar()
-                    self.type = self.rar
-
-                # test for corruption
-                if b_f:
-                    log_w('Bad file found in archive {}'.format(
-                        filepath.encode(errors='ignore')))
-                    raise app_constants.CreateArchiveFail
-            else:
-                log_e('Archive: Unsupported file format')
-                raise app_constants.CreateArchiveFail
-        except:
-            log.exception('Create archive: FAIL')
-            raise app_constants.CreateArchiveFail
-
-    def namelist(self):
-        """namelist."""
-        filelist = self.archive.namelist()
-        return filelist
-
-    def is_dir(self, name):
-        """is_dir.
-
-        Checks if the provided name in the archive is a directory or not
-        """
-        if not name:
-            return False
-        if name not in self.namelist():
-            log_e('File {} not found in archive'.format(name))
-            raise app_constants.FileNotFoundInArchive
-        if self.type == self.zip:
-            if name.endswith('/'):
-                return True
-        elif self.type == self.rar:
-            info = self.archive.getinfo(name)
-            return info.isdir()
-        return False
-
-    def dir_list(self, only_top_level=False):
-        """Return a list of all directories found recursively.
-
-        For directories not in toplevel
-        a path in the archive to the diretory will be returned.
-        """
-        if only_top_level:
-            if self.type == self.zip:
-                return [x for x in self.namelist() if x.endswith('/') and x.count('/') == 1]
-            elif self.type == self.rar:
-                potential_dirs = [
-                    x for x in self.namelist() if x.count('/') == 0]
-                return [
-                    x.filename for x in [
-                        self.archive.getinfo(y)
-                        for y in potential_dirs
-                    ] if x.isdir()
-                ]
-        else:
-            if self.type == self.zip:
-                return [x for x in self.namelist() if x.endswith('/') and x.count('/') >= 1]
-            elif self.type == self.rar:
-                return [x.filename for x in self.archive.infolist() if x.isdir()]
-
-    def dir_contents(self, dir_name):
-        """Return a list of contents in the directory.
-
-        An empty string will return the contents of the top folder
-        """
-        if dir_name and dir_name not in self.namelist():
-            log_e('Directory {} not found in archive'.format(dir_name))
-            raise app_constants.FileNotFoundInArchive
-        if not dir_name:
-            if self.type == self.zip:
-                con = [x for x in self.namelist() if x.count('/') == 0 or
-                       (x.count('/') == 1 and x.endswith('/'))]
-            elif self.type == self.rar:
-                con = [x for x in self.namelist() if x.count('/') == 0]
-            return con
-        if self.type == self.zip:
-            dir_con_start = [
-                x for x in self.namelist() if x.startswith(dir_name)]
-            return [x for x in dir_con_start if x.count('/') == dir_name.count('/') or
-                    (x.count('/') == 1 + dir_name.count('/') and x.endswith('/'))]
-        elif self.type == self.rar:
-            return [x for x in self.namelist() if x.startswith(dir_name) and
-                    x.count('/') == 1 + dir_name.count('/')]
-        return []
-
-    def extract(self, file_to_ext, path=None):
-        """Extract one file from archive to given path.
-
-        Creates a temp_dir if path is not specified
-        Returns path to the extracted file
-        """
-        if not path:
-            path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
-            os.mkdir(path)
-
-        if not file_to_ext:
-            return self.extract_all(path)
-        else:
-            if self.type == self.zip:
-                membs = []
-                for name in self.namelist():
-                    if name.startswith(file_to_ext) and name != file_to_ext:
-                        membs.append(name)
-                temp_p = self.archive.extract(file_to_ext, path)
-                for m in membs:
-                    self.archive.extract(m, path)
-            elif self.type == self.rar:
-                temp_p = os.path.join(path, file_to_ext)
-                self.archive.extract(file_to_ext, path)
-            return temp_p
-
-    def extract_all(self, path=None, member=None):
-        """Extract all files to given path, and returns path.
-
-        If path is not specified, a temp dir will be created
-        """
-        if not path:
-            path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
-            os.mkdir(path)
-        if member:
-            self.archive.extractall(path, member)
-        self.archive.extractall(path)
-        return path
-
-    def open(self, file_to_open, fp=False):
-        """Return bytes. If fp set to true, returns file-like object."""
-        if fp:
-            return self.archive.open(file_to_open)
-        else:
-            return self.archive.open(file_to_open).read()
-
-    def close(self):
-        """close."""
-        self.archive.close()
 
 
 def check_archive(archive_path):  # NOQA
