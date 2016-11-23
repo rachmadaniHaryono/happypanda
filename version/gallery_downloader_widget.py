@@ -1,5 +1,4 @@
 """gallery downloader widget."""
-import re
 import logging
 
 from PyQt5.QtCore import (
@@ -20,15 +19,11 @@ from PyQt5.QtWidgets import (
 
 try:
     import app_constants
-    import pewnet
-    import settings
     from gallery_downloader_list_widget import GalleryDownloaderListWidget
     from gallery_downloader_url_extractor_widget import GalleryDownloaderUrlExtractorWidget
 except ImportError:
     from . import (
         app_constants,
-        pewnet,
-        settings,
     )
     from .gallery_downloader_list_widget import GalleryDownloaderListWidget
     from .gallery_downloader_url_extractor_widget import GalleryDownloaderUrlExtractorWidget
@@ -152,43 +147,6 @@ class GalleryDownloaderWidget(QWidget):
         if h_item:
             log_i('Successfully added download entry')
             self.download_list.add_entry(h_item)
-
-    @staticmethod
-    def website_validator(url):
-        """validate website.
-
-        Args:
-            url(str):Url to validate.
-        Returns:
-            :class:`.pewnet.HenManager` of the said url when valid.
-        """
-        match_prefix = "^(http\:\/\/|https\:\/\/)?(www\.)?([^\.]?)"  # http:// or https:// + www.
-        # match_base = "(.*\.)+" # base. Replace with domain
-        # match_tld = "[a-zA-Z0-9][a-zA-Z0-9\-]*" # com
-        end = "/?$"
-
-        # NOTE ATTENTION: the prefix will automatically get prepended to the pattern string!
-        # Don't try to match it.
-
-        def regex_validate(r):
-            if re.fullmatch(match_prefix + r + end, url):
-                return True
-            return False
-
-        if regex_validate("((g\.e-hentai)\.org\/g\/[0-9]+\/[a-z0-9]+)"):
-            manager = pewnet.HenManager()
-        elif regex_validate("((exhentai)\.org\/g\/[0-9]+\/[a-z0-9]+)"):
-            exprops = settings.ExProperties()
-            if exprops.check():
-                manager = pewnet.ExHenManager()
-            else:
-                return
-        elif regex_validate("(panda\.chaika\.moe\/(archive|gallery)\/[0-9]+)"):
-            manager = pewnet.ChaikaManager()
-        else:
-            raise app_constants.WrongURL
-
-        return manager
 
     def show(self):
         """show widget."""
