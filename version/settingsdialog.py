@@ -44,27 +44,27 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPalette, QPixmapCache
 
 try:
+    from app_dialog import AppDialog
+    from flow_layout import FlowLayout
     from import_export_obj import ImportExportObject
     from path_line_edit import PathLineEdit
-    from misc import FlowLayout, Spacer, AppDialog
+    from spacer_widget import SpacerWidget
+    from spinner_widget import SpinnerWidget
     import app_constants
     import gallerydb
-    import misc
     import pewnet
     import settings
     import utils
 except ImportError:
+    from .app_dialog import AppDialog
+    from .flow_layout import FlowLayout
     from .import_export_obj import ImportExportObject
     from .path_line_edit import PathLineEdit
-    from .misc import (
-        AppDialog,
-        FlowLayout,
-        Spacer,
-    )
+    from .spacer_widget import SpacerWidget
+    from .spinner_widget import SpinnerWidget
     from . import (
         app_constants,
         gallerydb,
-        misc,
         pewnet,
         settings,
         utils,
@@ -905,7 +905,7 @@ class SettingsDialog(QWidget):
             log_btn = QPushButton("Login")
             b_l = QHBoxLayout()
             layout.addRow(b_l)
-            b_l.addWidget(Spacer('h'))
+            b_l.addWidget(SpacerWidget('h'))
             b_l.addWidget(log_btn)
             log_btn.clicked.connect(lambda: login(user, passw, status, baseHen_class, partial_txt))
             result = baseHen_class.check_login(exprops.cookies)
@@ -1094,7 +1094,7 @@ class SettingsDialog(QWidget):
         self.gallery_text_fit = QRadioButton('Fit text', gallery_text_mode)
         gallery_text_mode_l.addWidget(self.gallery_text_elide, 0, Qt.AlignLeft)
         gallery_text_mode_l.addWidget(self.gallery_text_fit, 0, Qt.AlignLeft)
-        gallery_text_mode_l.addWidget(Spacer('h'), 1, Qt.AlignLeft)
+        gallery_text_mode_l.addWidget(SpacerWidget('h'), 1, Qt.AlignLeft)
         gallery_font = QHBoxLayout()
         grid_gallery_main_l.addRow('Font:*', gallery_font)
         self.font_lbl = QLabel()
@@ -1107,7 +1107,7 @@ class SettingsDialog(QWidget):
         gallery_font.addWidget(self.font_lbl, 0, Qt.AlignLeft)
         gallery_font.addWidget(self.font_size_lbl, 0, Qt.AlignLeft)
         gallery_font.addWidget(choose_font, 0, Qt.AlignLeft)
-        gallery_font.addWidget(Spacer('h'), 1, Qt.AlignLeft)
+        gallery_font.addWidget(SpacerWidget('h'), 1, Qt.AlignLeft)
 
         class NoWheelSlider(QSlider):
             def __init__(self, ori, p):
@@ -1284,7 +1284,7 @@ class SettingsDialog(QWidget):
                 clear_cache = False
                 if clear_cache_confirm.exec_() == QMessageBox.Yes:
                     clear_cache = True
-                app_spinner = misc.Spinner(self.parent_widget)
+                app_spinner = SpinnerWidget(self.parent_widget)
                 app_spinner.set_size(60)
                 app_spinner.set_text("Thumbnails")
                 app_spinner.admin_db = gallerydb.AdminDB()
@@ -1402,7 +1402,7 @@ class SettingsDialog(QWidget):
         info_lbl.setWordWrap(True)
         info_lbl.setOpenExternalLinks(True)
         about_layout.addWidget(info_lbl)
-        about_layout.addWidget(Spacer('v'))
+        about_layout.addWidget(SpacerWidget('v'))
         open_hp_folder = QPushButton('Open Happypanda Directory')
         open_hp_folder.clicked.connect(self.open_hp_folder)
         open_hp_folder.adjustSize()
@@ -1425,7 +1425,7 @@ class SettingsDialog(QWidget):
         guide_lbl.setOpenExternalLinks(True)
         guide_lbl.setWordWrap(True)
         troubleshoot_layout.addWidget(guide_lbl, 0, Qt.AlignTop)
-        troubleshoot_layout.addWidget(Spacer('v'))
+        troubleshoot_layout.addWidget(SpacerWidget('v'))
 
         # About / Search tutorial
         about_search_tut, about_search_tut_l = new_tab("Search Guide", about, True)

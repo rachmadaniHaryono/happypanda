@@ -13,9 +13,9 @@
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
 try:
-    import gallery
+    from common_view import CommonView
 except:
-    from . import gallery
+    from .common_view import CommonView
 
 from PyQt5.QtWidgets import (
     QMenu,
@@ -37,9 +37,9 @@ class GalleryContextMenu(QMenu):
 
     def show_in_library(self):
         """show in library."""
-        index = gallery.CommonView.find_index(
+        index = CommonView.find_index(
             self.app_instance.get_current_view(),
             self.gallery_widget.gallery.id, True)
         if index:
-            gallery.CommonView.scroll_to_index(
+            CommonView.scroll_to_index(
                 self.app_instance.get_current_view(), index)

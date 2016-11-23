@@ -21,14 +21,14 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 try:
+    from app import AppWindow
     from database import db, db_constants
-    import app
     import app_constants
     import utils
 except ImportError:
+    from .app import AppWindow
     from .database import db, db_constants
     from . import (
-        app,
         app_constants,
         utils,
     )
@@ -150,7 +150,7 @@ class Program:
         """
         db.DBBase._DB_CONN = conn
         # create window
-        window = app.AppWindow(self.args.exceptions)
+        window = AppWindow(self.args.exceptions)
         # styling
         style = self._create_window_style()
         application.setStyleSheet(style)

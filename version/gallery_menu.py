@@ -15,15 +15,17 @@ from PyQt5.QtWidgets import (
 )
 
 try:
-    from executors import Executors
+    from archive_file import ArchiveFile
     from chapter_add_widget import ChapterAddWidget
+    from executors import Executors
     import app_constants
     import gallerydb
     import settings
     import utils
 except ImportError:
-    from .executors import Executors
+    from .archive_file import ArchiveFile
     from .chapter_add_widget import ChapterAddWidget
+    from .executors import Executors
     from . import (
         app_constants,
         gallerydb,
@@ -313,7 +315,7 @@ class GalleryMenu(QMenu):
             gallery.title.encode(errors='ignore')))
         if gallery.is_archive:
             try:
-                zip = utils.ArchiveFile(gallery.path)
+                zip = ArchiveFile(gallery.path)
             except utils.app_constants.CreateArchiveFail:
                 app_constants.NOTIF_BAR.add_text(
                     'Attempt to change cover failed. Could not create archive.')

@@ -21,12 +21,14 @@ try:
     import app_constants
     from gallery_downloader_list_widget import GalleryDownloaderListWidget
     from gallery_downloader_url_extractor_widget import GalleryDownloaderUrlExtractorWidget
+    from pewnet import website_validator
 except ImportError:
     from . import (
         app_constants,
     )
     from .gallery_downloader_list_widget import GalleryDownloaderListWidget
     from .gallery_downloader_url_extractor_widget import GalleryDownloaderUrlExtractorWidget
+    from .pewnet import website_validator
 
 
 log = logging.getLogger(__name__)
@@ -127,7 +129,7 @@ class GalleryDownloaderWidget(QWidget):
                 self.url_inserter.clear()
             url = url.lower()
 
-            manager = self.website_validator(url)
+            manager = website_validator(url)
             h_item = manager.from_gallery_url(url)
         except app_constants.WrongURL:
             self.info_lbl.setText(

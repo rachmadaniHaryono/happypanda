@@ -57,73 +57,113 @@ from PyQt5.QtWidgets import (
 
 try:
     import app_constants
-    import misc
-    import gallery
-    import io_misc
     import settingsdialog
     import fetch_obj
     import gallerydb
     import settings
-    import pewnet
     import utils
-    import misc_db
     import database
+    #
+    from app_bubble import AppBubble
+    from app_dialog import AppDialog
+    from common_view import CommonView
     from completer_popup_view import CompleterPopupView
-    from db_activity_checker_obj import DBActivityCheckerObject
-    from duplicate_check_obj import DuplicateCheckObject
+    from gallery_model import GalleryModel
+    from line_edit import LineEdit
+    from manga_views import MangaViews
+    from misc import centerWidget
+    from sidebar_widget_frame import SideBarWidgetFrame
+    from single_gallery_choices import SingleGalleryChoices
+    from system_tray import SystemTray
+    from toolbar_tab_manager_obj import ToolbarTabManagerObject
+    from watchers import Watchers
+    # menu
     from gallery_context_menu import GalleryContextMenu
+    from sort_menu import SortMenu
+    # QObject
+    from db_activity_checker_obj import DBActivityCheckerObject
+    from downloader_obj import DownloaderObject
+    from duplicate_check_obj import DuplicateCheckObject
+    from scan_dir_obj import ScanDirObject
+    from update_checker_obj import UpdateCheckerObject
+    # widget
     from gallery_dialog_widget import GalleryDialogWidget
     from gallery_downloader_widget import GalleryDownloaderWidget
     from gallery_list_view_widget import GalleryListViewWidget
-    from gallery_model import GalleryModel
-    from scan_dir_obj import ScanDirObject
-    from update_checker_obj import UpdateCheckerObject
-    from watchers import Watchers
+    from notification_overlay_widget import NotificationOverlayWidget
+    from spinner_widget import SpinnerWidget
+    # popup
+    from base_popup import BasePopup
+    from deleted_popup import DeletedPopup
+    from gallery_popup import GalleryPopup
+    from modified_popup import ModifiedPopup
+    from moved_popup import MovedPopup
+    #
     from misc_app import (
+        clean_up_db,
+        clean_up_temp_dir,
+        get_finished_startup_update_text,
         invoke_first_time_level,
         normalize_first_time,
-        get_finished_startup_update_text,
-        set_search_case,
-        clean_up_temp_dir,
-        clean_up_db,
-        set_tool_button_attribute,
         set_action_attribute,
+        set_search_case,
+        set_tool_button_attribute,
     )
 except ImportError:
     from . import (
         app_constants,
-        misc,
-        gallery,
-        io_misc,
-        settingsdialog,
+        database,
         fetch_obj,
         gallerydb,
         settings,
-        pewnet,
+        settingsdialog,
         utils,
-        misc_db,
-        database,
     )
+    #
+    from .app_bubble import AppBubble
+    from .app_dialog import AppDialog
+    from .common_view import CommonView
     from .completer_popup_view import CompleterPopupView
-    from .db_activity_checker_obj import DBActivityCheckerObject
-    from .duplicate_check_obj import DuplicateCheckObject
+    from .gallery_model import GalleryModel
+    from .line_edit import LineEdit
+    from .manga_views import MangaViews
+    from .misc import centerWidget
+    from .sidebar_widget_frame import SideBarWidgetFrame
+    from .single_gallery_choices import SingleGalleryChoices
+    from .system_tray import SystemTray
+    from .watchers import Watchers
+    # menu
     from .gallery_context_menu import GalleryContextMenu
+    from .sort_menu import SortMenu
+    # QObject
+    from .db_activity_checker_obj import DBActivityCheckerObject
+    from .downloader_obj import DownloaderObject
+    from .duplicate_check_obj import DuplicateCheckObject
+    from .scan_dir_obj import ScanDirObject
+    from .toolbar_tab_manager_obj import ToolbarTabManagerObject
+    from .update_checker_obj import UpdateCheckerObject
+    # widget
     from .gallery_dialog_widget import GalleryDialogWidget
     from .gallery_downloader_widget import GalleryDownloaderWidget
     from .gallery_list_view_widget import GalleryListViewWidget
-    from .gallery_model import GalleryModel
-    from .scan_dir_obj import ScanDirObject
-    from .update_checker_obj import UpdateCheckerObject
-    from .watchers import Watchers
+    from .notification_overlay_widget import NotificationOverlayWidget
+    from .spinner_widget import SpinnerWidget
+    # popup
+    from .base_popup import BasePopup
+    from .deleted_popup import DeletedPopup
+    from .gallery_popup import GalleryPopup
+    from .modified_popup import ModifiedPopup
+    from .moved_popup import MovedPopup
+    #
     from .misc_app import (
+        clean_up_db,
+        clean_up_temp_dir,
+        get_finished_startup_update_text,
         invoke_first_time_level,
         normalize_first_time,
-        get_finished_startup_update_text,
-        set_search_case,
-        clean_up_temp_dir,
-        clean_up_db,
-        set_tool_button_attribute,
         set_action_attribute,
+        set_search_case,
+        set_tool_button_attribute,
     )
 
 log = logging.getLogger(__name__)
@@ -180,12 +220,15 @@ class AppWindow(QMainWindow):
         admin_db(:class:`.gallerydb.AdminDB`):Admin for db.
         db_startup(:class:`.gallerydb.DatabaseStartup`):Database startup instance.
         watchers(:class:`.watchers.Watchers`):Watcher for window.
-        populate_msg_box(:class:`.misc.BasePopup`):Message box when populating gallery.
-        search_bar(:class:`.misc.LineEdit`):Search bar
-        notification_bar(:class:`.misc.NotificationOverlay`):Notification bar.
-        system_tray(:class:`.misc.SystemTray`):Sytem tray for window.
-        addition_tab(:class:`.misc_db.ToolbarTabManager`):Additional tab for window.
-        tab_manager(:class:`.misc_db.ToolbarTabManager`):Tab manager for window.
+        populate_msg_box(:class:`.base_popup.BasePopup`):Message box when populating gallery.
+        search_bar(:class:`.line_edit.LineEdit`):Search bar
+        notification_bar(:class:`.notification_overlay_widget.NotificationOverlayWidget`):
+            Notification bar.
+        system_tray(:class:`.system_tray.SystemTray`):Sytem tray for window.
+        addition_tab(:class:`.toolbar_tab_manager_obj.ToolbarTabManagerObject`):Additional tab
+            for window.
+        tab_manager(:class:`.toolbar_tab_manager_obj.ToolbarTabManagerObject`):Tab manager
+            for window.
         _g_populate_count(int):Amount of populated gallery.
     """
 
@@ -264,9 +307,9 @@ class AppWindow(QMainWindow):
         Args:
             g(:class:`.gallery_model.GalleryMode`):Gallery to be removed.
         """
-        index = gallery.CommonView.find_index(self.get_current_view(), g.id, True)
+        index = CommonView.find_index(self.get_current_view(), g.id, True)
         if index:
-            gallery.CommonView.remove_gallery(self.get_current_view(), [index])
+            CommonView.remove_gallery(self.get_current_view(), [index])
         else:
             log_e('Could not find gallery to remove from watcher')
 
@@ -276,7 +319,7 @@ class AppWindow(QMainWindow):
         Args:
             g(:class:`.gallery_model.GalleryModel`):Updated gallery.
         """
-        index = gallery.CommonView.find_index(self.get_current_view(), g.id)
+        index = CommonView.find_index(self.get_current_view(), g.id)
         if index:
             gal = index.data(GalleryModel.GALLERY_ROLE)
             gal.path = g.path
@@ -292,7 +335,7 @@ class AppWindow(QMainWindow):
             path(str): Path of the gallery.
             gallery(:class:`.gallery_model.GalleryModel`): Object gallery.
         """
-        d_popup = io_misc.DeletedPopup(path, gallery, self)
+        d_popup = DeletedPopup(path, gallery, self)
         d_popup.UPDATE_SIGNAL.connect(self._update_gallery)
         d_popup.REMOVE_SIGNAL.connect(self._remove_gallery)
 
@@ -303,7 +346,7 @@ class AppWindow(QMainWindow):
             new_path(str): New path for the gallery.
             gallery(:class:`.gallery_model.GalleryModel`): Object gallery.
         """
-        mov_popup = io_misc.MovedPopup(new_path, gallery, self)
+        mov_popup = MovedPopup(new_path, gallery, self)
         mov_popup.UPDATE_SIGNAL.connect(self._update_gallery)
 
     def init_watchers(self):
@@ -313,7 +356,7 @@ class AppWindow(QMainWindow):
             lambda path: self.gallery_populate([path]))
         self.watchers.gallery_handler.MODIFIED_SIGNAL.connect(
             lambda path, gallery:
-            io_misc.ModifiedPopup(path, gallery, self)
+            ModifiedPopup(path, gallery, self)
         )
         self.watchers.gallery_handler.MOVED_SIGNAL.connect(self._watcher_moved)
         self.watchers.gallery_handler.DELETED_SIGNAL.connect(self._watcher_deleted)
@@ -324,14 +367,14 @@ class AppWindow(QMainWindow):
         Args:
             status(bool):Show status or not.
         """
-        self.db_startup_invoker.emit(gallery.MangaViews.manga_views)
+        self.db_startup_invoker.emit(MangaViews.manga_views)
         normalize_first_time()
         finished_startup_update_text = get_finished_startup_update_text()
         self.notif_bubble.update_text(*finished_startup_update_text)
         if app_constants.ENABLE_MONITOR and \
                 app_constants.MONITOR_PATHS and all(app_constants.MONITOR_PATHS):
             self.init_watchers()
-        self.download_manager = pewnet.Downloader()
+        self.download_manager = DownloaderObject()
         app_constants.DOWNLOAD_MANAGER = self.download_manager
         self.download_manager.start_manager(4)
 
@@ -340,7 +383,7 @@ class AppWindow(QMainWindow):
         if app_constants.FIRST_TIME_LEVEL < 5:
             log_i('Invoking first time level {}'.format(5))
             app_constants.INTERNAL_LEVEL = 5
-            app_widget = misc.AppDialog(self)
+            app_widget = AppDialog(self)
             app_widget.note_info.setText(
                 "<font color='red'>IMPORTANT:</font> Application restart is required when done")
             app_widget.restart_info.hide()
@@ -376,7 +419,7 @@ class AppWindow(QMainWindow):
 
     def create_system_tray(self):
         """create system tray."""
-        self.system_tray = misc.SystemTray(QIcon(app_constants.APP_ICO_PATH), self)
+        self.system_tray = SystemTray(QIcon(app_constants.APP_ICO_PATH), self)
         app_constants.SYSTEM_TRAY = self.system_tray
         tray_menu = QMenu(self)
         self.system_tray.setContextMenu(tray_menu)
@@ -400,17 +443,17 @@ class AppWindow(QMainWindow):
         self.resize(*window_size)
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
-        misc.centerWidget(self)
+        centerWidget(self)
         self.init_spinners()
         self.show()
 
     def create_notification_bar(self):
         """create notification bar."""
-        self.notification_bar = misc.NotificationOverlay(self)
+        self.notification_bar = NotificationOverlayWidget(self)
         p = self.toolbar.pos()
         self.notification_bar.move(p.x(), p.y() + self.toolbar.height())
         self.notification_bar.resize(self.width())
-        self.notif_bubble = misc.AppBubble(self)
+        self.notif_bubble = AppBubble(self)
         app_constants.NOTIF_BAR = self.notification_bar
         app_constants.NOTIF_BUBBLE = self.notif_bubble
 
@@ -425,7 +468,7 @@ class AppWindow(QMainWindow):
 
         self.manga_views = {}
         self._current_manga_view = None
-        self.default_manga_view = gallery.MangaViews(app_constants.ViewType.Default, self, True)
+        self.default_manga_view = MangaViews(app_constants.ViewType.Default, self, True)
         self.db_startup.DONE.connect(lambda: self.current_manga_view.sort_model.refresh())
         self.manga_list_view = self.default_manga_view.list_view
         self.manga_table_view = self.default_manga_view.table_view
@@ -433,7 +476,7 @@ class AppWindow(QMainWindow):
         self.manga_list_view.STATUS_BAR_MSG.connect(self.stat_temp_msg)
         self.manga_table_view.STATUS_BAR_MSG.connect(self.stat_temp_msg)
 
-        self.sidebar_list = misc_db.SideBarWidget(self)
+        self.sidebar_list = SideBarWidgetFrame(self)
         self.db_startup.DONE.connect(self.sidebar_list.tags_tree.setup_tags)
         self._main_layout.addWidget(self.sidebar_list)
         self.current_manga_view = self.default_manga_view
@@ -505,7 +548,7 @@ class AppWindow(QMainWindow):
         if not parent:
             parent = self
         text = "Which gallery do you want to extract metadata from?"
-        s_gallery_popup = misc.SingleGalleryChoices(gallery, title_url_list, text, parent)
+        s_gallery_popup = SingleGalleryChoices(gallery, title_url_list, text, parent)
         s_gallery_popup.USER_CHOICE.connect(queue.put)
 
     def get_metadata_gallery(self, gal):
@@ -546,7 +589,7 @@ class AppWindow(QMainWindow):
             for tup in status:
                 galleries.append(tup[0])
 
-            g_popup = io_misc.GalleryPopup((
+            g_popup = GalleryPopup((
                 'Fecthing metadata for these galleries failed.' +
                 ' Check happypanda.log for details.', galleries
             ), self, menu=GalleryContextMenu, app_instance=self)
@@ -566,7 +609,7 @@ class AppWindow(QMainWindow):
             gal(:class:`.gallery_model.GalleryModel`):Gallery which require metadata.
         """
         if not app_constants.GLOBAL_EHEN_LOCK:
-            metadata_spinner = misc.Spinner(self)
+            metadata_spinner = SpinnerWidget(self)
             metadata_spinner.set_text("Metadata")
             metadata_spinner.set_size(55)
             thread = QThread(self)
@@ -657,7 +700,7 @@ class AppWindow(QMainWindow):
     def init_spinners(self):
         """init spinner."""
         # fetching spinner
-        self.data_fetch_spinner = misc.Spinner(self, "center")
+        self.data_fetch_spinner = SpinnerWidget(self, "center")
         self.data_fetch_spinner.set_size(80)
 
         self.manga_list_view.gallery_model.ADD_MORE.connect(self.data_fetch_spinner.show)
@@ -741,7 +784,7 @@ class AppWindow(QMainWindow):
         spacer_start.setFixedSize(QSize(10, 1))
         self.toolbar.addWidget(spacer_start)
 
-        self.tab_manager = misc_db.ToolbarTabManager(self.toolbar, self)
+        self.tab_manager = ToolbarTabManagerObject(self.toolbar, self)
         self.tab_manager.favorite_btn.clicked.connect(lambda: self._switch_view(True))
         self.tab_manager.library_btn.click()
         self.tab_manager.library_btn.clicked.connect(lambda: self._switch_view(False))
@@ -764,7 +807,7 @@ class AppWindow(QMainWindow):
         # new_gallery_k
         gallery_action_add = set_action_attribute(
             action=QAction(add_gallery_icon, "Add single gallery...", self),
-            triggered_connect_function=lambda: gallery.CommonView.spawn_dialog(self),
+            triggered_connect_function=lambda: CommonView.spawn_dialog(self),
             tool_tip='Add a single gallery thoroughly',
             shortcut=QKeySequence('Ctrl+N'),
         )
@@ -809,7 +852,7 @@ class AppWindow(QMainWindow):
         open_random_k = QKeySequence(QKeySequence.Open)
         gallery_action_random = gallery_menu.addAction("Open random gallery")
         gallery_action_random.triggered.connect(
-            lambda: gallery.CommonView.open_random_gallery(self.get_current_view()))
+            lambda: CommonView.open_random_gallery(self.get_current_view()))
         gallery_action_random.setShortcut(open_random_k)
         self.toolbar.addWidget(gallery_action)
 
@@ -852,7 +895,7 @@ class AppWindow(QMainWindow):
         spacer_middle.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.toolbar.addWidget(spacer_middle)
 
-        sort_menu = misc.SortMenu(self, self.toolbar)
+        sort_menu = SortMenu(self, self.toolbar)
         sort_menu.new_sort.connect(lambda s: self.current_manga_view.list_view.sort(s))
         # sort_k
         sort_action = set_tool_button_attribute(
@@ -870,7 +913,7 @@ class AppWindow(QMainWindow):
         self.grid_toggle = QToolButton()
         self.grid_toggle.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.grid_toggle.setShortcut(togle_view_k)
-        if self.current_manga_view.current_view == gallery.MangaViews.View.List:
+        if self.current_manga_view.current_view == MangaViews.View.List:
             self.grid_toggle.setIcon(self.grid_toggle_l_icon)
         else:
             self.grid_toggle.setIcon(self.grid_toggle_g_icon)
@@ -882,7 +925,7 @@ class AppWindow(QMainWindow):
         spacer_mid2.setFixedSize(QSize(5, 1))
         self.toolbar.addWidget(spacer_mid2)
 
-        self.search_bar = misc.LineEdit()
+        self.search_bar = LineEdit()
         search_options = self.search_bar.addAction(
             QIcon(app_constants.SEARCH_OPTIONS_PATH), QLineEdit.TrailingPosition)
         search_options_menu = QMenu(self)
@@ -995,7 +1038,7 @@ class AppWindow(QMainWindow):
 
     def toggle_view(self):
         """Toggle the current display view."""
-        if self.current_manga_view.current_view == gallery.MangaViews.View.Table:
+        if self.current_manga_view.current_view == MangaViews.View.Table:
             self.current_manga_view.changeTo(self.current_manga_view.m_l_view_index)
             self.grid_toggle.setIcon(self.grid_toggle_l_icon)
         else:
@@ -1048,7 +1091,7 @@ class AppWindow(QMainWindow):
             gallery_view.SERIES.connect(self.gallery_populate)
             gallery_view.show()
         else:
-            self.populate_msg_box = misc.BasePopup(self)
+            self.populate_msg_box = BasePopup(self)
             l = QVBoxLayout()
             self.populate_msg_box.main_widget.setLayout(l)
             l.addWidget(QLabel('Directory or Archive?'))
@@ -1075,7 +1118,7 @@ class AppWindow(QMainWindow):
             self.g_populate_inst.series_path = path
             self._g_populate_count = 0
 
-            fetch_spinner = misc.Spinner(self)
+            fetch_spinner = SpinnerWidget(self)
             fetch_spinner.set_size(60)
             fetch_spinner.set_text("Populating")
             fetch_spinner.show()
@@ -1164,7 +1207,7 @@ class AppWindow(QMainWindow):
             self.notification_bar.add_text("Scanning for new galleries...")
             log_i('Scanning for new galleries...')
             try:
-                new_gall_spinner = misc.Spinner(self)
+                new_gall_spinner = SpinnerWidget(self)
                 new_gall_spinner.set_text("Gallery Scan")
                 new_gall_spinner.show()
 
@@ -1306,7 +1349,7 @@ class AppWindow(QMainWindow):
         # check if there is db activity
         if not gallerydb.method_queue.empty():
             db_activity = DBActivityCheckerObject()
-            db_spinner = misc.Spinner(self)
+            db_spinner = SpinnerWidget(self)
             self.db_activity_checker.connect(db_activity.check)
             db_activity.moveToThread(app_constants.GENERAL_THREAD)
             db_activity.FINISHED.connect(db_spinner.close)
@@ -1343,7 +1386,7 @@ class AppWindow(QMainWindow):
         log_i('Checking for duplicates in mode: {}'.format(mode))
         notifbar = app_constants.NOTIF_BAR
         notifbar.add_text('Checking for duplicates...')
-        duplicate_spinner = misc.Spinner(self)
+        duplicate_spinner = SpinnerWidget(self)
         duplicate_spinner.set_text("Duplicate Check")
         duplicate_spinner.show()
         dup_tab = self.tab_manager.addTab("Duplicate", app_constants.ViewType.Duplicate)
@@ -1368,7 +1411,7 @@ class AppWindow(QMainWindow):
             ex:Exception.
             tb:Traceback.
         """
-        w = misc.AppDialog(self, misc.AppDialog.MESSAGE)
+        w = AppDialog(self, AppDialog.MESSAGE)
         w.show()
         log_c(''.join(traceback.format_tb(tb)))
         log_c('{}: {}'.format(ex_type, ex))

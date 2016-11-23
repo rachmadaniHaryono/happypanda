@@ -1,4 +1,5 @@
-﻿# """
+"""fetch obj."""
+# """
 # This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,16 +23,26 @@ import scandir
 from PyQt5.QtCore import QObject, pyqtSignal  # need this for interaction with main thread
 
 try:
+    from archive_file import ArchiveFile
+    from chaika_hen import ChaikaHen
+    from ehen import EHen
+    from exhen import ExHen
     from gallerydb import Gallery, GalleryDB, HashDB, execute
+    from gmetafile import GMetafile
+    from pewnet import hen_list_init
     import app_constants
-    import pewnet
     import settings
     import utils
 except ImportError:
+    from .archive_file import ArchiveFile
+    from .chaika_hen import ChaikaHen
+    from .ehen import EHen
+    from .exhen import ExHen
     from .gallerydb import Gallery, GalleryDB, HashDB, execute
+    from .gmetafile import GMetafile
+    from .pewnet import hen_list_init
     from . import (
         app_constants,
-        pewnet,
         settings,
         utils,
     )
@@ -47,7 +58,7 @@ log_c = log.critical
 
 
 class FetchObject(QObject):
-    """ A class containing methods to fetch gallery data.
+    """A class containing methods to fetch gallery data.
 
     Should be executed in a new thread.
     Contains following methods:
@@ -104,7 +115,7 @@ class FetchObject(QObject):
             new_gallery = Gallery()
             # variable assigned but never used.
             # images_paths = []
-            metafile = utils.GMetafile()
+            metafile = GMetafile()
             try:
                 con = scandir.scandir(temp_p)  # all of content in the gallery folder
                 log_i('Gallery source is a directory')
@@ -126,17 +137,17 @@ class FetchObject(QObject):
                                 utils.IMG_FILES
                             )
                         ])
-                        metafile.update(utils.GMetafile(chap.path))
+                        metafile.update(GMetafile(chap.path))
 
                 else:  # else assume that all images are in gallery folder
                     chap = new_gallery.chapters.create_chapter()
                     chap.title = utils.title_parser(os.path.split(path)[1])['title']
                     chap.path = path
-                    metafile.update(utils.GMetafile(chap.path))
+                    metafile.update(GMetafile(chap.path))
                     chap.pages = len(list(scandir.scandir(path)))
 
                 parsed = utils.title_parser(folder_name)
-            except NotADirectoryError:
+            except NotADirectoryError:  # NOQA
                 try:
                     if is_archive or temp_p.endswith(utils.ARCHIVE_FILES):
                         log_i('Gallery source is an archive')
@@ -171,8 +182,8 @@ class FetchObject(QObject):
                                     chap.in_archive = 1
                                     chap.title = utils.title_parser(g)['title']
                                     chap.path = g
-                                    metafile.update(utils.GMetafile(g, temp_p))
-                                    arch = utils.ArchiveFile(temp_p)
+                                    metafile.update(GMetafile(g, temp_p))
+                                    arch = ArchiveFile(temp_p)
                                     chap.pages = len([
                                         x for x in arch.dir_contents(g)
                                         if x.endswith(utils.IMG_FILES)
@@ -183,8 +194,8 @@ class FetchObject(QObject):
                                 chap.title = utils.title_parser(os.path.split(path)[1])['title']
                                 chap.in_archive = 1
                                 chap.path = path
-                                metafile.update(utils.GMetafile(path, temp_p))
-                                arch = utils.ArchiveFile(temp_p)
+                                metafile.update(GMetafile(path, temp_p))
+                                arch = ArchiveFile(temp_p)
                                 chap.pages = len(arch.dir_contents(''))
                                 arch.close()
                         else:
@@ -279,7 +290,7 @@ class FetchObject(QObject):
                             if not list(scandir.scandir(path)):
                                 raise ValueError
                         elif not path.endswith(utils.ARCHIVE_FILES):
-                            raise NotADirectoryError
+                            raise NotADirectoryError  # NOQA
 
                         log_i("Treating each subfolder as chapter")
                         self.create_gallery(path, folder_name, do_chapters=True)
@@ -287,7 +298,7 @@ class FetchObject(QObject):
                     except ValueError:
                         self.skipped_paths.append((path, 'Empty directory'))
                         log_w('Directory is empty: {}'.format(path.encode(errors='ignore')))
-                    except NotADirectoryError:
+                    except NotADirectoryError:  # NOQA
                         self.skipped_paths.append((path, 'Unsupported file'))
                         log_w('Unsupported file: {}'.format(path.encode(errors='ignore')))
 
@@ -308,7 +319,7 @@ class FetchObject(QObject):
             self.SKIPPED.emit(self.skipped_paths)
 
     def _return_gallery_metadata(self, gallery):
-        "Emits galleries"
+        """Emit galleries."""
         assert isinstance(gallery, Gallery)
         if gallery:
             gallery.exed = 1
@@ -316,9 +327,9 @@ class FetchObject(QObject):
             log_d('Success')
 
     def fetch_metadata(self, gallery=None, hen=None, proc=False):
-        """
-        Puts gallery in queue for metadata fetching. Applies received galleries and sends
-        them to gallery model.
+        """Put gallery in queue for metadata fetching.
+
+        Applies received galleries and sends them to gallery model.
         Set proc to true if you want to process the queue immediately
         """
         if gallery:
@@ -482,7 +493,7 @@ class FetchObject(QObject):
                 continue
 
             if not gallery.link:
-                if isinstance(hen, (pewnet.EHen, pewnet.ExHen)):
+                if isinstance(hen, (EHen, ExHen)):
                     gallery.link = url
                     self.GALLERY_EMITTER.emit(gallery, None, None)
             gallery.temp_url = url
@@ -534,7 +545,7 @@ class FetchObject(QObject):
 
                 if not gallery.link:
                     gallery.link = url
-                    if isinstance(hen, (pewnet.EHen, pewnet.ExHen)):
+                    if isinstance(hen, (EHen, ExHen)):
                         self.GALLERY_EMITTER.emit(gallery, None, None)
                 gallery.temp_url = url
                 self.AUTO_METADATA_PROGRESS.emit("({}/{}) Adding to queue: {}".format(
@@ -564,7 +575,7 @@ class FetchObject(QObject):
         Appends or replaces metadata with the new fetched metadata.
         """
         log_i('Initiating auto metadata fetcher')
-        self._hen_list = pewnet.hen_list_init()
+        self._hen_list = hen_list_init()
         if self.galleries and not app_constants.GLOBAL_EHEN_LOCK:
             log_i('Auto metadata fetcher is now running')
             app_constants.GLOBAL_EHEN_LOCK = True
@@ -585,17 +596,17 @@ class FetchObject(QObject):
                 try:
                     exprops = settings.ExProperties()
                     if exprops.check():
-                        hen = pewnet.ExHen(exprops.cookies)
+                        hen = ExHen(exprops.cookies)
                         valid_url = 'exhen'
                         log_i("using exhen")
                     else:
                         raise ValueError
                 except ValueError:
-                    hen = pewnet.EHen()
+                    hen = EHen()
                     valid_url = 'ehen'
                     log_i("using ehen")
             else:
-                hen = pewnet.EHen()
+                hen = EHen()
                 valid_url = 'ehen'
                 log_i("Using Exhentai")
             try:
@@ -616,7 +627,7 @@ class FetchObject(QObject):
 
                         valid_url = ""
 
-                        if hen == pewnet.ChaikaHen:
+                        if hen == ChaikaHen:
                             valid_url = "chaikahen"
                             log_i("using chaika hen")
                         try:

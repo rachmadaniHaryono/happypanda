@@ -33,20 +33,24 @@ from PyQt5.QtCore import (
 )
 
 try:
+    from clicked_label import ClickedLabel
+    from completer_text_edit import CompleterTextEdit
     from fetch_obj import FetchObject
+    from gcompleter import GCompleter
     import app_constants
     import database
     import gallerydb
-    import misc
     import utils
 except ImportError:
+    from .clicked_label import ClickedLabel
+    from .completer_text_edit import CompleterTextEdit
     from .fetch_obj import FetchObject
+    from .gcompleter import GCompleter
     from . import (
         app_constants,
-        utils,
-        gallerydb,
-        misc,
         database,
+        gallerydb,
+        utils,
     )
 
 log = logging.getLogger(__name__)
@@ -139,18 +143,18 @@ class GalleryDialogWidget(QWidget):
             f_web.setCheckable(False)
             self.main_layout.addWidget(f_web)
             web_main_layout = QVBoxLayout()
-            web_info = misc.ClickedLabel("Which gallery URLs are supported? (hover)", parent=self)
+            web_info = ClickedLabel("Which gallery URLs are supported? (hover)", parent=self)
             web_info.setToolTip(app_constants.SUPPORTED_METADATA_URLS)
             web_info.setToolTipDuration(999999999)
             web_main_layout.addWidget(web_info)
             web_layout = QHBoxLayout()
             web_main_layout.addLayout(web_layout)
             f_web.setLayout(web_main_layout)
-
-            def basic_web(name):
-                return QLabel(name), QLineEdit(), QPushButton("Get metadata"), QProgressBar()
-
-            url_lbl, self.url_edit, url_btn, url_prog = basic_web("URL:")
+            #
+            url_lbl = QLabel("URL: ")
+            self.url_edit = QLineEdit()
+            url_btn = QPushButton("Get metadata")
+            url_prog = QProgressBar()
             url_btn.clicked.connect(
                 lambda: self.web_metadata(self.url_edit.text(), url_btn, url_prog))
             url_prog.setTextVisible(False)
@@ -188,7 +192,7 @@ class GalleryDialogWidget(QWidget):
 
         self.title_edit = add_check(QLineEdit())
         self.author_edit = add_check(QLineEdit())
-        author_completer = misc.GCompleter(self, False, True, False)
+        author_completer = GCompleter(self, False, True, False)
         author_completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.author_edit.setCompleter(author_completer)
         self.descr_edit = add_check(QTextEdit())
@@ -201,7 +205,7 @@ class GalleryDialogWidget(QWidget):
         self.rating_box.setMinimum(0)
         self._find_combobox_match(self.lang_box, app_constants.G_DEF_LANGUAGE, 0)
         tags_l = QVBoxLayout()
-        tag_info = misc.ClickedLabel("How do i write namespace & tags? (hover)", parent=self)
+        tag_info = ClickedLabel("How do i write namespace & tags? (hover)", parent=self)
         tag_info.setToolTip(
             "Ways to write tags:\n\nNormal tags:\ntag1, tag2, tag3\n\n"
             "Namespaced tags:\nns1:tag1, ns1:tag2\n\n"
@@ -213,8 +217,8 @@ class GalleryDialogWidget(QWidget):
         )
         tag_info.setToolTipDuration(99999999)
         tags_l.addWidget(tag_info)
-        self.tags_edit = add_check(misc.CompleterTextEdit())
-        self.tags_edit.setCompleter(misc.GCompleter(self, False, False))
+        self.tags_edit = add_check(CompleterTextEdit())
+        self.tags_edit.setCompleter(GCompleter(self, False, False))
         if self._multiple_galleries:
             tags_l.addLayout(checkbox_layout(self.tags_edit), 3)
         else:
@@ -232,7 +236,7 @@ class GalleryDialogWidget(QWidget):
         self.pub_edit = add_check(QDateEdit())
         self.pub_edit.setCalendarPopup(True)
         self.pub_edit.setDate(QDate.currentDate())
-        self.path_lbl = misc.ClickedLabel("")
+        self.path_lbl = ClickedLabel("")
         self.path_lbl.setWordWrap(True)
         self.path_lbl.clicked.connect(lambda a: utils.open_path(a, a) if a else None)
 
@@ -297,7 +301,7 @@ class GalleryDialogWidget(QWidget):
             return False
 
     def setGallery(self, gallery):  # NOQA
-        "To be used for when editing a gallery"
+        """To be used for when editing a gallery."""
         if isinstance(gallery, gallerydb.Gallery):
             self.gallery = gallery
 
@@ -482,6 +486,7 @@ class GalleryDialogWidget(QWidget):
             self.close()
 
     def web_metadata(self, url, btn_widget, pgr_widget):  # NOQA
+        """web metadata."""
         if not self.path_lbl.text():
             return
         self.link_lbl.setText(url)
@@ -499,13 +504,13 @@ class GalleryDialogWidget(QWidget):
             if stat:
                 do_hide()
             else:
-                danger = """QProgressBar::chunk {
-                    background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #FF0350,stop:
-                    0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 );
+                danger_style_sheet = """QProgressBar::chunk {
+                    background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                    stop: 0 #FF0350,stop: 0.4999 #FF0020,stop: 0.5 #FF0019,stop: 1 #FF0000 );
                     border-bottom-right-radius: 5px;
                     border-bottom-left-radius: 5px;
                     border: .px solid black;}"""
-                pgr_widget.setStyleSheet(danger)
+                pgr_widget.setStyleSheet(danger_style_sheet)
                 QTimer.singleShot(3000, do_hide)
 
         def gallery_picker(gallery, title_url_list, q):
@@ -544,6 +549,7 @@ class GalleryDialogWidget(QWidget):
         self._find_combobox_match(self.type_box, metadata.type, 0)
 
     def make_gallery(self, new_gallery, add_to_model=True, new=False):  # NOQA
+        """make gallery."""
         def is_checked(widget):
             return widget.g_check.isChecked()
         if self.check():
