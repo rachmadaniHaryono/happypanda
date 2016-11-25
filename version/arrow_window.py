@@ -2,9 +2,7 @@
 import logging
 
 from PyQt5.QtCore import (
-    QByteArray,
     QPointF,
-    QPropertyAnimation,
     QRectF,
     QSizeF,
     Qt,
@@ -14,20 +12,16 @@ from PyQt5.QtGui import (
     QPainter,
     QPaintEvent,
     QPolygonF,
-    QTextLayout,
 )
 from PyQt5.QtWidgets import (
     QCommonStyle,
-    QDesktopWidget,
     QStyleOption,
 )
 
 try:
     from transparent_widget import TransparentWidget
-    from misc import default_text_option
 except ImportError:
     from .transparent_widget import TransparentWidget
-    from .misc import default_text_option
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -35,55 +29,6 @@ log_d = log.debug
 log_w = log.warning
 log_e = log.error
 log_c = log.critical
-
-
-def text_layout(text, width, font, font_metrics, alignment=Qt.AlignCenter):
-    """Lay out wrapped text."""
-    text_option = default_text_option
-    layout = QTextLayout(text, font)
-    layout.setTextOption(text_option)
-    leading = font_metrics.leading()
-    height = 0
-    layout.setCacheEnabled(True)
-    layout.beginLayout()
-    while True:
-        line = layout.createLine()
-        if not line.isValid():
-            break
-        line.setLineWidth(width)
-        height += leading
-        line.setPosition(QPointF(0, height))
-        height += line.height()
-    layout.endLayout()
-    return layout
-
-
-def centerWidget(widget, parent_widget=None):
-    """centerWidget."""
-    if parent_widget:
-        r = parent_widget.rect()
-    else:
-        r = QDesktopWidget().availableGeometry()
-
-    widget.setGeometry(QCommonStyle.alignedRect(
-        Qt.LeftToRight, Qt.AlignCenter, widget.size(), r))
-
-
-def clearLayout(layout):  # NOQA
-    """clearLayout."""
-    if layout is not None:
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget() is not None:
-                child.widget().deleteLater()
-            elif child.layout() is not None:
-                clearLayout(child.layout())
-
-
-def create_animation(parent, prop):
-    """create_animation."""
-    p_array = QByteArray().append(prop)
-    return QPropertyAnimation(parent, p_array)
 
 
 class ArrowWindow(TransparentWidget):
