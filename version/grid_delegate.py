@@ -65,16 +65,11 @@ def _draw_pixmap(image, img_too_big_func, w_limit, h_limit, center_img_func, pai
 
 
 def _get_adjusted_font_size(obj, font_size, limit_list):
-    """set obj size based on value packs.
-
-    value_packs are list of tuple (top)
-    """
-    for ii, x in enumerate(limit_list):
-        if ii == len(limit_list) - 1 and len(obj) >= x:
-            return font_size - ii
-        elif ii == len(limit_list) - 1:
-            pass
-        elif limit_list[ii + 1] > len(obj) >= x:
+    """set adjusted font size based on limit list."""
+    if len(obj) >= max(limit_list):
+        return font_size - len(limit_list) + 1
+    for ii, x in enumerate(limit_list[:-1]):
+        if limit_list[ii + 1] > len(obj) >= x:
             return font_size - ii
     return font_size
 
