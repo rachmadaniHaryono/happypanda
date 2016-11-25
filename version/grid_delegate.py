@@ -64,6 +64,21 @@ def _draw_pixmap(image, img_too_big_func, w_limit, h_limit, center_img_func, pai
             painter_obj.drawPixmap(QPoint(img_x, y_pos), image)
 
 
+def _get_adjusted_font_size(obj, font_size, limit_list):
+    """set obj size based on value packs.
+
+    value_packs are list of tuple (top)
+    """
+    for ii, x in enumerate(limit_list):
+        if ii == len(limit_list) - 1 and len(obj) >= x:
+            return font_size - ii
+        elif ii == len(limit_list) - 1:
+            pass
+        elif limit_list[ii + 1] > len(obj) >= x:
+            return font_size - ii
+    return font_size
+
+
 class GridDelegate(QStyledItemDelegate):
     """A custom delegate for the model/view framework."""
 
@@ -141,27 +156,11 @@ class GridDelegate(QStyledItemDelegate):
             # Enable this to see the defining box
             # painter.drawRect(option.rect)
             # define font size
-            if 20 > len(title) > 15:
-                title_size = "font-size:{}px;".format(self.font_size)
-            elif 30 > len(title) > 20:
-                title_size = "font-size:{}px;".format(self.font_size - 1)
-            elif 40 > len(title) >= 30:
-                title_size = "font-size:{}px;".format(self.font_size - 2)
-            elif 50 > len(title) >= 40:
-                title_size = "font-size:{}px;".format(self.font_size - 3)
-            elif len(title) >= 50:
-                title_size = "font-size:{}px;".format(self.font_size - 4)
-            else:
-                title_size = "font-size:{}px;".format(self.font_size)
+            title_size = "font-size:{}px;".format(_get_adjusted_font_size(
+                obj=title, font_size=self.font_size, limit_list=[16, 21, 30, 40, 50]))
 
-            if 30 > len(artist) > 20:
-                artist_size = "font-size:{}px;".format(self.font_size)
-            elif 40 > len(artist) >= 30:
-                artist_size = "font-size:{}px;".format(self.font_size - 1)
-            elif len(artist) >= 40:
-                artist_size = "font-size:{}px;".format(self.font_size - 2)
-            else:
-                artist_size = "font-size:{}px;".format(self.font_size)
+            artist_size = "font-size:{}px;".format(_get_adjusted_font_size(
+                obj=title, font_size=self.font_size, limit_list=[21, 30, 40]))
 
             text_area = QTextDocument()
             text_area.setDefaultFont(option.font)
