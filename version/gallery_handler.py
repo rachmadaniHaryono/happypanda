@@ -10,12 +10,12 @@ from PyQt5.QtCore import (
 
 try:
     import app_constants
-    import gallerydb
+    from gallerydb import GalleryDB
     import utils
 except ImportError:
+    from .gallerydb import GalleryDB
     from . import (
         app_constants,
-        gallerydb,
         utils,
     )
 
@@ -68,25 +68,33 @@ class GalleryHandler(FileSystemEventHandler, QObject):
             return True
         return False
 
+    def _is_condition_match(self, event):
+        """condition to match before any method run.
+
+        this method may calso have side effect.
+        """
+        if not app_constants.OVERRIDE_MONITOR:
+            if self.file_filter(event):
+                return True
+        else:
+            app_constants.OVERRIDE_MONITOR = False
+        return False
+
     def on_created(self, event):
         """Run the function when file created.
 
         Args:
             event:Event
         """
-        if not app_constants.OVERRIDE_MONITOR:
-            if self.file_filter(event):
-                gs = 0
-                if event.src_path.endswith(utils.ARCHIVE_FILES):
-                    gs = len(utils.check_archive(event.src_path))
-                elif event.is_directory:
-                    g_dirs, g_archs = utils.recursive_gallery_check(
-                        event.src_path)
-                    gs = len(g_dirs) + len(g_archs)
-                if gs:
-                    self.CREATE_SIGNAL.emit(event.src_path)
-        else:
-            app_constants.OVERRIDE_MONITOR = False
+        if self._is_condition_match(event):
+            gs = 0
+            if event.src_path.endswith(utils.ARCHIVE_FILES):
+                gs = len(utils.check_archive(event.src_path))
+            elif event.is_directory:
+                g_dirs, g_archs = utils.recursive_gallery_check(event.src_path)
+                gs = len(g_dirs) + len(g_archs)
+            if gs:
+                self.CREATE_SIGNAL.emit(event.src_path)
 
     def on_deleted(self, event):
         """Run the function when file deleted.
@@ -94,22 +102,16 @@ class GalleryHandler(FileSystemEventHandler, QObject):
         Args:
             event:Event.
         """
-        if not app_constants.OVERRIDE_MONITOR:
-            if self.file_filter(event):
-                path = event.src_path
-                gallery = gallerydb.GalleryDB.get_gallery_by_path(path)
-                if gallery:
-                    self.DELETED_SIGNAL.emit(path, gallery)
-        else:
-            app_constants.OVERRIDE_MONITOR = False
+        if self._is_condition_match(event):
+            path = event.src_path
+            gallery = GalleryDB.get_gallery_by_path(path)
+            if gallery:
+                self.DELETED_SIGNAL.emit(path, gallery)
 
     def on_moved(self, event):
         """Run the function when file moved."""
-        if not app_constants.OVERRIDE_MONITOR:
-            if self.file_filter(event):
-                old_path = event.src_path
-                gallery = gallerydb.GalleryDB.get_gallery_by_path(old_path)
-                if gallery:
-                    self.MOVED_SIGNAL.emit(event.dest_path, gallery)
-        else:
-            app_constants.OVERRIDE_MONITOR = False
+        if self._is_condition_match(event):
+            old_path = event.src_path
+            gallery = GalleryDB.get_gallery_by_path(old_path)
+            if gallery:
+                self.MOVED_SIGNAL.emit(event.dest_path, gallery)
