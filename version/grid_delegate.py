@@ -33,14 +33,14 @@ from PyQt5.QtWidgets import (
 
 try:
     import app_constants
-    import misc
+    from misc import text_layout
     from gallery_model import GalleryModel
     from file_icon import FileIcon
 except ImportError:
     from . import (
         app_constants,
-        misc,
     )
+    from .misc import text_layout
     from .gallery_model import GalleryModel
     from .file_icon import FileIcon
 
@@ -208,7 +208,7 @@ class GridDelegate(QStyledItemDelegate):
                 return new_x
 
             def img_too_big(start_x):
-                txt_layout = misc.text_layout(
+                txt_layout = text_layout(
                     "Thumbnail regeneration needed!", w, self.title_font, self.title_font_m)
 
                 clipping = QRectF(x, y + h // 4, w, app_constants.GRIDBOX_LBL_H - 10)
@@ -247,7 +247,7 @@ class GridDelegate(QStyledItemDelegate):
                     thumb_text = "Loading..."
                 else:
                     thumb_text = "Thumbnail regeneration needed!"
-                txt_layout = misc.text_layout(thumb_text, w, self.title_font, self.title_font_m)
+                txt_layout = text_layout(thumb_text, w, self.title_font, self.title_font_m)
 
                 clipping = QRectF(x, y + h // 4, w, app_constants.GRIDBOX_LBL_H - 10)
                 txt_layout.draw(painter, QPointF(x, y + h // 4), clip=clipping)
@@ -384,8 +384,8 @@ class GridDelegate(QStyledItemDelegate):
                 return rect
 
             if option.state & QStyle.State_MouseOver or option.state & QStyle.State_Selected:
-                title_layout = misc.text_layout(title, w, self.title_font, self.title_font_m)
-                artist_layout = misc.text_layout(artist, w, self.artist_font, self.artist_font_m)
+                title_layout = text_layout(title, w, self.title_font, self.title_font_m)
+                artist_layout = text_layout(artist, w, self.artist_font, self.artist_font_m)
                 t_h = title_layout.boundingRect().height()
                 a_h = artist_layout.boundingRect().height()
 
@@ -460,7 +460,7 @@ class GridDelegate(QStyledItemDelegate):
                 p_path.addRect(x + w - 20, y, 20, 20)
                 painter.drawPath(p_path.simplified())
                 painter.setPen(QColor("white"))
-                txt_layout = misc.text_layout(txt, w, self.title_font, self.title_font_m)
+                txt_layout = text_layout(txt, w, self.title_font, self.title_font_m)
                 txt_layout.draw(painter, QPointF(x, y + h * 0.3))
                 painter.restore()
 
@@ -487,7 +487,7 @@ class GridDelegate(QStyledItemDelegate):
         else:
             painter.fillRect(option.rect, QColor(164, 164, 164, 100))
             painter.setPen(QColor(164, 164, 164, 200))
-            txt_layout = misc.text_layout("Fetching...", w, self.title_font, self.title_font_m)
+            txt_layout = text_layout("Fetching...", w, self.title_font, self.title_font_m)
 
             clipping = QRectF(x, y + h // 4, w, app_constants.GRIDBOX_LBL_H - 10)
             txt_layout.draw(painter, QPointF(x, y + h // 4), clip=clipping)
