@@ -71,7 +71,7 @@ try:
     from gallery_model import GalleryModel
     from line_edit import LineEdit
     from manga_views import MangaViews
-    from misc import centerWidget
+    from misc import center_widget
     from sidebar_widget_frame import SideBarWidgetFrame
     from single_gallery_choices import SingleGalleryChoices
     from system_tray import SystemTray
@@ -127,7 +127,7 @@ except ImportError:
     from .gallery_model import GalleryModel
     from .line_edit import LineEdit
     from .manga_views import MangaViews
-    from .misc import centerWidget
+    from .misc import center_widget
     from .sidebar_widget_frame import SideBarWidgetFrame
     from .single_gallery_choices import SingleGalleryChoices
     from .system_tray import SystemTray
@@ -443,7 +443,7 @@ class AppWindow(QMainWindow):
         self.resize(*window_size)
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
-        centerWidget(self)
+        center_widget(self)
         self.init_spinners()
         self.show()
 

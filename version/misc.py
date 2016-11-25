@@ -60,7 +60,7 @@ def text_layout(text, width, font, font_metrics, alignment=Qt.AlignCenter):
     return layout
 
 
-def centerWidget(widget, parent_widget=None):
+def center_widget(widget, parent_widget=None):
     """centerWidget."""
     if parent_widget:
         r = parent_widget.rect()
@@ -71,7 +71,7 @@ def centerWidget(widget, parent_widget=None):
         Qt.LeftToRight, Qt.AlignCenter, widget.size(), r))
 
 
-def clearLayout(layout):  # NOQA
+def clear_layout(layout):
     """clearLayout."""
     if layout is not None:
         while layout.count():
@@ -79,7 +79,7 @@ def clearLayout(layout):  # NOQA
             if child.widget() is not None:
                 child.widget().deleteLater()
             elif child.layout() is not None:
-                clearLayout(child.layout())
+                clear_layout(child.layout())
 
 
 def create_animation(parent, prop):

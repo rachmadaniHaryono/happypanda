@@ -32,7 +32,7 @@ try:
     from clicked_label import ClickedLabel
     from flow_layout import FlowLayout
     from line_frame import LineFrame
-    from misc import create_animation
+    from misc import create_animation, clear_layout
     from tag_text_button import TagTextButton
     import app_constants
     import utils
@@ -44,7 +44,7 @@ except ImportError:
     from .tag_text_button import TagTextButton
     from .misc import (
         create_animation,
-        clearLayout,
+        clear_layout,
     )
     from . import (
         app_constants,
@@ -497,7 +497,7 @@ class GalleryMetaWindow(ArrowWindow):
             else:
                 self.g_url_lbl.hide()
 
-            clearLayout(self.tags_layout)
+            clear_layout(self.tags_layout)
             if self.has_tags(gallery.tags):
                 ns_layout = QFormLayout()
                 self.tags_layout.addRow(ns_layout)
