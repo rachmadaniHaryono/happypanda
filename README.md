@@ -1,19 +1,10 @@
-### I will now be posting progress updates on twitter[(@pewspew)](https://twitter.com/pewspew) if you're interested.
-### I'm looking for someone who want to work on the frontend. Language of your choice. 
-
-I'm available in the gitter chat if you have any questions!
-
 [![Build Status](https://travis-ci.org/rachmadaniHaryono/happypanda.svg?branch=master)](https://travis-ci.org/rachmadaniHaryono/happypanda)
 [![codecov](https://codecov.io/gh/rachmadaniHaryono/happypanda/branch/master/graph/badge.svg)](https://codecov.io/gh/rachmadaniHaryono/happypanda)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Pewpews/happypanda?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Stories in Progress](https://badge.waffle.io/Pewpews/happypanda.png?label=In%20Progress&title=Features%20In%20Progress)](https://waffle.io/Pewpews/happypanda)
-[![Stories in Before next release](https://badge.waffle.io/Pewpews/happypanda.png?label=Before%20next%20release&title=Before%20next%20release)](https://waffle.io/Pewpews/happypanda)
-
-Development is done in alpha branch
-
-For future plans, see [issues](https://github.com/Pewpews/happypanda/issues)
-
-For general documentation, check the [wiki](https://github.com/Pewpews/happypanda/wiki)
+[![GitHub license](https://img.shields.io/badge/license-GPL-blue.svg)](https://raw.githubusercontent.com/rachmadaniHaryono/happypanda/master/LICENSE)
+[![Code Climate](https://codeclimate.com/github/rachmadaniHaryono/happypanda/badges/gpa.svg)](https://codeclimate.com/github/rachmadaniHaryono/happypanda)
+[]([![Stories in Progress](https://badge.waffle.io/Pewpews/happypanda.png?label=In%20Progress&title=Features%20In%20Progress)](https://waffle.io/Pewpews/happypanda))
+[]([![Stories in Before next release](https://badge.waffle.io/Pewpews/happypanda.png?label=Before%20next%20release&title=Before%20next%20release)](https://waffle.io/Pewpews/happypanda))
 
 # Screenshots
 <img src="https://raw.githubusercontent.com/Pewpews/happypanda/master/misc/screenshot1.png" width="700">
@@ -34,6 +25,31 @@ For general documentation, check the [wiki](https://github.com/Pewpews/happypand
 - Supports ZIP/CBZ, RAR/CBR and directories with loose files
 - Customizable by lots of settings
 - And lots more...
+
+# Fork's goals:
+
+## Main goals:
+
+- [ ] Testing coverage for non pyqt stuff over 50 %.
+- [ ] Using peewee for database module.
+- [ ] More supported gallery downloader.
+
+## Optional goals:
+
+- [ ] Metadata from other website such as myanimelist, mangaupdates, etc
+
+# Original author's message:
+
+### I will now be posting progress updates on twitter[(@pewspew)](https://twitter.com/pewspew) if you're interested.
+### I'm looking for someone who want to work on the frontend. Language of your choice.
+
+I'm available in the gitter chat if you have any questions!
+
+Development is done in alpha branch
+
+For future plans, see [issues](https://github.com/Pewpews/happypanda/issues)
+
+For general documentation, check the [wiki](https://github.com/Pewpews/happypanda/wiki)
 
 # How to install and run
 #### Windows
