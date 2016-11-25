@@ -52,6 +52,18 @@ log_e = log.error
 log_c = log.critical
 
 
+def _draw_pixmap(image, img_too_big_func, w_limit, h_limit, center_img_func, painter_obj, y_pos):
+    """helper function to draw pixmap."""
+    img_x = center_img_func(image.width())
+    if image.width() > w_limit or image.height() > h_limit:
+        img_too_big_func(img_x)
+    else:
+        if image.height() < image.width():  # to keep aspect ratio
+            painter_obj.drawPixmap(QPoint(img_x, y_pos), image)
+        else:
+            painter_obj.drawPixmap(QPoint(img_x, y_pos), image)
+
+
 class GridDelegate(QStyledItemDelegate):
     """A custom delegate for the model/view framework."""
 
@@ -220,25 +232,15 @@ class GridDelegate(QStyledItemDelegate):
                 pix_cache = QPixmapCache.find(self.key(loaded_image.cacheKey()))
                 if isinstance(pix_cache, QPixmap):
                     self.image = pix_cache
-                    img_x = center_img(self.image.width())
-                    if self.image.width() > w or self.image.height() > h:
-                        img_too_big(img_x)
-                    else:
-                        if self.image.height() < self.image.width():  # to keep aspect ratio
-                            painter.drawPixmap(QPoint(img_x, y), self.image)
-                        else:
-                            painter.drawPixmap(QPoint(img_x, y), self.image)
+                    _draw_pixmap(
+                        image=self.image, img_too_big_func=img_too_big, w_limit=w, h_limit=h,
+                        center_img_func=center_img, painter_obj=painter, y_pos=y)
                 else:
                     self.image = QPixmap.fromImage(loaded_image)
-                    img_x = center_img(self.image.width())
                     QPixmapCache.insert(self.key(loaded_image.cacheKey()), self.image)
-                    if self.image.width() > w or self.image.height() > h:
-                        img_too_big(img_x)
-                    else:
-                        if self.image.height() < self.image.width():  # to keep aspect ratio
-                            painter.drawPixmap(QPoint(img_x, y), self.image)
-                        else:
-                            painter.drawPixmap(QPoint(img_x, y), self.image)
+                    _draw_pixmap(
+                        image=self.image, img_too_big_func=img_too_big, w_limit=w, h_limit=h,
+                        center_img_func=center_img, painter_obj=painter, y_pos=y)
             else:
 
                 painter.save()
