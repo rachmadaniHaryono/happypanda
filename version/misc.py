@@ -39,8 +39,9 @@ log_c = log.critical
 
 def text_layout(text, width, font, font_metrics, alignment=Qt.AlignCenter):
     """Lay out wrapped text."""
-    text_option = get_text_option(
-        alignment=alignment, use_design_metrics=True, wrap_mode=QTextOption.WordWrap)
+    text_option = QTextOption(alignment)
+    text_option.setUseDesignMetrics(True)
+    text_option.setWrapMode(QTextOption.WordWrap)
     layout = QTextLayout(text, font)
     layout.setTextOption(text_option)
     leading = font_metrics.leading()
@@ -86,13 +87,6 @@ def create_animation(parent, prop):
     p_array = QByteArray().append(prop)
     return QPropertyAnimation(parent, p_array)
 
-
-def get_text_option(alignment, use_design_metrics, wrap_mode):
-    """create QTextOption and set it's attribute from input."""
-    text_option = QTextOption(alignment)
-    text_option.setUseDesignMetrics(use_design_metrics)
-    text_option.setWrapMode(wrap_mode)
-    return text_option
 
 # def center_parent(parent, child):
 #   "centers child window in parent"
