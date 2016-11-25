@@ -25,8 +25,10 @@ from PyQt5.QtWidgets import (
 
 try:
     from transparent_widget import TransparentWidget
+    from misc import get_text_option
 except ImportError:
     from .transparent_widget import TransparentWidget
+    from .misc import get_text_option
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -38,9 +40,8 @@ log_c = log.critical
 
 def text_layout(text, width, font, font_metrics, alignment=Qt.AlignCenter):
     """Lay out wrapped text."""
-    text_option = QTextOption(alignment)
-    text_option.setUseDesignMetrics(True)
-    text_option.setWrapMode(QTextOption.WordWrap)
+    text_option = get_text_option(
+        alignment=alignment, use_design_metrics=True, wrap_mode=QTextOption.WordWrap)
     layout = QTextLayout(text, font)
     layout.setTextOption(text_option)
     leading = font_metrics.leading()
