@@ -37,6 +37,7 @@ try:
     from completer_text_edit import CompleterTextEdit
     from fetch_obj import FetchObject
     from gcompleter import GCompleter
+    from utils import tag_to_string
     import app_constants
     import database
     import gallerydb
@@ -46,6 +47,7 @@ except ImportError:
     from .completer_text_edit import CompleterTextEdit
     from .fetch_obj import FetchObject
     from .gcompleter import GCompleter
+    from .utils import tag_to_string
     from . import (
         app_constants,
         database,
@@ -317,6 +319,25 @@ class GalleryDialogWidget(QWidget):
             combobox.setCurrentIndex(default)
             return False
 
+    @staticmethod
+    def _set_form(gallery, attr, editor=None, box=None):
+        """set editor."""
+        if editor is not None and box is not None:
+            raise NotImplementedError
+        if editor is None and box is None:
+            raise ValueError('No editor or box given.')
+        g = gallery[0]
+        g_attr = getattr(g, attr)
+        arg = g_attr if attr != 'tags' else tag_to_string(g_attr)
+        if all(map(lambda x: getattr(x, attr) == g_attr, gallery)):
+            if editor is not None:
+                editor.setText(arg)
+                form = editor
+            if box is not None:
+                box.setValue(arg)
+                form = box
+            form.g_check.setChecked(True)
+
     def setGallery(self, gallery):  # NOQA
         """To be used for when editing a gallery."""
         if isinstance(gallery, gallerydb.Gallery):
@@ -329,8 +350,7 @@ class GalleryDialogWidget(QWidget):
             self.author_edit.setText(gallery.artist)
             self.descr_edit.setText(gallery.info)
             self.rating_box.setValue(gallery.rating)
-
-            self.tags_edit.setText(utils.tag_to_string(gallery.tags))
+            self.tags_edit.setText(tag_to_string(gallery.tags))
 
             _set_gallery_constant_setting(
                 widget=self, widget_attr=self.lang_box, gallery_attr=gallery.language,
@@ -355,26 +375,18 @@ class GalleryDialogWidget(QWidget):
 
         elif isinstance(gallery, list):
             g = gallery[0]
-            if all(map(lambda x: x.title == g.title, gallery)):
-                self.title_edit.setText(g.title)
-                self.title_edit.g_check.setChecked(True)
-            if all(map(lambda x: x.artist == g.artist, gallery)):
-                self.author_edit.setText(g.artist)
-                self.author_edit.g_check.setChecked(True)
-            if all(map(lambda x: x.info == g.info, gallery)):
-                self.descr_edit.setText(g.info)
-                self.descr_edit.g_check.setChecked(True)
-            if all(map(lambda x: x.tags == g.tags, gallery)):
-                self.tags_edit.setText(utils.tag_to_string(g.tags))
-                self.tags_edit.g_check.setChecked(True)
+            self._set_form(gallery=gallery, attr='title', editor=self.title_edit)
+            self._set_form(gallery=gallery, attr='artist', editor=self.author_edit)
+            self._set_form(gallery=gallery, attr='info', editor=self.descr_edit)
+            self._set_form(gallery=gallery, attr='tags', editor=self.tags_edit)
+            self._set_form(gallery=gallery, attr='rating', box=self.rating_box)
+            self._set_form(gallery=gallery, attr='link', editor=self.link_lbl)
+            #
             _set_gallery_specific_setting(
                 cls=self,
                 attr='language', cls_attr='lang_box', gallery=gallery, def_val=1,
                 constant_attr='G_DEF_LANGUAGE'
             )
-            if all(map(lambda x: x.rating == g.rating, gallery)):
-                self.rating_box.setValue(g.rating)
-                self.rating_box.g_check.setChecked(True)
             _set_gallery_specific_setting(
                 cls=self,
                 attr='type', cls_attr='type_box', gallery=gallery, def_val=0,
@@ -394,9 +406,6 @@ class GalleryDialogWidget(QWidget):
                 qdate_pub_date = QDate.fromString(gallery_pub_date[0], "yyyy-MM-dd")
                 self.pub_edit.setDate(qdate_pub_date)
                 self.pub_edit.g_check.setChecked(True)
-            if all(map(lambda x: x.link == g.link, gallery)):
-                self.link_lbl.setText(g.link)
-                self.link_lbl.g_check.setChecked(True)
 
     def newUI(self):
         """new ui."""
@@ -565,7 +574,7 @@ class GalleryDialogWidget(QWidget):
         # tags = ""
         # lang = ['English', 'Japanese']
         self._find_combobox_match(self.lang_box, metadata.language, 2)
-        self.tags_edit.setText(utils.tag_to_string(metadata.tags))
+        self.tags_edit.setText(tag_to_string(metadata.tags))
         pub_string = "{}".format(metadata.pub_date)
         pub_date = QDate.fromString(pub_string.split()[0], "yyyy-MM-dd")
         self.pub_edit.setDate(pub_date)

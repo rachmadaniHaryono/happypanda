@@ -92,3 +92,57 @@ def test_change_link():
     main_link.setText.assert_called_once_with(text)
     link_btn1.hide.assert_called_once_with()
     link_btn2.show.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    'mode', ['none_given', 'both_given']
+)
+def test_set_form_raises_error(mode):
+    """test method when raise error."""
+    if mode == 'none_given':
+        editor = None
+        box = None
+        exp_error = ValueError
+    elif mode == 'both_given':
+        editor = mock.Mock()
+        box = mock.Mock()
+        exp_error = NotImplementedError
+    else:
+        raise ValueError('Unknown mode.')
+    from version.gallery_dialog_widget import GalleryDialogWidget
+    # run
+    with pytest.raises(exp_error):
+        GalleryDialogWidget._set_form(
+            gallery=mock.Mock(), attr=mock.Mock(), editor=editor, box=box)
+
+
+@pytest.mark.parametrize(
+    'mode, attr',
+    product(
+        ['box_given', 'editor_given'],
+        ['name', "tags"],
+    )
+)
+def test_set_form(mode, attr):
+    """test method."""
+    if mode not in ('box_given', 'editor_given'):
+        raise ValueError('Unknown mode.')
+    box, editor = (mock.Mock(), None) if mode == 'box_given' else (None, mock.Mock())
+    with mock.patch('version.gallery_dialog_widget.tag_to_string') as m_tts:
+        from version.gallery_dialog_widget import GalleryDialogWidget
+        #
+        g = mock.Mock()
+        g_attr = getattr(g, attr)
+        arg = g_attr if attr != 'tags' else m_tts(g_attr)
+        gallery = [g]
+        # run
+        GalleryDialogWidget._set_form(gallery=gallery, attr=attr, editor=editor, box=box)
+        if mode == 'box_given':
+            form = box
+            form_1call = mock.call.setValue(arg)
+        elif mode == 'editor_given':
+            form = editor
+            form_1call = mock.call.setText(arg)
+        form.assert_has_calls(
+            [form_1call, mock.call.g_check.setChecked(True)]
+        )
