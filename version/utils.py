@@ -354,6 +354,18 @@ def external_viewer_checker(path):
             return x
 
 
+def _find_filepath(path):
+    """find filepath.
+
+    this is helper function to open_chapter func.
+    """
+    sorted_scandir_result_names = sorted([y.name for y in scandir.scandir(path)])
+    pages = [
+        x for x in sorted_scandir_result_names if x.lower().endswith(IMG_FILES)]
+    first_page = pages[0]
+    return os.path.join(path, first_page)
+
+
 def open_chapter(chapterpath, archive=None):  # NOQA
     """open_chapter."""
     is_archive = True if archive else False
@@ -378,12 +390,7 @@ def open_chapter(chapterpath, archive=None):  # NOQA
 
     def find_f_img_folder():
         """find_f_img_folder."""
-        filepath = os.path.join(
-            temp_p,
-            [
-                x for x in sorted([y.name for y in scandir.scandir(temp_p)])
-                if x.lower().endswith(IMG_FILES)
-            ][0])  # Find first page
+        filepath = _find_filepath(path=temp_p)
         return temp_p if send_folder else filepath
 
     def find_f_img_archive(extract=True):
@@ -412,10 +419,7 @@ def open_chapter(chapterpath, archive=None):  # NOQA
             if send_folder:
                 filepath = t_p
             else:
-                filepath = os.path.join(t_p, [
-                    x for x in sorted([y.name for y in scandir.scandir(t_p)])
-                    if x.lower().endswith(IMG_FILES)
-                ][0])  # Find first page
+                filepath = _find_filepath(path=t_p)
                 filepath = os.path.abspath(filepath)
         else:
             if is_archive or chapterpath.endswith(ARCHIVE_FILES):
