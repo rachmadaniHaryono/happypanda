@@ -300,6 +300,16 @@ class GalleryDialogWidget(QWidget):
             combobox.setCurrentIndex(default)
             return False
 
+    def _set_gallery_specific_setting(self, attr, cls_attr, gallery, def_val, constant_attr):
+        """set gallery specific_setting."""
+        g = gallery[0]
+        if all(map(lambda x: getattr(x, attr) == getattr(g, attr), gallery)):
+            self_attr = getattr(self, cls_attr)
+            if not self._find_combobox_match(self_attr, getattr(g, attr), def_val):
+                self._find_combobox_match(
+                    self_attr, getattr(app_constants, constant_attr), def_val)
+            self_attr.g_check.setChecked(True)
+
     def setGallery(self, gallery):  # NOQA
         """To be used for when editing a gallery."""
         if isinstance(gallery, gallerydb.Gallery):
@@ -347,21 +357,21 @@ class GalleryDialogWidget(QWidget):
             if all(map(lambda x: x.tags == g.tags, gallery)):
                 self.tags_edit.setText(utils.tag_to_string(g.tags))
                 self.tags_edit.g_check.setChecked(True)
-            if all(map(lambda x: x.language == g.language, gallery)):
-                if not self._find_combobox_match(self.lang_box, g.language, 1):
-                    self._find_combobox_match(self.lang_box, app_constants.G_DEF_LANGUAGE, 1)
-                self.lang_box.g_check.setChecked(True)
+            self._set_gallery_specific_setting(
+                attr='language', cls_attr='lang_box', gallery=gallery, def_val=1,
+                constant_attr='G_DEF_LANGUAGE'
+            )
             if all(map(lambda x: x.rating == g.rating, gallery)):
                 self.rating_box.setValue(g.rating)
                 self.rating_box.g_check.setChecked(True)
-            if all(map(lambda x: x.type == g.type, gallery)):
-                if not self._find_combobox_match(self.type_box, g.type, 0):
-                    self._find_combobox_match(self.type_box, app_constants.G_DEF_TYPE, 0)
-                self.type_box.g_check.setChecked(True)
-            if all(map(lambda x: x.status == g.status, gallery)):
-                if not self._find_combobox_match(self.status_box, g.status, 0):
-                    self._find_combobox_match(self.status_box, app_constants.G_DEF_STATUS, 0)
-                self.status_box.g_check.setChecked(True)
+            self._set_gallery_specific_setting(
+                attr='type', cls_attr='type_box', gallery=gallery, def_val=0,
+                constant_attr='G_DEF_TYPE'
+            )
+            self._set_gallery_specific_setting(
+                attr='status', cls_attr='status_box', gallery=gallery, def_val=0,
+                constant_attr='G_DEF_STATUS'
+            )
             if all(map(lambda x: x.pub_date == g.pub_date, gallery)):
                 gallery_pub_date = "{}".format(g.pub_date).split(' ')
                 try:
