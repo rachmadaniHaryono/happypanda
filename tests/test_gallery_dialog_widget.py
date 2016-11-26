@@ -99,16 +99,10 @@ def test_change_link():
 )
 def test_set_form_raises_error(mode):
     """test method when raise error."""
-    if mode == 'none_given':
-        editor = None
-        box = None
-        exp_error = ValueError
-    elif mode == 'both_given':
-        editor = mock.Mock()
-        box = mock.Mock()
-        exp_error = NotImplementedError
-    else:
+    if mode not in ('none_given', 'both_given'):
         raise ValueError('Unknown mode.')
+    exp_error = ValueError
+    editor, box = (None, None) if mode == 'none_given' else (mock.Mock(), mock.Mock())
     from version.gallery_dialog_widget import GalleryDialogWidget
     # run
     with pytest.raises(exp_error):
