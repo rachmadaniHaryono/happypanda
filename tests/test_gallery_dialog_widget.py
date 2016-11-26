@@ -46,3 +46,27 @@ def test_set_gallery_specific_setting(val_pack, find_combobox_match_result):
             mock.call(*fcm_func_1call),
             mock.call(*fcm_func_2call)
         ])
+
+
+def test_set_gallery_constant_setting():
+    """test func."""
+    widget = mock.Mock()
+    widget_attr = mock.Mock()
+    gallery_attr = mock.Mock()
+    constant_attr = mock.Mock()
+    def_val = mock.Mock()
+    find_combobox_match_result = True
+    widget._find_combobox_match.return_value = find_combobox_match_result
+    fcm_func_1call = widget_attr, gallery_attr, def_val
+    from version.gallery_dialog_widget import _set_gallery_constant_setting
+    # run
+    _set_gallery_constant_setting(
+        widget, widget_attr, gallery_attr, constant_attr, def_val)
+    # test
+    if not find_combobox_match_result:
+        widget._find_combobox_match.assert_has_calls([
+            mock.call(*fcm_func_1call),
+            mock.call(widget_attr, constant_attr, def_val)
+        ])
+    else:
+        widget._find_combobox_match.assert_called_once_with(*fcm_func_1call)
