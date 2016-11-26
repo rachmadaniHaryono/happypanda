@@ -635,23 +635,40 @@ class GalleryDialogWidget(QWidget):
                     self.parent_widget.default_manga_view.replace_gallery([new_gallery], False)
             return new_gallery
 
+    @staticmethod
+    def _change_link(pre_link_item, main_link_item, text, after_link_items):
+        """change link.
+
+        This is method helper for link_set and link_modify method.
+
+        Summary of this method.
+
+        - pre_link will be hide.
+        - show and set text on main_link_item.
+        - hide after_link_item1 and show after_link_item2.
+        """
+        after_link_item1, after_link_item2 = after_link_items
+        pre_link_item.hide()
+        main_link_item.show()
+        main_link_item.setText(text)
+        after_link_item1.hide()
+        after_link_item2.show()
+
     def link_set(self):
         """link set."""
-        t = self.link_edit.text()
-        self.link_edit.hide()
-        self.link_lbl.show()
-        self.link_lbl.setText(t)
-        self.link_btn2.hide()
-        self.link_btn.show()
+        self._change_link(
+            pre_link_item=self.link_edit,
+            main_link_item=self.link_lbl, text=self.link_edit.text(),
+            after_link_items=[self.link_btn2, self.link_btn]
+        )
 
     def link_modify(self):
         """link modify."""
-        t = self.link_lbl.text()
-        self.link_lbl.hide()
-        self.link_edit.show()
-        self.link_edit.setText(t)
-        self.link_btn.hide()
-        self.link_btn2.show()
+        self._change_link(
+            pre_link_item=self.link_lbl,
+            main_link_item=self.link_edit, text=self.self.link_lbl.text(),
+            after_link_items=[self.link_btn, self.link_btn2]
+        )
 
     def _disconnect(self):
         try:

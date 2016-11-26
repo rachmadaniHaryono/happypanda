@@ -70,3 +70,25 @@ def test_set_gallery_constant_setting():
         ])
     else:
         widget._find_combobox_match.assert_called_once_with(*fcm_func_1call)
+
+
+def test_change_link():
+    """test method."""
+    pre_link = mock.Mock()
+    main_link = mock.Mock()
+    text = mock.Mock()
+    link_btn1 = mock.Mock()
+    link_btn2 = mock.Mock()
+    from version.gallery_dialog_widget import GalleryDialogWidget
+    # run
+    GalleryDialogWidget._change_link(
+        pre_link_item=pre_link,
+        main_link_item=main_link, text=text,
+        after_link_items=[link_btn1, link_btn2]
+    )
+    # test
+    pre_link.hide.assert_called_once_with()
+    main_link.show.assert_called_once_with()
+    main_link.setText.assert_called_once_with(text)
+    link_btn1.hide.assert_called_once_with()
+    link_btn2.show.assert_called_once_with()
