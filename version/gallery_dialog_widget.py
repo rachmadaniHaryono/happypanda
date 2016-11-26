@@ -61,6 +61,17 @@ log_e = log.error
 log_c = log.critical
 
 
+def _set_gallery_specific_setting(cls, attr, cls_attr, gallery, def_val, constant_attr):
+    """set gallery specific_setting."""
+    g = gallery[0]
+    if all(map(lambda x: getattr(x, attr) == getattr(g, attr), gallery)):
+        self_attr = getattr(cls, cls_attr)
+        if not cls._find_combobox_match(self_attr, getattr(g, attr), def_val):
+            cls._find_combobox_match(
+                self_attr, getattr(app_constants, constant_attr), def_val)
+        self_attr.g_check.setChecked(True)
+
+
 class GalleryDialogWidget(QWidget):
     """A window for adding/modifying gallery.
 
@@ -300,16 +311,6 @@ class GalleryDialogWidget(QWidget):
             combobox.setCurrentIndex(default)
             return False
 
-    @classmethod
-    def _set_gallery_specific_setting(cls, attr, cls_attr, gallery, def_val, constant_attr):
-        """set gallery specific_setting."""
-        g = gallery[0]
-        if all(map(lambda x: getattr(x, attr) == getattr(g, attr), gallery)):
-            self_attr = getattr(cls, cls_attr)
-            if not cls._find_combobox_match(self_attr, getattr(g, attr), def_val):
-                cls._find_combobox_match(
-                    self_attr, getattr(app_constants, constant_attr), def_val)
-            self_attr.g_check.setChecked(True)
 
     def setGallery(self, gallery):  # NOQA
         """To be used for when editing a gallery."""
@@ -358,18 +359,21 @@ class GalleryDialogWidget(QWidget):
             if all(map(lambda x: x.tags == g.tags, gallery)):
                 self.tags_edit.setText(utils.tag_to_string(g.tags))
                 self.tags_edit.g_check.setChecked(True)
-            self._set_gallery_specific_setting(
+            _set_gallery_specific_setting(
+                cls=self,
                 attr='language', cls_attr='lang_box', gallery=gallery, def_val=1,
                 constant_attr='G_DEF_LANGUAGE'
             )
             if all(map(lambda x: x.rating == g.rating, gallery)):
                 self.rating_box.setValue(g.rating)
                 self.rating_box.g_check.setChecked(True)
-            self._set_gallery_specific_setting(
+            _set_gallery_specific_setting(
+                cls=self,
                 attr='type', cls_attr='type_box', gallery=gallery, def_val=0,
                 constant_attr='G_DEF_TYPE'
             )
-            self._set_gallery_specific_setting(
+            _set_gallery_specific_setting(
+                cls=self,
                 attr='status', cls_attr='status_box', gallery=gallery, def_val=0,
                 constant_attr='G_DEF_STATUS'
             )
