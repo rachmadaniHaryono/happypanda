@@ -101,15 +101,15 @@ def handle_keypress_event_on_manga_view(view_obj, event, selected_idx):
     - SingleMangaView
     - MangaTableView
     """
-    if event.key() == Qt.Key_Return:
-        s_idx = selected_idx
-        if s_idx:
-            for idx in s_idx:
-                view_obj.doubleClicked.emit(idx)
-    elif event.modifiers() == Qt.ShiftModifier and event.key() == Qt.Key_Delete:
-        CommonView.remove_selected(view_obj, True)
+    s_idx = selected_idx
+    if event.key() == Qt.Key_Return and s_idx:
+        map(view_obj.doubleClicked.emit, s_idx)
     elif event.key() == Qt.Key_Delete:
-        CommonView.remove_selected(view_obj)
+        if event.modifiers() == Qt.ShiftModifier:
+            source = True
+        else:
+            source = False
+        CommonView.remove_selected(view_obj, source=source)
 
 
 # def center_parent(parent, child):
