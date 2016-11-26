@@ -72,6 +72,12 @@ def _set_gallery_specific_setting(cls, attr, cls_attr, gallery, def_val, constan
         self_attr.g_check.setChecked(True)
 
 
+def _set_gallery_constant_setting(widget, widget_attr, gallery_attr, constant_attr, def_val):
+    """set gallery constant setting."""
+    if not widget._find_combobox_match(widget_attr, gallery_attr, def_val):
+        widget._find_combobox_match(widget_attr, constant_attr, def_val)
+
+
 class GalleryDialogWidget(QWidget):
     """A window for adding/modifying gallery.
 
@@ -311,7 +317,6 @@ class GalleryDialogWidget(QWidget):
             combobox.setCurrentIndex(default)
             return False
 
-
     def setGallery(self, gallery):  # NOQA
         """To be used for when editing a gallery."""
         if isinstance(gallery, gallerydb.Gallery):
@@ -327,12 +332,15 @@ class GalleryDialogWidget(QWidget):
 
             self.tags_edit.setText(utils.tag_to_string(gallery.tags))
 
-            if not self._find_combobox_match(self.lang_box, gallery.language, 1):
-                self._find_combobox_match(self.lang_box, app_constants.G_DEF_LANGUAGE, 1)
-            if not self._find_combobox_match(self.type_box, gallery.type, 0):
-                self._find_combobox_match(self.type_box, app_constants.G_DEF_TYPE, 0)
-            if not self._find_combobox_match(self.status_box, gallery.status, 0):
-                self._find_combobox_match(self.status_box, app_constants.G_DEF_STATUS, 0)
+            _set_gallery_constant_setting(
+                widget=self, widget_attr=self.lang_box, gallery_attr=gallery.language,
+                constant_attr=app_constants.G_DEF_LANGUAGE, def_val=1)
+            _set_gallery_constant_setting(
+                widget=self, widget_attr=self.type_box, gallery_attr=gallery.type,
+                constant_attr=app_constants.G_DEF_TYPE, def_val=0)
+            _set_gallery_constant_setting(
+                widget=self, widget_attr=self.status_box, gallery_attr=gallery.status,
+                constant_attr=app_constants.G_DEF_STATUS, def_val=0)
 
             gallery_pub_date = "{}".format(gallery.pub_date).split(' ')
             try:
