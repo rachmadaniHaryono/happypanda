@@ -917,17 +917,14 @@ class TagDB(DBBase):
 
                 returns id else None.
                 """
-                c = cls.execute(
-                    cls,
-                    'SELECT tags_mappings_id FROM tags_mappings WHERE namespace_id=? AND tag_id=?',
-                    (namespace_id, tag_id,)
+                cmd = (
+                    'SELECT tags_mappings_id FROM tags_mappings '
+                    'WHERE namespace_id=? AND tag_id=?'
                 )
-                try:  # exists
-                    return c.fetchone()['tags_mappings_id']
-                except TypeError:  # doesnt exist
-                    return None
-                except IndexError:
-                    return None
+                return _fetchone_from_cursor(
+                    cls=cls, cmd=cmd, exec_last_arg=(namespace_id, tag_id,),
+                    key='tags_mappings_id'
+                )
 
             # time to map the tags to the namespace now
             for tag_id in tags_id_list:
@@ -1318,17 +1315,11 @@ class HashDB(DBBase):
 
                 returns hash, else returns None
                 """
-                c = cls.execute(
-                    cls,
-                    'SELECT hash FROM hashes WHERE page=? AND chapter_id=?',
-                    (page, chap_id,)
+                cmd = 'SELECT hash FROM hashes WHERE page=? AND chapter_id=?',
+                return _fetchone_from_cursor(
+                    cls=cls, cmd=cmd, exec_last_arg=(page, chap_id,),
+                    key='hash'
                 )
-                try:  # exists
-                    return c.fetchone()['hash']
-                except TypeError:  # doesnt exist
-                    return None
-                except IndexError:
-                    return None
 
             if gallery.dead_link:
                 log_e(
@@ -2443,6 +2434,17 @@ class DatabaseStartup(QObject):
     def fetch_hashes(self):
         for g in self._loaded_galleries:
             g.hashes = execute(HashDB.get_gallery_hashes, False, g.id)
+
+
+def _fetchone_from_cursor(cls, cmd, exec_last_arg, key):
+    """fetch one row from cursor."""
+    c = cls.execute(cls, cmd, exec_last_arg)
+    try:  # exists
+        return c.fetchone()[key]
+    except TypeError:  # doesnt exist
+        return None
+    except IndexError:
+        return None
 
 
 if __name__ == '__main__':
