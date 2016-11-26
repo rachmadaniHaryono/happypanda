@@ -48,6 +48,6 @@ def test_handle_keypress_event_on_manga_view(event_key, selected_idx):
             else:
                 view_obj.doubleClicked.emit.assert_not_called()
         elif event_key == 'shift-delete':
-            m_cw.remove_selected.assert_called_once_with(view_obj, True)
+            m_cw.remove_selected.assert_called_once_with(view_obj, source=True)
         elif event_key == 'delete':
-            m_cw.remove_selected.assert_called_once_with(view_obj)
+            m_cw.remove_selected.assert_called_once_with(view_obj, source=False)

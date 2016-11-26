@@ -103,7 +103,7 @@ def handle_keypress_event_on_manga_view(view_obj, event, selected_idx):
     """
     s_idx = selected_idx
     if event.key() == Qt.Key_Return and s_idx:
-        map(view_obj.doubleClicked.emit, s_idx)
+        list(map(view_obj.doubleClicked.emit, s_idx))
     elif event.key() == Qt.Key_Delete:
         if event.modifiers() == Qt.ShiftModifier:
             source = True
