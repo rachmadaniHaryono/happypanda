@@ -22,6 +22,7 @@ try:
     from gallery_meta_window import GalleryMetaWindow
     from gallery_model import GalleryModel
     from grid_delegate import GridDelegate
+    from misc import handle_keypress_event_on_manga_view
     from sort_filter_model import SortFilterModel
 except ImportError:
     from . import (
@@ -32,6 +33,7 @@ except ImportError:
     from .gallery_meta_window import GalleryMetaWindow
     from .gallery_model import GalleryModel
     from .grid_delegate import GridDelegate
+    from .misc import handle_keypress_event_on_manga_view
     from .sort_filter_model import SortFilterModel
 
 log = logging.getLogger(__name__)
@@ -171,15 +173,8 @@ class SingleMangaView(QListView):
 
     def keyPressEvent(self, event):
         """key press event."""
-        if event.key() == Qt.Key_Return:
-            s_idx = self.selectedIndexes()
-            if s_idx:
-                for idx in s_idx:
-                    self.doubleClicked.emit(idx)
-        elif event.modifiers() == Qt.ShiftModifier and event.key() == Qt.Key_Delete:
-            CommonView.remove_selected(self, True)
-        elif event.key() == Qt.Key_Delete:
-            CommonView.remove_selected(self)
+        handle_keypress_event_on_manga_view(
+            view_obj=self, event=event, selected_idx=self.selectedIndexes())
         return super().keyPressEvent(event)
 
     def favorite(self, index):

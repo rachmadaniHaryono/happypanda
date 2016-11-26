@@ -16,8 +16,10 @@ from PyQt5.QtWidgets import (
 )
 try:
     from common_view import CommonView
+    from misc import handle_keypress_event_on_manga_view
 except ImportError:
     from .common_view import CommonView
+    from .misc import handle_keypress_event_on_manga_view
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -81,15 +83,8 @@ class MangaTableView(QTableView):
 
     def keyPressEvent(self, event):
         """keypress event."""
-        if event.key() == Qt.Key_Return:
-            s_idx = self.selectionModel().selectedRows()
-            if s_idx:
-                for idx in s_idx:
-                    self.doubleClicked.emit(idx)
-        elif event.modifiers() == Qt.ShiftModifier and event.key() == Qt.Key_Delete:
-            CommonView.remove_selected(self, True)
-        elif event.key() == Qt.Key_Delete:
-            CommonView.remove_selected(self)
+        handle_keypress_event_on_manga_view(
+            view_obj=self, event=event, selected_idx=self.selectionModel().selectedRows())
         return super().keyPressEvent(event)
 
     def contextMenuEvent(self, event):
