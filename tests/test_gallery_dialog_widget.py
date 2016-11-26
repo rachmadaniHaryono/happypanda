@@ -16,7 +16,7 @@ import pytest
         [True, False]
     )
 )
-def test_set_gallery_specific_setting(val_pack, find_combobox_match_result, qtbot):
+def test_set_gallery_specific_setting(val_pack, find_combobox_match_result):
     """test method."""
     attr, cls_attr, constant_attr, def_val = val_pack
     #
