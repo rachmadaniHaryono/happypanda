@@ -80,6 +80,18 @@ def _set_gallery_constant_setting(widget, widget_attr, gallery_attr, constant_at
         widget._find_combobox_match(widget_attr, constant_attr, def_val)
 
 
+def _check_form_input_condition_match(gallery, attr, editor=None, box=None):
+    """function to check _set_form args if it is match certain condition.
+
+    Return True when check is succesful.
+    """
+    if (editor is not None and box is not None) or (editor is None and box is None):
+        raise ValueError('Either only editor or box should be inputted.')
+    g = gallery[0]
+    g_attr = getattr(g, attr)
+    return all(map(lambda x: getattr(x, attr) == g_attr, gallery))
+
+
 class GalleryDialogWidget(QWidget):
     """A window for adding/modifying gallery.
 
@@ -322,21 +334,18 @@ class GalleryDialogWidget(QWidget):
     @staticmethod
     def _set_form(gallery, attr, editor=None, box=None):
         """set editor."""
-        if editor is not None and box is not None:
-            raise NotImplementedError
-        if editor is None and box is None:
-            raise ValueError('No editor or box given.')
+        if not _check_form_input_condition_match(
+                gallery=gallery, attr=attr, editor=editor, box=box):
+            return
         g = gallery[0]
         g_attr = getattr(g, attr)
         arg = g_attr if attr != 'tags' else tag_to_string(g_attr)
-        if all(map(lambda x: getattr(x, attr) == g_attr, gallery)):
-            if editor is not None:
-                editor.setText(arg)
-                form = editor
-            if box is not None:
-                box.setValue(arg)
-                form = box
-            form.g_check.setChecked(True)
+        form = editor if editor is not None else box
+        if editor is not None:
+            editor.setText(arg)
+        else:
+            box.setValue(arg)
+        form.g_check.setChecked(True)
 
     def setGallery(self, gallery):  # NOQA
         """To be used for when editing a gallery."""
