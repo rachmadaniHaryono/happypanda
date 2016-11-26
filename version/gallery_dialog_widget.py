@@ -300,13 +300,14 @@ class GalleryDialogWidget(QWidget):
             combobox.setCurrentIndex(default)
             return False
 
-    def _set_gallery_specific_setting(self, attr, cls_attr, gallery, def_val, constant_attr):
+    @classmethod
+    def _set_gallery_specific_setting(cls, attr, cls_attr, gallery, def_val, constant_attr):
         """set gallery specific_setting."""
         g = gallery[0]
         if all(map(lambda x: getattr(x, attr) == getattr(g, attr), gallery)):
-            self_attr = getattr(self, cls_attr)
-            if not self._find_combobox_match(self_attr, getattr(g, attr), def_val):
-                self._find_combobox_match(
+            self_attr = getattr(cls, cls_attr)
+            if not cls._find_combobox_match(self_attr, getattr(g, attr), def_val):
+                cls._find_combobox_match(
                     self_attr, getattr(app_constants, constant_attr), def_val)
             self_attr.g_check.setChecked(True)
 
