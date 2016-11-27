@@ -7,11 +7,13 @@ import datetime
 try:
     import app_constants
     import gallerydb
+    from .utils import get_gallery_tags
 except ImportError:
     from . import (
         app_constants,
         gallerydb,
     )
+    from .utils import get_gallery_tags
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
@@ -118,9 +120,8 @@ class ImportExportData:
             for ns in self.structure['tags']:
                 if ns not in g.tags:
                     g.tags[ns] = []
-                for tag in self.structure['tags'][ns]:
-                    if tag not in g.tags[ns]:
-                        g.tags[ns].append(tag)
+                g.tags = get_gallery_tags(
+                    tags=self.structure['tags'][ns], g_tags=g.tags, namespace=ns)
             g.exed = self.structure['exed']
             g.info = self.structure['info']
             g.fav = self.structure['fav']

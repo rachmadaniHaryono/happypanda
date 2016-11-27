@@ -1,4 +1,5 @@
 """test module."""
+from itertools import product
 from unittest import mock
 
 import pytest
@@ -90,3 +91,30 @@ def test_tag_to_string(simple, gallery, exp_res):
     from version.utils import tag_to_string
     res = tag_to_string(gallery, simple=simple)
     assert res == exp_res
+
+
+@pytest.mark.parametrize(
+    'tag_in_gallery, add_second_tag',
+    product([False, True], repeat=2)
+)
+def test_get_gallery_tags(tag_in_gallery, add_second_tag):
+    """test func."""
+    tag = mock.Mock()
+    tag2 = mock.Mock()
+    tags = [tag]
+    if add_second_tag:
+        tags.append(tag2)
+    namespace = mock.Mock()
+    g_tags = {}
+    if tag_in_gallery:
+        g_tags[namespace] = [tag]
+    else:
+        g_tags[namespace] = []
+    from version.misc import get_gallery_tags
+    # run
+    res = get_gallery_tags(tags, g_tags, namespace)
+    # test
+    if add_second_tag:
+        assert res == {namespace: [tag, tag2]}
+    else:
+        assert res == {namespace: [tag]}

@@ -1061,3 +1061,12 @@ def timeit(func):
         print('function [{}] finished in {} ms'.format(
             func.__name__, int(elapsed_time * 1000)))
     return newfunc
+
+
+def get_gallery_tags(tags, g_tags, namespace):
+    """set gallery tags from namespace."""
+    ns = namespace
+    for tag in tags:
+        if tag not in g_tags[ns]:
+            g_tags[ns].append(tag)
+    return g_tags

@@ -11,16 +11,14 @@ from datetime import datetime
 
 try:
     import app_constants
-    import utils
     from commenhen import CommenHen
     from settings import ExProperties
+    from utils import get_gallery_tags, title_parser
 except ImportError:
-    from . import (
-        app_constants,
-        utils,
-    )
+    from . import app_constants
     from .settings import ExProperties
     from .commenhen import CommenHen
+    from .utils import get_gallery_tags, title_parser
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -66,7 +64,7 @@ class EHen(CommenHen):
         else:
             lang = ""
 
-        title_artist_dict = utils.title_parser(title)
+        title_artist_dict = title_parser(title)
         if not append:
             g.title = title_artist_dict['title']
             if title_artist_dict['artist']:
@@ -101,9 +99,8 @@ class EHen(CommenHen):
             else:
                 for ns in data['tags']:
                     if ns in g.tags:
-                        for tag in data['tags'][ns]:
-                            if tag not in g.tags[ns]:
-                                g.tags[ns].append(tag)
+                        g.tags = get_gallery_tags(
+                            tags=data['tags'][ns], g_tags=g.tags, namespace=ns)
                     else:
                         g.tags[ns] = data['tags'][ns]
             if 'url' in data:
