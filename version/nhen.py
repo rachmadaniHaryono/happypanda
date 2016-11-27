@@ -29,13 +29,9 @@ class NHen(CommenHen):
     def login(cls, user, password):
         """login."""
         exprops = settings.ExProperties(settings.ExProperties.NHENTAI)
-        if cls.COOKIES:
-            if cls.check_login(cls.COOKIES):
-                return cls.COOKIES
-        elif exprops.cookies:
-            if cls.check_login(exprops.cookies):
-                cls.COOKIES.update(exprops.cookies)
-                return cls.COOKIES
+        cls_cookies = cls.check_existing_cookies(cls, exprops)
+        if cls_cookies is not None:
+            return cls_cookies
 
         cls._browser.open(cls.LOGIN_URL)
         login_form = cls._browser.get_form()

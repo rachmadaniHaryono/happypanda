@@ -107,6 +107,19 @@ class CommenHen:
         """check login."""
         pass
 
+    def check_existing_cookies(self, exprops):
+        """check existing cookies and return.
+
+        return None if nothing found.
+        """
+        if self.COOKIES:
+            if self.check_login(self.COOKIES):
+                return self.COOKIES
+        elif exprops.cookies:
+            if self.check_login(exprops.cookies):
+                self.COOKIES.update(exprops.cookies)
+                return self.COOKIES
+
     def check_cookie(self, cookie):
         """check cookie."""
         cookies = self.COOKIES.keys()
