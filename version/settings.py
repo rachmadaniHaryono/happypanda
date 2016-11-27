@@ -200,45 +200,45 @@ class ExProperties(Properties):
             with open(phappypanda_path, 'wb') as f:
                 pickle.dump(cls._INFO, f, 4)
 
+    def _set_info_site(self, catg, arg):
+        """default info setter."""
+        if self.site not in self._INFO:
+            self._INFO[self.site] = {}
+        self._INFO[self.site][catg] = arg
+
+    def _get_info_site(self, catg):
+        """default info getter."""
+        if self._INFO:
+            if self.site in self._INFO:
+                return self._INFO[self.site][catg]
+
     @property
     def cookies(self):
         """cookies."""
-        if self._INFO:
-            if self.site in self._INFO:
-                return self._INFO[self.site]['cookies']
-        return {}
+        val = self._get_info_site('cookies')
+        return val if val is not None else {}
 
     @cookies.setter
-    def cookies(self, c):
-        if self.site not in self._INFO:
-            self._INFO[self.site] = {}
-        self._INFO[self.site]['cookies'] = c
+    def cookies(self, arg):
+        self._set_info_site('cookies', arg)
 
     @property
     def username(self):
         """username."""
-        if self._INFO:
-            if self.site in self._INFO:
-                return self._INFO[self.site]['username']
+        return self._get_info_site('username')
 
     @username.setter
-    def username(self, us):
-        if self.site not in self._INFO:
-            self._INFO[self.site] = {}
-        self._INFO[self.site]['username'] = us
+    def username(self, arg):
+        self._set_info_site('username', arg)
 
     @property
     def password(self):
         """password."""
-        if self._INFO:
-            if self.site in self._INFO:
-                return self._INFO[self.site]['password']
+        return self._get_info_site('password')
 
     @password.setter
-    def password(self, ps):
-        if self.site not in self._INFO:
-            self._INFO[self.site] = {}
-        self._INFO[self.site]['password'] = ps
+    def password(self, arg):
+        self._set_info_site('password', arg)
 
     def check(self):
         """Return true if usable."""
