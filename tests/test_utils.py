@@ -27,3 +27,66 @@ def test_find_filepath(ext):
         m_scandir.scandir.assert_called_once_with(path)
         m_os.path.join.assert_called_once_with(path, filename)
         assert res == m_os.path.join.return_value
+
+
+@pytest.mark.parametrize(
+    'simple, gallery, exp_res', [
+        # (gallery, exp_res),
+        # namespace only, simple
+        (True, {'namespace': []}, ''),
+        (True, {'namespace': ['tag1', 'tag2']}, 'namespace,tag1, tag2'),
+        (
+            True,
+            {'namespace1': ['tag1'], 'namespace2': ['tag2']},
+            'namespace1,tag1, namespace2,tag2'), (
+            True,
+            {'namespace1': ['tag1', 'tag2'], 'namespace2':['tag3', 'tag4']},
+            'namespace1,tag1, tag2, namespace2,tag3, tag4'
+        ),
+        # namespace only, not_simple
+        (False, {'namespace': []}, ''),
+        (False, {'namespace': ['tag1', 'tag2']}, 'namespace:[tag1, tag2]'),
+        (
+            False,
+            {'namespace1': ['tag1'], 'namespace2': ['tag2']},
+            'namespace1:tag1, namespace2:tag2'),
+        (
+            False,
+            {'namespace1': ['tag1', 'tag2'], 'namespace2':['tag3', 'tag4']},
+            'namespace1:[tag1, tag2], namespace2:[tag3, tag4]'
+        ),
+        # default only, simple
+        (True, {'default': []}, ''),
+        (True, {'default': ['tag1', 'tag2']}, 'tag1, tag2'),
+        # default only, not_simple
+        (False, {'default': []}, ''),
+        (False, {'default': ['tag1', 'tag2']}, 'tag1, tag2'),
+        # blank mix, simple
+        (True, {'default': [], 'namespace': []}, ''),
+        (True, {'default': ['tag1'], 'namespace': []}, 'tag1, '),
+        (True, {'default': [], 'namespace': ['tag1']}, 'namespace,tag1'),
+        # blank mix, not_simple
+        (False, {'default': [], 'namespace': []}, ''),
+        (False, {'default': ['tag1'], 'namespace': []}, 'tag1, '),
+        (False, {'default': [], 'namespace': ['tag1']}, 'namespace:tag1'),
+        # mix, simple
+        (True, {'default': ['tag1'], 'namespace': ['tag2']}, 'tag1, namespace,tag2'),
+        (
+            True,
+            {'default': ['tag1', 'tag2'], 'namespace':['tag3', 'tag4']},
+            'tag1, tag2, namespace,tag3, tag4'
+        ),
+        # mix, not_simple
+        (False, {'default': ['tag1'], 'namespace': ['tag2']}, 'tag1, namespace:tag2'),
+        (
+            False,
+            {'default': ['tag1', 'tag2'], 'namespace':['tag3', 'tag4']},
+            'tag1, tag2, namespace:[tag3, tag4]'
+        ),
+    ]
+)
+def test_tag_to_string(simple, gallery, exp_res):
+    """test func."""
+    from version.utils import tag_to_string
+    res = tag_to_string(gallery, simple=simple)
+    assert res == exp_res
