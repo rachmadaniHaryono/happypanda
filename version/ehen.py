@@ -12,14 +12,14 @@ from datetime import datetime
 try:
     import app_constants
     import utils
-    import settings
     from commenhen import CommenHen
+    from settings import ExProperties
 except ImportError:
     from . import (
         app_constants,
         utils,
-        settings,
     )
+    from .settings import ExProperties
     from .commenhen import CommenHen
 
 log = logging.getLogger(__name__)
@@ -261,7 +261,7 @@ class EHen(CommenHen):
         """Log into g.e-h."""
         log_i("Attempting EH Login")
         eh_c = {}
-        exprops = settings.ExProperties()
+        exprops = ExProperties()
         if cls.COOKIES:
             if cls.check_login(cls.COOKIES):
                 return cls.COOKIES
