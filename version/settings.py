@@ -294,9 +294,9 @@ def win_read(cls, name):
     assert isinstance(name, str)
     props = WinProperties()
     try:
-        props.resize = (int(config[name]['resize.w']),
-                        int(config[name]['resize.h']))
-        props.pos = (int(config[name]['pos.x']), int(config[name]['pos.y']))
+        attrs_packs = [('resize', 'resize.w', 'resize.h'), ('pos', 'pos.x', 'pos.y')]
+        for attr, key1, key2 in attrs_packs:
+            setattr(props, attr, (int(config[name][key1]), int(config[name][key2])))
     except KeyError:
         pass
     return props
