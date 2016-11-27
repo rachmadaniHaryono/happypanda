@@ -556,45 +556,28 @@ def tag_to_string(gallery_tag, simple=False):  # NOQA
     assert isinstance(
         gallery_tag, dict), "Please provide a dict like this: {'namespace':['tag1']}"
     string = ""
-    if not simple:
-        for n, namespace in enumerate(sorted(gallery_tag), 1):
-            if len(gallery_tag[namespace]) != 0:
-                if namespace != 'default':
-                    string += namespace + ":"
-
-                # find tags
-                if namespace != 'default' and len(gallery_tag[namespace]) > 1:
-                    string += '['
-                for x, tag in enumerate(sorted(gallery_tag[namespace]), 1):
-                    # if we are at the end of the list
-                    if x == len(gallery_tag[namespace]):
-                        string += tag
-                    else:
-                        string += tag + ', '
-                if namespace != 'default' and len(gallery_tag[namespace]) > 1:
-                    string += ']'
-
-                # if we aren't at the end of the list
-                if not n == len(gallery_tag):
-                    string += ', '
-    else:
-        for n, namespace in enumerate(sorted(gallery_tag), 1):
-            if len(gallery_tag[namespace]) != 0:
-                if namespace != 'default':
-                    string += namespace + ","
-
-                # find tags
-                for x, tag in enumerate(sorted(gallery_tag[namespace]), 1):
-                    # if we are at the end of the list
-                    if x == len(gallery_tag[namespace]):
-                        string += tag
-                    else:
-                        string += tag + ', '
-
-                # if we aren't at the end of the list
-                if not n == len(gallery_tag):
-                    string += ', '
-
+    # remove empty default namespace
+    if 'default' in gallery_tag:
+        if gallery_tag['default'] == []:
+            gallery_tag.pop('default', None)
+    filtered_gallery_tag = {
+        key: gallery_tag[key] for key in gallery_tag if len(gallery_tag[key]) != 0}
+    filtered_gallery_tag = sorted(filtered_gallery_tag)
+    namespace_separator = ':' if not simple else ','
+    for n, namespace in enumerate(filtered_gallery_tag, 1):
+        string += namespace + namespace_separator if namespace != 'default' else ''
+        # sub_string require separator ?
+        ss_require_separator = \
+            namespace != 'default' and len(gallery_tag[namespace]) > 1 and not simple
+        substring_format = '[{}]' if ss_require_separator else '{}'
+        # find tags
+        sub_string = ''
+        for x, tag in enumerate(sorted(gallery_tag[namespace]), 1):
+            # check if loop at the end of the list
+            sub_string += tag + ', ' if x != len(gallery_tag[namespace]) else tag
+        string += substring_format.format(sub_string)
+        # if we aren't at the end of the list
+        string += ', ' if not n == len(gallery_tag) else ''
     return string
 
 
