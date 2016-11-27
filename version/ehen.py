@@ -39,6 +39,12 @@ class EHen(CommenHen):
         self.e_url = "http://g.e-hentai.org/api.php"
         self.e_url_o = "http://g.e-hentai.org/"
 
+    @staticmethod
+    def _get_g_artist(g_artist, data):
+        if 'Artist' in data['tags']:
+            return data['tags']['Artist'][0].capitalize()
+        return g_artist
+
     @classmethod  # NOQA
     def apply_metadata(cls, g, data, append=True):
         """Apply metadata to gallery, returns gallery."""
@@ -66,8 +72,7 @@ class EHen(CommenHen):
             if title_artist_dict['artist']:
                 g.artist = title_artist_dict['artist']
             g.language = title_artist_dict['language'].capitalize()
-            if 'Artist' in data['tags']:
-                g.artist = data['tags']['Artist'][0].capitalize()
+            g.artist = cls._get_g_artist(g.artist, data)
             if lang:
                 g.language = lang
             g.type = data['type']
@@ -82,8 +87,7 @@ class EHen(CommenHen):
                 g.title = title_artist_dict['title']
             if not g.artist:
                 g.artist = title_artist_dict['artist']
-                if 'Artist' in data['tags']:
-                    g.artist = data['tags']['Artist'][0].capitalize()
+                g.artist = cls._get_g_artist(g.artist, data)
             if not g.language:
                 g.language = title_artist_dict['language'].capitalize()
                 if lang:

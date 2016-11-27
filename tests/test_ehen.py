@@ -106,3 +106,22 @@ def test_login_with_existing_cookies():
         assert res == m_cookies
         m_check_login.assert_called_once_with(m_cookies)
         m_ex_prop.assert_called_once_with()
+
+
+@pytest.mark.parametrize('artist_in_tags', [False, True])
+def test_set_g_artist(artist_in_tags):
+    """test method."""
+    artist = mock.Mock()
+    if not artist_in_tags:
+        data = {'tags': {}}
+    else:
+        data = {'tags': {'Artist': [artist]}}
+    g_artist = mock.Mock()
+    from version.ehen import EHen
+    # run
+    res = EHen._get_g_artist(g_artist, data)
+    # test
+    if not artist_in_tags:
+        assert res == g_artist
+    else:
+        assert res == artist.capitalize.return_value
