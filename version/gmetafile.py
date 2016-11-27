@@ -87,8 +87,7 @@ class GMetafile:
             self.metadata['language'] = ezedata['language']
             d = ezedata['upload_date']
             # should be zero padded
-            d[1] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1]
-            d[3] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1]
+            d[3] = d[1] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1]
             self.metadata['pub_date'] = datetime.datetime.strptime(
                 "{} {} {}".format(d[0], d[1], d[3]), "%Y %m %d")
             l = ezedata['source']
