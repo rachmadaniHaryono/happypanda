@@ -40,8 +40,8 @@ try:
     from gmetafile import GMetafile
 except ImportError:
     from . import app_constants
-    from .database import db_constants
     from .archive_file import ArchiveFile
+    from .database import db_constants
     from .gmetafile import GMetafile
 
 log = logging.getLogger(__name__)
@@ -639,10 +639,8 @@ def tag_to_dict(string, ns_capitalize=True):  # NOQA
                 tags = [x for x in tags if len(x) != 0]
                 # if namespace is already in our list
                 if namespace in namespace_tags:
-                    for t in tags:
-                        # if tag not already in ns list
-                        if t not in namespace_tags[namespace]:
-                            namespace_tags[namespace].append(t)
+                    namespace_tags = get_gallery_tags(
+                        tags=namespace_tags, g_tags=namespace_tags, namespace=namespace)
                 else:
                     # to avoid empty strings
                     namespace_tags[namespace] = tags

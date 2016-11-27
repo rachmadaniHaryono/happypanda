@@ -110,7 +110,7 @@ def test_get_gallery_tags(tag_in_gallery, add_second_tag):
         g_tags[namespace] = [tag]
     else:
         g_tags[namespace] = []
-    from version.misc import get_gallery_tags
+    from version.utils import get_gallery_tags
     # run
     res = get_gallery_tags(tags, g_tags, namespace)
     # test
