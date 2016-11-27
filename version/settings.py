@@ -265,6 +265,11 @@ class WinProperties(Properties):
         self._resize = None
         self._pos = (0, 0)
 
+    def _default_setter(self, attr, arg):
+        """default setter func."""
+        assert isinstance(arg, list) or isinstance(arg, tuple)
+        setattr(self, '_{}'.format(attr), tuple(arg))
+
     @property
     def resize(self):
         """resize."""
@@ -272,8 +277,7 @@ class WinProperties(Properties):
 
     @resize.setter
     def resize(self, size):
-        assert isinstance(size, list) or isinstance(size, tuple)
-        self._resize = tuple(size)
+        self._default_setter('resize', size)
 
     @property
     def pos(self):
@@ -282,8 +286,7 @@ class WinProperties(Properties):
 
     @pos.setter
     def pos(self, point):
-        assert isinstance(point, list) or isinstance(point, tuple)
-        self._pos = tuple(point)
+        self._default_setter('pos', point)
 
 
 def win_read(cls, name):
