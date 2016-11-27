@@ -40,8 +40,8 @@ try:
     from gmetafile import GMetafile
 except ImportError:
     from . import app_constants
-    from .database import db_constants
     from .archive_file import ArchiveFile
+    from .database import db_constants
     from .gmetafile import GMetafile
 
 log = logging.getLogger(__name__)
@@ -639,10 +639,8 @@ def tag_to_dict(string, ns_capitalize=True):  # NOQA
                 tags = [x for x in tags if len(x) != 0]
                 # if namespace is already in our list
                 if namespace in namespace_tags:
-                    for t in tags:
-                        # if tag not already in ns list
-                        if t not in namespace_tags[namespace]:
-                            namespace_tags[namespace].append(t)
+                    namespace_tags = get_gallery_tags(
+                        tags=namespace_tags, g_tags=namespace_tags, namespace=namespace)
                 else:
                     # to avoid empty strings
                     namespace_tags[namespace] = tags
@@ -1061,3 +1059,21 @@ def timeit(func):
         print('function [{}] finished in {} ms'.format(
             func.__name__, int(elapsed_time * 1000)))
     return newfunc
+
+
+def get_gallery_tags(tags, g_tags, namespace):
+    """set gallery tags from namespace."""
+    ns = namespace
+    for tag in tags:
+        if tag not in g_tags[ns]:
+            g_tags[ns].append(tag)
+    return g_tags
+
+
+def cleanup_dir(path):
+    """cleanup recursive in dir."""
+    for root, dirs, files in scandir.walk(path, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))

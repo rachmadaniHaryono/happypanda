@@ -11,16 +11,14 @@ from datetime import datetime
 
 try:
     import app_constants
-    import utils
     from commenhen import CommenHen
     from settings import ExProperties
+    from utils import get_gallery_tags, title_parser
 except ImportError:
-    from . import (
-        app_constants,
-        utils,
-    )
+    from . import app_constants
     from .settings import ExProperties
     from .commenhen import CommenHen
+    from .utils import get_gallery_tags, title_parser
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -38,6 +36,12 @@ class EHen(CommenHen):
         self.cookies = cookies
         self.e_url = "http://g.e-hentai.org/api.php"
         self.e_url_o = "http://g.e-hentai.org/"
+
+    @staticmethod
+    def _get_g_artist(g_artist, data):
+        if 'Artist' in data['tags']:
+            return data['tags']['Artist'][0].capitalize()
+        return g_artist
 
     @classmethod  # NOQA
     def apply_metadata(cls, g, data, append=True):
@@ -60,14 +64,13 @@ class EHen(CommenHen):
         else:
             lang = ""
 
-        title_artist_dict = utils.title_parser(title)
+        title_artist_dict = title_parser(title)
         if not append:
             g.title = title_artist_dict['title']
             if title_artist_dict['artist']:
                 g.artist = title_artist_dict['artist']
             g.language = title_artist_dict['language'].capitalize()
-            if 'Artist' in data['tags']:
-                g.artist = data['tags']['Artist'][0].capitalize()
+            g.artist = cls._get_g_artist(g.artist, data)
             if lang:
                 g.language = lang
             g.type = data['type']
@@ -82,8 +85,7 @@ class EHen(CommenHen):
                 g.title = title_artist_dict['title']
             if not g.artist:
                 g.artist = title_artist_dict['artist']
-                if 'Artist' in data['tags']:
-                    g.artist = data['tags']['Artist'][0].capitalize()
+                g.artist = cls._get_g_artist(g.artist, data)
             if not g.language:
                 g.language = title_artist_dict['language'].capitalize()
                 if lang:
@@ -97,9 +99,8 @@ class EHen(CommenHen):
             else:
                 for ns in data['tags']:
                     if ns in g.tags:
-                        for tag in data['tags'][ns]:
-                            if tag not in g.tags[ns]:
-                                g.tags[ns].append(tag)
+                        g.tags = get_gallery_tags(
+                            tags=data['tags'][ns], g_tags=g.tags, namespace=ns)
                     else:
                         g.tags[ns] = data['tags'][ns]
             if 'url' in data:
@@ -262,13 +263,9 @@ class EHen(CommenHen):
         log_i("Attempting EH Login")
         eh_c = {}
         exprops = ExProperties()
-        if cls.COOKIES:
-            if cls.check_login(cls.COOKIES):
-                return cls.COOKIES
-        elif exprops.cookies:
-            if cls.check_login(exprops.cookies):
-                cls.COOKIES.update(exprops.cookies)
-                return cls.COOKIES
+        cls_cookies = cls.check_existing_cookies(cls, exprops)
+        if cls_cookies is not None:
+            return cls_cookies
 
         p = {
             'CookieDate': '1',

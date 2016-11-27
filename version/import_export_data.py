@@ -7,11 +7,13 @@ import datetime
 try:
     import app_constants
     import gallerydb
+    from .utils import get_gallery_tags
 except ImportError:
     from . import (
         app_constants,
         gallerydb,
     )
+    from .utils import get_gallery_tags
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
@@ -82,6 +84,13 @@ class ImportExportData:
         with open(file_name, 'w', encoding='utf-8') as fp:
             json.dump(self.structure, fp, indent=4)
 
+    @staticmethod
+    def _get_date(attr_name, structure, gallery):
+        """get date based on condition."""
+        if structure[attr_name] and structure[attr_name] is not None:
+            return datetime.datetime.strptime(structure[attr_name], "%Y-%m-%d %H:%M:%S")
+        return getattr(gallery, attr_name)
+
     def _find_pair_for_single_gallery(self, g, found_pairs, identifier):
         """find pair for single gallery.
 
@@ -103,14 +112,10 @@ class ImportExportData:
             found = g
             g.title = self.structure['title']
             g.artist = self.structure['artist']
-            if self.structure['pub_date'] and self.structure['pub_date'] != 'None':
-                g.pub_date = datetime.datetime.strptime(
-                    self.structure['pub_date'], "%Y-%m-%d %H:%M:%S")
+            g.pub_date = self._get_date(attr_name='pub_date', structure=self.structure, gallery=g)
             g.type = self.structure['type']
             g.status = self.structure['status']
-            if self.structure['last_read'] and self.structure['last_read'] != 'None':
-                g.last_read = datetime.datetime.strptime(
-                    self.structure['last_read'], "%Y-%m-%d %H:%M:%S")
+            g.pub_date = self._get_date(attr_name='last_read', structure=self.structure, gallery=g)
             g.times_read += self.structure['times_read']
             g._db_v = self.structure['db_v']
             g.language = self.structure['language']
@@ -118,9 +123,8 @@ class ImportExportData:
             for ns in self.structure['tags']:
                 if ns not in g.tags:
                     g.tags[ns] = []
-                for tag in self.structure['tags'][ns]:
-                    if tag not in g.tags[ns]:
-                        g.tags[ns].append(tag)
+                g.tags = get_gallery_tags(
+                    tags=self.structure['tags'][ns], g_tags=g.tags, namespace=ns)
             g.exed = self.structure['exed']
             g.info = self.structure['info']
             g.fav = self.structure['fav']

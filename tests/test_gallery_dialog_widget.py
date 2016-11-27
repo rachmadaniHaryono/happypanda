@@ -140,3 +140,26 @@ def test_set_form(mode, attr):
         form.assert_has_calls(
             [form_1call, mock.call.g_check.setChecked(True)]
         )
+
+
+@pytest.mark.parametrize('raise_index_error', [False, True])
+def test_get_gallery_date(raise_index_error):
+    """test method."""
+    m_time = mock.Mock()
+    if raise_index_error:
+        g_pub_date = [mock.Mock()]
+    else:
+        g_pub_date = [mock.Mock(), m_time]
+    g_time = mock.Mock()
+    with mock.patch('version.gallery_dialog_widget.datetime') as m_dt:
+        from version.gallery_dialog_widget import GalleryDialogWidget
+        res = GalleryDialogWidget._get_gallery_date(g_time=g_time, g_pub_date=g_pub_date)
+        if raise_index_error:
+            m_dt.assert_not_called()
+            assert res == g_time
+        else:
+            m_dt.assert_has_calls([
+                mock.call.strptime(m_time, '%H:%M:%S'),
+                mock.call.strptime().time()
+            ])
+            assert res == m_dt.strptime.return_value.time.return_value
