@@ -14,19 +14,19 @@
 # """
 import random
 import logging
-import scandir
-import os
 
 try:
     import app_constants
     import settings
     import gallerydb
+    from utils import cleanup_dir
 except ImportError:
     from . import (
         app_constants,
         settings,
         gallerydb,
     )
+    from .utils import cleanup_dir
 
 
 log = logging.getLogger(__name__)
@@ -83,11 +83,7 @@ def set_search_case(b):
 def clean_up_temp_dir():
     """clean temp up dir."""
     try:
-        for root, dirs, files in scandir.walk('temp', topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
+        cleanup_dir(path='temp')
         log_d('Flush temp on exit: OK')
     except:
         log.exception('Flush temp on exit: FAIL')

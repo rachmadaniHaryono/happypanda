@@ -35,6 +35,7 @@ try:
     from database import db_constants
     from database.db import DBBase
     from executors import Executors
+    from utils import cleanup_dir
     import app_constants
     import utils
 except ImportError:
@@ -48,6 +49,7 @@ except ImportError:
     from .database import db_constants
     from .database.db import DBBase
     from .executors import Executors
+    from .utils import cleanup_dir
     from . import (
         app_constants,
         utils,
@@ -2269,11 +2271,7 @@ class AdminDB(QObject):
         log_d("G: {} C:{}".format(len(n_galleries), data_count - 1))
         log_i("Database magic...")
         if os.path.exists(db_constants.THUMBNAIL_PATH):
-            for root, dirs, files in scandir.walk(db_constants.THUMBNAIL_PATH, topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
+            cleanup_dir(path=db_constants.THUMBNAIL_PATH)
 
         head = os.path.split(old_db_path)[0]
         DBBase._DB_CONN.close()

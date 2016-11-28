@@ -118,3 +118,29 @@ def test_get_gallery_tags(tag_in_gallery, add_second_tag):
         assert res == {namespace: [tag, tag2]}
     else:
         assert res == {namespace: [tag]}
+
+
+def test_cleanup_dir():
+    """test func."""
+    root = mock.Mock()
+    m_dir = mock.Mock()
+    dirs = [m_dir]
+    m_file = mock.Mock()
+    files = [m_file]
+    path = mock.Mock()
+    join_result = mock.Mock()
+    with mock.patch('version.utils.os') as m_os, \
+            mock.patch('version.utils.scandir') as m_sd:
+        from version.utils import cleanup_dir
+        m_sd.walk.return_value = [(root, dirs, files)]
+        m_os.path.join.return_value = join_result
+        # run
+        cleanup_dir(path)
+        # test
+        m_sd.walk.assert_called_once_with(path, topdown=False)
+        m_os.assert_has_calls([
+            mock.call.path.join(root, m_file),
+            mock.call.remove(join_result),
+            mock.call.path.join(root, m_dir),
+            mock.call.rmdir(join_result)
+        ])

@@ -1068,3 +1068,12 @@ def get_gallery_tags(tags, g_tags, namespace):
         if tag not in g_tags[ns]:
             g_tags[ns].append(tag)
     return g_tags
+
+
+def cleanup_dir(path):
+    """cleanup recursive in dir."""
+    for root, dirs, files in scandir.walk(path, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
