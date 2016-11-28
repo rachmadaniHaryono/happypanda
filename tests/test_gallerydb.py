@@ -153,3 +153,26 @@ def test_look_exists_when_add_tags():
         ),
         mock.call().fetchone()]
     )
+
+
+@pytest.mark.parametrize('func_result', [None, mock.Mock()])
+def test_get_id(func_result):
+    """test method."""
+    m_func = mock.Mock(return_value=func_result)
+    exec_func = mock.Mock()
+    ton = mock.Mock()
+    ton_name = mock.Mock()
+    from version.gallerydb import TagDB
+    TagDB._look_exists_when_add_tags = m_func
+    TagDB.execute = exec_func
+    # run
+    res = TagDB._get_id(tag_or_ns=ton, ton_name=ton_name)
+    # test
+    m_func.assert_called_once_with(tag_or_ns=ton, what=ton_name)
+    if func_result is None:
+        assert res == exec_func.return_value.lastrowid
+        exec_func.assert_called_once_with(
+            TagDB, "INSERT INTO {name}s({name}) VALUES(?)".format(name=ton_name), (ton,))
+    elif isinstance(func_result, mock.Mock):
+        assert res == func_result
+        exec_func.assert_not_called()
