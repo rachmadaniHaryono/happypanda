@@ -115,34 +115,14 @@ def test_set_search_case():
 @pytest.mark.parametrize('raise_error', [False, True])
 def test_clean_up_temp_dir(raise_error):
     """test func."""
-    m_root = mock.Mock()
-    m_file = mock.Mock()
-    m_dir = mock.Mock()
-    with mock.patch('version.misc_app.scandir') as m_scandir, \
-            mock.patch('version.misc_app.log_d') as m_log_d, \
-            mock.patch('version.misc_app.log') as m_log, \
-            mock.patch('version.misc_app.os') as m_os:
-        # pre run
+    with mock.patch('version.misc_app.cleanup_dir') as m_cd:
         from version import misc_app
         if raise_error:
-            m_scandir.walk.side_effect = ValueError()
-        else:
-            m_scandir.walk.return_value = [(m_root, [m_dir], [m_file])]
+            m_cd.side_effect = ValueError
         # run
         misc_app.clean_up_temp_dir()
         # test
-        if raise_error:
-            m_log.exception.assert_called_once_with('Flush temp on exit: FAIL')
-        else:
-            m_scandir.walk.assert_called_once_with('temp', topdown=False)
-            m_log_d.assert_called_once_with('Flush temp on exit: OK')
-            assert not m_log.mock_calls
-            m_os.assert_has_calls([
-                mock.call.path.join(m_root, m_file),
-                mock.call.remove(m_os.path.join.return_value),
-                mock.call.path.join(m_root, m_dir),
-                mock.call.rmdir(m_os.path.join.return_value)
-            ])
+        m_cd.assert_called_once_with(path='temp')
 
 
 @pytest.mark.parametrize('raise_error', [False, True])
