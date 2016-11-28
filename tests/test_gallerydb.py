@@ -131,7 +131,11 @@ def test_get_existing_gallery(exist_result):
             getattr(galleries, func_name).assert_not_called()
 
 
-def test_look_exists_when_add_tags():
+@pytest.mark.parametrize(
+    'raise_error, error_raised',
+    product([True, False], [TypeError, IndexError])
+)
+def test_look_exists_when_add_tags(raise_error, error_raised):
     """test method."""
     tag_or_ns = mock.Mock()
     #
@@ -140,12 +144,19 @@ def test_look_exists_when_add_tags():
     key = '{}_id'.format(arg)
     fetchone_result = {key: value}
     execute_func = mock.Mock()
-    execute_func.return_value.fetchone.return_value = fetchone_result
+    if not raise_error:
+        execute_func.return_value.fetchone.return_value = fetchone_result
+    else:
+        execute_func.return_value.fetchone.side_effects = [error_raised]
+
     #
     from version.gallerydb import TagDB
     TagDB.execute = execute_func
     res = TagDB._look_exists_when_add_tags(tag_or_ns=tag_or_ns, what=arg)
-    assert res == value
+    if not raise_error:
+        assert res == value
+    else:
+        assert res is None
     execute_func.assert_has_calls([
         mock.call(
             TagDB, 'SELECT {} FROM {}s WHERE {} = ?'.format(key, arg, arg),
