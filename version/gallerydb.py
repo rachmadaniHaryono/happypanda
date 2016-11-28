@@ -915,6 +915,22 @@ class TagDB(DBBase):
         except IndexError:
             return None
 
+    @classmethod
+    def _get_id(cls, tag_or_ns, ton_name):
+        """get id from tag or namespace."""
+        try:
+            res_id = cls._look_exists_when_add_tags(tag_or_ns=tag_or_ns, what=ton_name)
+            if not res_id:
+                raise ValueError
+        except ValueError:
+            c = cls.execute(
+                cls,
+                'INSERT INTO {name}s({name}) VALUES(?)'.format(name=ton_name),
+                (tag_or_ns,)
+            )
+            res_id = c.lastrowid
+        return res_id
+
     @classmethod  # NOQA
     def add_tags(cls, object):
         """Add the given dict_of_tags to the given series_id."""
@@ -928,24 +944,11 @@ class TagDB(DBBase):
         for namespace in dict_of_tags:
             tags_list = dict_of_tags[namespace]
             # don't add if it already exists
-            try:
-                namespace_id = cls._look_exists_when_add_tags(namespace, "namespace")
-                if not namespace_id:
-                    raise ValueError
-            except ValueError:
-                c = cls.execute(cls, 'INSERT INTO namespaces(namespace) VALUES(?)', (namespace,))
-                namespace_id = c.lastrowid
-
+            namespace_id = cls._get_id(tag_or_ns=namespace, ton_name='namespace')
+            #
             tags_id_list = []
             for tag in tags_list:
-                try:
-                    tag_id = cls._look_exists_when_add_tags(tag, "tag")
-                    if not tag_id:
-                        raise ValueError
-                except ValueError:
-                    c = cls.execute(cls, 'INSERT INTO tags(tag) VALUES(?)', (tag,))
-                    tag_id = c.lastrowid
-
+                tag_id = cls._get_id(tag_or_ns=tag, ton_name='tag')
                 tags_id_list.append(tag_id)
 
             def look_exist_tag_map(tag_id):
