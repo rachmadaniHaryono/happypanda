@@ -110,3 +110,22 @@ def test_get_db_cmd_with_encoded_value():
     # test
     m_get_db_cmd.assert_called_once_with(**exp_kwargs)
     assert res == m_get_db_cmd.return_value
+
+
+@pytest.mark.parametrize('exist_result', [True, False])
+def test_get_existing_gallery(exist_result):
+    """test method."""
+    func_name = 'func_name'
+    galleries = mock.Mock()
+    unchecked_gallery = mock.Mock()
+    with mock.patch('version.gallerydb.os') as m_os:
+        m_os.path.exists.return_value = exist_result
+        from version.gallerydb import AdminDB
+        # run
+        res = AdminDB._get_existing_gallery(
+            galleries=galleries, unchecked_gallery=unchecked_gallery, func_name=func_name)
+        assert res == galleries
+        if exist_result:
+            getattr(galleries, func_name).assert_called_once_with(unchecked_gallery)
+        else:
+            getattr(galleries, func_name).assert_not_called()

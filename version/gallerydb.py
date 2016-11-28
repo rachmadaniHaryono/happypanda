@@ -2254,6 +2254,16 @@ class AdminDB(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+    @staticmethod
+    def _get_existing_gallery(galleries, unchecked_gallery, func_name):
+        """append only existing gallery."""
+        g = unchecked_gallery
+        if not os.path.exists(g.path):
+            log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
+        else:
+            getattr(galleries, func_name)(g)
+        return galleries
+
     def from_v021_to_v022(self, old_db_path=db_constants.DB_PATH):  # NOQA
         log_i("Started rebuilding database")
         if DBBase._DB_CONN:
@@ -2262,11 +2272,9 @@ class AdminDB(QObject):
         db_galleries = execute(GalleryDB.get_all_gallery, False, False, True, True)
         galleries = []
         for g in db_galleries:
-            if not os.path.exists(g.path):
-                log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
-            else:
-                galleries.append(g)
-
+            galleries = self._get_existing_gallery(
+                galleries=galleries, unchecked_gallery=g, func_name='append')
+        #
         n_galleries = []
         # get all chapters
         log_i("Getting chapters...")
@@ -2350,10 +2358,10 @@ class AdminDB(QObject):
         log_i("Adding galleries...")
         GalleryDB.clear_thumb_dir()
         for n, g in enumerate(galleries):
-            if not os.path.exists(g.path):
-                log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
-            else:
-                GalleryDB.add_gallery(g)
+            # NOTE GalleryDB and  gallery is little bit difference
+            # galleries require the result because append func, and GalleryDB not.
+            self._get_existing_gallery(
+                galleries=GalleryDB, unchecked_gallery=g, func_name='add_gallery')
             self.PROGRESS.emit(n)
         DBBase.end()
         DBBase._DB_CONN.close()
