@@ -900,6 +900,21 @@ class TagDB(DBBase):
                 continue
         return tags
 
+    @classmethod
+    def _look_exists_when_add_tags(cls, tag_or_ns, what):
+        """check if tag or namespace already exists in base.
+
+        returns id, else returns None
+        """
+        c = cls.execute(
+            cls, 'SELECT {}_id FROM {}s WHERE {} = ?'.format(what, what, what), (tag_or_ns,))
+        try:  # exists
+            return c.fetchone()['{}_id'.format(what)]
+        except TypeError:  # doesnt exist
+            return None
+        except IndexError:
+            return None
+
     @classmethod  # NOQA
     def add_tags(cls, object):
         """Add the given dict_of_tags to the given series_id."""
@@ -908,27 +923,13 @@ class TagDB(DBBase):
         series_id = object.id
         dict_of_tags = object.tags
 
-        def look_exists(tag_or_ns, what):
-            """check if tag or namespace already exists in base.
-
-            returns id, else returns None
-            """
-            c = cls.execute(
-                cls, 'SELECT {}_id FROM {}s WHERE {} = ?'.format(what, what, what), (tag_or_ns,))
-            try:  # exists
-                return c.fetchone()['{}_id'.format(what)]
-            except TypeError:  # doesnt exist
-                return None
-            except IndexError:
-                return None
-
         tags_mappings_id_list = []
         # first let's add the tags and namespaces to db
         for namespace in dict_of_tags:
             tags_list = dict_of_tags[namespace]
             # don't add if it already exists
             try:
-                namespace_id = look_exists(namespace, "namespace")
+                namespace_id = cls._look_exists_when_add_tags(namespace, "namespace")
                 if not namespace_id:
                     raise ValueError
             except ValueError:
@@ -938,7 +939,7 @@ class TagDB(DBBase):
             tags_id_list = []
             for tag in tags_list:
                 try:
-                    tag_id = look_exists(tag, "tag")
+                    tag_id = cls._look_exists_when_add_tags(tag, "tag")
                     if not tag_id:
                         raise ValueError
                 except ValueError:
