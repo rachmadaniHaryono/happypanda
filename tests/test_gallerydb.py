@@ -129,3 +129,27 @@ def test_get_existing_gallery(exist_result):
             getattr(galleries, func_name).assert_called_once_with(unchecked_gallery)
         else:
             getattr(galleries, func_name).assert_not_called()
+
+
+def test_look_exists_when_add_tags():
+    """test method."""
+    tag_or_ns = mock.Mock()
+    #
+    arg = 'what_arg'
+    value = mock.Mock()
+    key = '{}_id'.format(arg)
+    fetchone_result = {key: value}
+    execute_func = mock.Mock()
+    execute_func.return_value.fetchone.return_value = fetchone_result
+    #
+    from version.gallerydb import TagDB
+    TagDB.execute = execute_func
+    res = TagDB._look_exists_when_add_tags(tag_or_ns=tag_or_ns, what=arg)
+    assert res == value
+    execute_func.assert_has_calls([
+        mock.call(
+            TagDB, 'SELECT {} FROM {}s WHERE {} = ?'.format(key, arg, arg),
+            (tag_or_ns,)
+        ),
+        mock.call().fetchone()]
+    )
