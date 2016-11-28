@@ -362,6 +362,25 @@ class GalleryDB(DBBase):
             return False
         return True
 
+    @staticmethod
+    def _get_db_cmd(db_cmds, value, value_name, series_id, value_type=None, cmd_value_arg=None):
+        """get database cmd."""
+        cmd_value_arg = cmd_value_arg if cmd_value_arg is not None else value
+        if value_type is not None:
+            assert isinstance(value, value_type)
+        if value is not None:
+            db_cmds.append([
+                "UPDATE series SET {}=? WHERE series_id=?".format(value_name),
+                (cmd_value_arg, series_id)
+            ])
+        return db_cmds
+
+    @classmethod
+    def _get_db_cmd_with_encoded_value(cls, **kwargs):
+        """get db cmd with encoded value."""
+        kwargs['cmd_value_arg'] = str.encode(kwargs['value'])
+        return cls._get_db_cmd(**kwargs)
+
     @classmethod  # NOQA
     def modify_gallery(
             cls,
@@ -393,70 +412,84 @@ class GalleryDB(DBBase):
         assert isinstance(series_id, int)
         assert not isinstance(series_id, bool)
         executing = []
-        if title is not None:
-            assert isinstance(title, str)
-            executing.append(["UPDATE series SET title=? WHERE series_id=?", (title, series_id)])
-        if profile is not None:
-            assert isinstance(profile, str)
-            executing.append([
-                "UPDATE series SET profile=? WHERE series_id=?",
-                (str.encode(profile), series_id)
-            ])
-        if artist is not None:
-            assert isinstance(artist, str)
-            executing.append(["UPDATE series SET artist=? WHERE series_id=?", (artist, series_id)])
-        if info is not None:
-            assert isinstance(info, str)
-            executing.append(["UPDATE series SET info=? WHERE series_id=?", (info, series_id)])
-        if type is not None:
-            assert isinstance(type, str)
-            executing.append(["UPDATE series SET type=? WHERE series_id=?", (type, series_id)])
-        if fav is not None:
-            assert isinstance(fav, int)
-            executing.append(["UPDATE series SET fav=? WHERE series_id=?", (fav, series_id)])
-        if language is not None:
-            assert isinstance(language, str)
-            executing.append(
-                ["UPDATE series SET language=? WHERE series_id=?", (language, series_id)])
-        if rating is not None:
-            assert isinstance(rating, int)
-            executing.append(
-                ["UPDATE series SET rating=? WHERE series_id=?", (rating, series_id)])
-        if status is not None:
-            assert isinstance(status, str)
-            executing.append(
-                ["UPDATE series SET status=? WHERE series_id=?", (status, series_id)])
-        if pub_date is not None:
-            executing.append(
-                ["UPDATE series SET pub_date=? WHERE series_id=?", (pub_date, series_id)])
-        if link is not None:
-            executing.append(["UPDATE series SET link=? WHERE series_id=?", (link, series_id)])
-        if times_read is not None:
-            executing.append(
-                ["UPDATE series SET times_read=? WHERE series_id=?", (times_read, series_id)])
-        if last_read is not None:
-            executing.append(
-                ["UPDATE series SET last_read=? WHERE series_id=?", (last_read, series_id)])
-        if series_path is not None:
-            executing.append([
-                "UPDATE series SET series_path=? WHERE series_id=?",
-                (str.encode(series_path), series_id)
-            ])
-        if _db_v is not None:
-            executing.append(["UPDATE series SET db_v=? WHERE series_id=?", (_db_v, series_id)])
-        if exed is not None:
-            executing.append(["UPDATE series SET exed=? WHERE series_id=?", (exed, series_id)])
-        if is_archive is not None:
-            executing.append(
-                ["UPDATE series SET is_archive=? WHERE series_id=?", (is_archive, series_id)])
-        if path_in_archive is not None:
-            executing.append([
-                "UPDATE series SET path_in_archive=? WHERE series_id=?",
-                (path_in_archive, series_id)
-            ])
-        if view is not None:
-            executing.append(["UPDATE series SET view=? WHERE series_id=?", (view, series_id)])
-
+        # NOTE _get_db_cmd_with_encoded_value may not correct
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=title, value_type=str, value_name='title',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd_with_encoded_value(
+            db_cmds=executing, value=profile, value_type=str, value_name='profile',
+            series_id=series_id,
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=artist, value_type=str, value_name='artist',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=info, value_type=str, value_name='info',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=type, value_type=str, value_name='type',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=fav, value_type=int, value_name='fav',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=language, value_type=str, value_name='language',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=rating, value_type=int, value_name='rating',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=status, value_type=str, value_name='status',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=pub_date, value_type=None, value_name='pub_date',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=link, value_type=None, value_name='link',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=times_read, value_type=None, value_name='times_read',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=last_read, value_type=None, value_name='last_read',
+            series_id=series_id
+        )
+        executing = cls._get_db_cmd_with_encoded_value(
+            db_cmds=executing, value=series_path, value_type=None, value_name='series_path',
+            series_id=series_id,
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=_db_v, value_type=None, value_name='db_v',
+            series_id=series_id,
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=exed, value_type=None, value_name='exed',
+            series_id=series_id,
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=is_archive, value_type=None, value_name='is_archive',
+            series_id=series_id,
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=path_in_archive, value_type=None,
+            value_name='path_in_archive',
+            series_id=series_id,
+        )
+        executing = cls._get_db_cmd(
+            db_cmds=executing, value=view, value_type=None, value_name='view',
+            series_id=series_id,
+        )
         if tags is not None:
             assert isinstance(tags, dict)
             TagDB.modify_tags(series_id, tags)
@@ -2221,6 +2254,16 @@ class AdminDB(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+    @staticmethod
+    def _get_existing_gallery(galleries, unchecked_gallery, func_name):
+        """append only existing gallery."""
+        g = unchecked_gallery
+        if not os.path.exists(g.path):
+            log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
+        else:
+            getattr(galleries, func_name)(g)
+        return galleries
+
     def from_v021_to_v022(self, old_db_path=db_constants.DB_PATH):  # NOQA
         log_i("Started rebuilding database")
         if DBBase._DB_CONN:
@@ -2229,11 +2272,9 @@ class AdminDB(QObject):
         db_galleries = execute(GalleryDB.get_all_gallery, False, False, True, True)
         galleries = []
         for g in db_galleries:
-            if not os.path.exists(g.path):
-                log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
-            else:
-                galleries.append(g)
-
+            galleries = self._get_existing_gallery(
+                galleries=galleries, unchecked_gallery=g, func_name='append')
+        #
         n_galleries = []
         # get all chapters
         log_i("Getting chapters...")
@@ -2317,10 +2358,10 @@ class AdminDB(QObject):
         log_i("Adding galleries...")
         GalleryDB.clear_thumb_dir()
         for n, g in enumerate(galleries):
-            if not os.path.exists(g.path):
-                log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
-            else:
-                GalleryDB.add_gallery(g)
+            # NOTE GalleryDB and  gallery is little bit difference
+            # galleries require the result because append func, and GalleryDB not.
+            self._get_existing_gallery(
+                galleries=GalleryDB, unchecked_gallery=g, func_name='add_gallery')
             self.PROGRESS.emit(n)
         DBBase.end()
         DBBase._DB_CONN.close()
