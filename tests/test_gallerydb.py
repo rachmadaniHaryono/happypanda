@@ -91,3 +91,22 @@ def test_get_db_cmd(is_value_none, is_cmd_value_arg_none, is_value_type_none, is
             ]
         else:
             assert res == []
+
+
+def test_get_db_cmd_with_encoded_value():
+    """test method."""
+    key = 'key'
+    key_value = mock.Mock()
+    value = 'value'
+    kwargs = {key: key_value, 'value': value}
+    exp_kwargs = kwargs
+    exp_kwargs.update({'cmd_value_arg': str.encode(value)})
+    #
+    m_get_db_cmd = mock.Mock()
+    from version.gallerydb import GalleryDB
+    GalleryDB._get_db_cmd = m_get_db_cmd
+    # run
+    res = GalleryDB._get_db_cmd_with_encoded_value(**kwargs)
+    # test
+    m_get_db_cmd.assert_called_once_with(**exp_kwargs)
+    assert res == m_get_db_cmd.return_value

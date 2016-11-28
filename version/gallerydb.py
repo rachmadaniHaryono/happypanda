@@ -375,6 +375,12 @@ class GalleryDB(DBBase):
             ])
         return db_cmds
 
+    @classmethod
+    def _get_db_cmd_with_encoded_value(cls, **kwargs):
+        """get db cmd with encoded value."""
+        kwargs['cmd_value_arg'] = str.encode(kwargs['value'])
+        return cls._get_db_cmd(**kwargs)
+
     @classmethod  # NOQA
     def modify_gallery(
             cls,
@@ -406,14 +412,14 @@ class GalleryDB(DBBase):
         assert isinstance(series_id, int)
         assert not isinstance(series_id, bool)
         executing = []
+        # NOTE _get_db_cmd_with_encoded_value may not correct
         executing = cls._get_db_cmd(
             db_cmds=executing, value=title, value_type=str, value_name='title',
             series_id=series_id
         )
-        executing = cls._get_db_cmd(
+        executing = cls._get_db_cmd_with_encoded_value(
             db_cmds=executing, value=profile, value_type=str, value_name='profile',
             series_id=series_id,
-            cmd_value_arg=str.encode(profile)
         )
         executing = cls._get_db_cmd(
             db_cmds=executing, value=artist, value_type=str, value_name='artist',
@@ -459,10 +465,9 @@ class GalleryDB(DBBase):
             db_cmds=executing, value=last_read, value_type=None, value_name='last_read',
             series_id=series_id
         )
-        executing = cls._get_db_cmd(
+        executing = cls._get_db_cmd_with_encoded_value(
             db_cmds=executing, value=series_path, value_type=None, value_name='series_path',
             series_id=series_id,
-            cmd_value_arg=str.encode(series_path)
         )
         executing = cls._get_db_cmd(
             db_cmds=executing, value=_db_v, value_type=None, value_name='db_v',
