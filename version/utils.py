@@ -646,10 +646,8 @@ def tag_to_dict(string, ns_capitalize=True):  # NOQA
                     namespace_tags[namespace] = tags
             else:  # only one tag
                 if len(tags) != 0:
-                    if namespace in namespace_tags:
-                        namespace_tags[namespace].append(tags)
-                    else:
-                        namespace_tags[namespace] = [tags]
+                    namespace_tags = append_or_create_list_on_dict(
+                        dict_=namespace_tags, key=namespace, value=tags)
         else:  # no namespace specified
             tag = splitted_tag[0]
             if len(tag) != 0:
@@ -660,6 +658,15 @@ def tag_to_dict(string, ns_capitalize=True):  # NOQA
             namespace_tags['default'].append(t)
 
     return namespace_tags
+
+
+def append_or_create_list_on_dict(dict_, key, value, ):
+    """append item in dict if key is in dict, if not create a list with that key on the dict."""
+    if key in dict_:
+        dict_[key].append(value)
+    else:
+        dict_[key] = [value]
+    return dict_
 
 
 def title_parser(title):  # NOQA
@@ -1000,6 +1007,11 @@ def PToQImageHelper(im):  # NOQA
     }
 
 
+def get_chapter_pages_len(chapter_path):
+    """get chapter pages len."""
+    return len([x for x in scandir.scandir(chapter_path) if x.name.endswith(IMG_FILES)])
+
+
 def make_chapters(gallery_object):
     """make_chapters."""
     chap_container = gallery_object.chapters
@@ -1020,8 +1032,7 @@ def make_chapters(gallery_object):
                 chap.title = title_parser(ch)['title']
                 chap.path = os.path.join(path, ch)
                 metafile.update(GMetafile(chap.path))
-                chap.pages = len([x for x in scandir.scandir(
-                    chap.path) if x.name.endswith(IMG_FILES)])
+                chap.pages = get_chapter_pages_len(chap.path)
 
         else:  # else assume that all images are in gallery folder
             chap = chap_container.create_chapter()

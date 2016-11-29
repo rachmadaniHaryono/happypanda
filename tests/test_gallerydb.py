@@ -187,3 +187,68 @@ def test_get_id(func_result):
     elif isinstance(func_result, mock.Mock):
         assert res == func_result
         exec_func.assert_not_called()
+
+
+@pytest.mark.parametrize("value_name", ['tag', 'namespace'])
+def test_get_all_value(value_name):
+    """test method."""
+    value = mock.Mock()
+    exec_func = mock.Mock()
+    exec_func.return_value.fetchall.return_value = [{value_name: value}]
+    from version.gallerydb import TagDB
+    TagDB.execute = exec_func
+    # run
+    res = TagDB._get_all_value(value_name=value_name)
+    # test
+    assert res == [value]
+    exec_func.assert_has_calls([
+        mock.call(TagDB, 'SELECT {value_name} FROM {value_name}s'.format(value_name=value_name)),
+        mock.call().fetchall()
+    ])
+
+
+@pytest.mark.parametrize('search_func_result', [True, False])
+def test_return_is_exclude(search_func_result):
+    """test method."""
+    search_func = mock.Mock()
+    search_func.return_value = search_func_result
+    #
+    key = mock.Mock()
+    subkey = mock.Mock()
+    value = mock.Mock()
+    #
+    tag = mock.Mock()
+    args = mock.Mock()
+    from version.gallerydb import Gallery
+    Gallery.tags = {key: {subkey: value}}
+    # run
+    res = Gallery._return_is_exclude(search_func=search_func, tag=tag, args=args)
+    # test
+    if search_func_result:
+        assert res
+    else:
+        assert not res
+    search_func.assert_called_once_with(tag, subkey, True, args=args)
+
+
+@pytest.mark.parametrize('search_func_result, cond', product([True, False], repeat=2))
+def test_return_is_exclude_on_simple_tag(search_func_result, cond):
+    """test method."""
+    tag = mock.Mock()
+    args = mock.Mock()
+    #
+    search_func = mock.Mock()
+    search_func.return_value = search_func_result
+    #
+    key = mock.Mock()
+    value = mock.Mock()
+    from version.gallerydb import Gallery
+    Gallery.tags = {key: [value]}
+    # run
+    res = Gallery._return_is_exclude_on_simple_tag(
+        cond=cond, key=key, search_func=search_func, tag=tag, args=args)
+    # test
+    if search_func_result and cond:
+        assert res
+    else:
+        assert not res
