@@ -22,8 +22,11 @@ try:
     from gallery_meta_window import GalleryMetaWindow
     from gallery_model import GalleryModel
     from grid_delegate import GridDelegate
-    from misc import handle_keypress_event_on_manga_view
     from sort_filter_model import SortFilterModel
+    from misc import (
+        handle_keypress_event_on_manga_view,
+        open_idx_data_first_chapter_when_double_clicked,
+    )
 except ImportError:
     from . import (
         gallerydb,
@@ -33,8 +36,11 @@ except ImportError:
     from .gallery_meta_window import GalleryMetaWindow
     from .gallery_model import GalleryModel
     from .grid_delegate import GridDelegate
-    from .misc import handle_keypress_event_on_manga_view
     from .sort_filter_model import SortFilterModel
+    from .misc import (
+        handle_keypress_event_on_manga_view,
+        open_idx_data_first_chapter_when_double_clicked,
+    )
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -82,7 +88,7 @@ class SingleMangaView(QListView):
         self.sort_model.change_model(self.gallery_model)
         self.sort_model.sort(0)
         self.setModel(self.sort_model)
-        self.doubleClicked.connect(lambda idx: idx.data(Qt.UserRole + 1).chapters[0].open())
+        self.doubleClicked.connect(open_idx_data_first_chapter_when_double_clicked)
         self.setViewportMargins(0, 0, 0, 0)
 
         self.gallery_window = GalleryMetaWindow(parent if parent else self)
@@ -208,33 +214,66 @@ class SingleMangaView(QListView):
                 self.gallery_model.replaceRows([gallery], index.row())
                 gallerydb.execute(gallerydb.ChapterDB.del_chapter, True, gallery.id, chap_numb)
 
+    @classmethod
+    def _set_sort(cls, name, exp_name, role, sort_arg):
+        """set sort variable.
+
+        Args:
+            name: Name.
+            exp_name(str): Expected name.
+            role: Sort role.
+            sort_arg: Argument for sort func.
+
+        Returns:
+            bool: True if name is equal expected name.
+        """
+        if name == exp_name:
+            cls.sort_model.setSortRole(role)
+            cls.sort_model.sort(0, sort_arg)
+            cls.current_sort = name
+            return True
+        return False
+
     def sort(self, name):
         """sort."""
         if not self.view_type == app_constants.ViewType.Duplicate:
-            if name == 'title':
-                self.sort_model.setSortRole(Qt.DisplayRole)
-                self.sort_model.sort(0, Qt.AscendingOrder)
-                self.current_sort = 'title'
-            elif name == 'artist':
-                self.sort_model.setSortRole(GalleryModel.ARTIST_ROLE)
-                self.sort_model.sort(0, Qt.AscendingOrder)
-                self.current_sort = 'artist'
-            elif name == 'date_added':
-                self.sort_model.setSortRole(GalleryModel.DATE_ADDED_ROLE)
-                self.sort_model.sort(0, Qt.DescendingOrder)
-                self.current_sort = 'date_added'
-            elif name == 'pub_date':
-                self.sort_model.setSortRole(GalleryModel.PUB_DATE_ROLE)
-                self.sort_model.sort(0, Qt.DescendingOrder)
-                self.current_sort = 'pub_date'
-            elif name == 'times_read':
-                self.sort_model.setSortRole(GalleryModel.TIMES_READ_ROLE)
-                self.sort_model.sort(0, Qt.DescendingOrder)
-                self.current_sort = 'times_read'
-            elif name == 'last_read':
-                self.sort_model.setSortRole(GalleryModel.LAST_READ_ROLE)
-                self.sort_model.sort(0, Qt.DescendingOrder)
-                self.current_sort = 'last_read'
+            if self._set_sort(
+                    name=name, exp_name='title', role=Qt.DisplayRole,
+                    sort_arg=Qt.AscendingOrder
+            ):
+                pass
+            elif self._set_sort(
+                    name=name, exp_name='artist', role=GalleryModel.ARTIST_ROLE,
+                    sort_arg=Qt.AscendingOrder
+            ):
+                pass
+            elif self._set_sort(
+                    name=name, exp_name='date_added', role=GalleryModel.DATE_ADDED_ROLE,
+                    sort_arg=Qt.DescendingOrder
+            ):
+                pass
+            elif self._set_sort(
+                    name=name, exp_name='pub_date', role=GalleryModel.PUB_DATE_ROLE,
+                    sort_arg=Qt.DescendingOrder
+            ):
+                pass
+            elif self._set_sort(
+                    name=name, exp_name='pub_date', role=GalleryModel.PUB_DATE_ROLE,
+                    sort_arg=Qt.DescendingOrder
+            ):
+                pass
+            elif self._set_sort(
+                    name=name, exp_name='times_read', role=GalleryModel.TIMES_READ_ROLE,
+                    sort_arg=Qt.DescendingOrder
+            ):
+                pass
+            elif self._set_sort(
+                    name=name, exp_name='last_read', role=GalleryModel.LAST_READ_ROLE,
+                    sort_arg=Qt.DescendingOrder
+            ):
+                pass
+            else:
+                log_i('Unknown name [{}]'.format(name))
 
     def contextMenuEvent(self, event):
         """context menu event."""

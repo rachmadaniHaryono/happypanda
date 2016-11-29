@@ -1,6 +1,5 @@
 """gallery db module."""
-# """
-# This file is part of Happypanda.
+# """ This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
@@ -27,29 +26,33 @@ from PyQt5.QtCore import QObject, pyqtSignal, QTime
 try:
     from utils import (
         IMG_FILES,
+        append_or_create_list_on_dict,
+        cleanup_dir,
         delete_path,
         generate_img_hash,
+        get_chapter_pages_len,
     )
     from archive_file import ArchiveFile
     from database import db
     from database import db_constants
     from database.db import DBBase
     from executors import Executors
-    from utils import cleanup_dir
     import app_constants
     import utils
 except ImportError:
     from .utils import (
         IMG_FILES,
+        append_or_create_list_on_dict,
+        cleanup_dir,
         delete_path,
         generate_img_hash,
+        get_chapter_pages_len,
     )
     from .archive_file import ArchiveFile
     from .database import db
     from .database import db_constants
     from .database.db import DBBase
     from .executors import Executors
-    from .utils import cleanup_dir
     from . import (
         app_constants,
         utils,
@@ -1036,10 +1039,8 @@ class TagDB(DBBase):
                 c = cls.execute(cls, 'SELECT tag FROM tags WHERE tag_id=?', (t['tag_id'],))
                 tag = c.fetchone()['tag']
                 # put in dict
-                if ns in ns_tags:
-                    ns_tags[ns].append(tag)
-                else:
-                    ns_tags[ns] = [tag]
+                ns_tags = append_or_create_list_on_dict(
+                    dict_=ns_tags, key=ns, value=tag)
             except:
                 continue
         return ns_tags
@@ -1058,18 +1059,22 @@ class TagDB(DBBase):
         pass
 
     @classmethod
+    def _get_all_value(cls, value_name):
+        """get all value."""
+        cursor = cls.execute(
+            cls, 'SELECT {value_name} FROM {value_name}s'.format(value_name=value_name))
+        result = [t[value_name] for t in cursor.fetchall()]
+        return result
+
+    @classmethod
     def get_all_tags(cls):
         """Return all tags in database in a list."""
-        cursor = cls.execute(cls, 'SELECT tag FROM tags')
-        tags = [t['tag'] for t in cursor.fetchall()]
-        return tags
+        return cls._get_all_value(value_name='tag')
 
     @classmethod
     def get_all_ns(cls):
         """Return all namespaces in database in a list."""
-        cursor = cls.execute(cls, 'SELECT namespace FROM namespaces')
-        ns = [n['namespace'] for n in cursor.fetchall()]
-        return ns
+        return cls._get_all_value(value_name='namespace')
 
 
 class ListDB(DBBase):
@@ -1956,38 +1961,45 @@ class Gallery:
                         if self.dead_link:
                             return is_exclude
 
-                if app_constants.Search.Regex in args:
-                    if ns:
-                        if self._keyword_search(ns, tag, args=args):
+                keyword_search_result = self._keyword_search(ns, tag, args=args)
+                if ns and keyword_search_result:
+                    return is_exclude
+                if app_constants.Search.Regex in args and ns:
+                    for x in self.tags:
+                        if self._return_is_exclude(
+                                cond=utils.regex_search(ns, x),
+                                key=x, search_func=utils.regex_search, tag=tag, args=args
+                        ):
                             return is_exclude
-
-                        for x in self.tags:
-                            if utils.regex_search(ns, x):
-                                for t in self.tags[x]:
-                                    if utils.regex_search(tag, t, True, args=args):
-                                        return is_exclude
-                    else:
-                        for x in self.tags:
-                            for t in self.tags[x]:
-                                if utils.regex_search(tag, t, True, args=args):
-                                    return is_exclude
+                elif app_constants.Search.Regex in args:
+                    if self._return_is_exclude(search_func=utils.regex_search, tag=tag, args=args):
+                        return is_exclude
+                elif self._return_is_exclude_on_simple_tag(
+                        cond=ns in self.tags, key=ns,
+                        search_func=utils.search_term, tag=tag, args=args
+                ):
+                    return is_exclude
                 else:
-                    if ns:
-                        if self._keyword_search(ns, tag, args=args):
-                            return is_exclude
-
-                        if ns in self.tags:
-                            for t in self.tags[ns]:
-                                if utils.search_term(tag, t, True, args=args):
-                                    return is_exclude
-                    else:
-                        for x in self.tags:
-                            for t in self.tags[x]:
-                                if utils.search_term(tag, t, True, args=args):
-                                    return is_exclude
+                    if self._return_is_exclude(search_func=utils.search_term, tag=tag, args=args):
+                        return is_exclude
             else:
                 return is_exclude
         return default
+
+    @classmethod
+    def _return_is_exclude_on_simple_tag(cls, cond, key, search_func, tag, args):
+        """check if is_exclude var have to be returned when tag is simple."""
+        if cond and any(search_func(tag, t, True, args=args) for t in cls.tags[key]):
+            return True
+        return False
+
+    @classmethod
+    def _return_is_exclude(cls, search_func, tag, args):
+        """check if is_exclude var have to be returned."""
+        for x in cls.tags:
+            if any(search_func(tag, t, True, args=args) for t in cls.tags[x]):
+                return True
+        return False
 
     def move_gallery(self, new_path=''):
         log_i("Moving gallery...")
@@ -2190,7 +2202,7 @@ class ChaptersContainer:
                 [x for x in _archive.dir_contents(chap.path) if x.endswith(IMG_FILES)])
             _archive.close()
         else:
-            chap.pages = len([x for x in scandir.scandir(chap.path) if x.path.endswith(IMG_FILES)])
+            chap.pages = get_chapter_pages_len(chap.path)
 
         execute(ChapterDB.update_chapter, True, self, [chap.number])
         return True

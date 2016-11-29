@@ -144,3 +144,41 @@ def test_cleanup_dir():
             mock.call.path.join(root, m_dir),
             mock.call.rmdir(join_result)
         ])
+
+
+@pytest.mark.parametrize('key_in_list', [True, False])
+def test_append_or_create_list_on_dict(key_in_list):
+    """test func."""
+    key = mock.Mock()
+    value = mock.Mock()
+    if key_in_list:
+        dict_ = {key: []}
+    else:
+        dict_ = {}
+    from version.utils import append_or_create_list_on_dict
+    # run
+    res = append_or_create_list_on_dict(dict_=dict_, key=key, value=value)
+    # test
+    assert res[key] == [value]
+
+
+def test_get_chapter_pages_len():
+    """test func."""
+    valid_exts = ['.jpg', '.bmp', '.png', '.gif', '.jpeg']
+    test_exts = valid_exts + ['.random_ext']
+    scandir_result = []
+    for ext in test_exts:
+        m = mock.Mock()
+        m.name = 'basename{}'.format(ext)
+        scandir_result.append(m)
+    exp_res = len(valid_exts)
+    #
+    chapter_path = mock.Mock()
+    with mock.patch('version.utils.scandir') as m_sd:
+        from version.utils import get_chapter_pages_len
+        m_sd.scandir.return_value = scandir_result
+        # run
+        res = get_chapter_pages_len(chapter_path)
+        # test
+        assert res == exp_res
+        m_sd.scandir.assert_called_once_with(chapter_path)

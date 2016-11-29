@@ -412,11 +412,8 @@ class SettingsDialog(QWidget):
         # App / Monitor / folders
         paths = []
         folder_p_widgets = self.take_all_layout_widgets(self.folders_layout)
-        for x, l_edit in enumerate(folder_p_widgets):
-            p = l_edit.text()
-            if p:
-                paths.append(p)
-
+        paths.extend([l_edit.text() for l_edit in folder_p_widgets if l_edit.text()])
+        #
         set(paths, 'Application', 'monitor paths')
         app_constants.MONITOR_PATHS = paths
         # App / Monitor / ignore list
@@ -431,10 +428,8 @@ class SettingsDialog(QWidget):
 
         paths = []
         ignore_p_widgets = self.take_all_layout_widgets(self.ignore_path_l)
-        for x, l_edit in enumerate(ignore_p_widgets):
-            p = l_edit.text()
-            if p:
-                paths.append(p)
+        paths.extend([l_edit.text() for l_edit in ignore_p_widgets if l_edit.text()])
+        #
         set(paths, 'Application', 'ignore paths')
         app_constants.IGNORE_PATHS = paths
 
@@ -543,44 +538,66 @@ class SettingsDialog(QWidget):
         # Visual / Grid View / Colors
         app_constants.DISPLAY_GALLERY_RIBBON = self.colors_ribbon_group.isChecked()
         set(app_constants.DISPLAY_GALLERY_RIBBON, 'Visual', 'display gallery ribbon')
-        if self.color_checker(self.grid_title_color.text()):
-            app_constants.GRID_VIEW_TITLE_COLOR = self.grid_title_color.text()
-            set(app_constants.GRID_VIEW_TITLE_COLOR, 'Visual', 'grid view title color')
-        if self.color_checker(self.grid_artist_color.text()):
-            app_constants.GRID_VIEW_ARTIST_COLOR = self.grid_artist_color.text()
-            set(app_constants.GRID_VIEW_ARTIST_COLOR, 'Visual', 'grid view artist color')
-        if self.color_checker(self.grid_label_color.text()):
-            app_constants.GRID_VIEW_LABEL_COLOR = self.grid_label_color.text()
-            set(app_constants.GRID_VIEW_LABEL_COLOR, 'Visual', 'grid view label color')
-
-        if self.color_checker(self.ribbon_manga_color.text()):
-            app_constants.GRID_VIEW_T_MANGA_COLOR = self.ribbon_manga_color.text()
-            set(app_constants.GRID_VIEW_T_MANGA_COLOR, 'Visual', 'grid view t manga color')
-        if self.color_checker(self.ribbon_doujin_color.text()):
-            app_constants.GRID_VIEW_T_DOUJIN_COLOR = self.ribbon_doujin_color.text()
-            set(app_constants.GRID_VIEW_T_DOUJIN_COLOR, 'Visual', 'grid view t doujin color')
-        if self.color_checker(self.ribbon_artist_cg_color.text()):
-            app_constants.GRID_VIEW_T_ARTIST_CG_COLOR = self.ribbon_artist_cg_color.text()
-            set(app_constants.GRID_VIEW_T_ARTIST_CG_COLOR, 'Visual', 'grid view t artist cg color')
-        if self.color_checker(self.ribbon_game_cg_color.text()):
-            app_constants.GRID_VIEW_T_GAME_CG_COLOR = self.ribbon_game_cg_color.text()
-            set(app_constants.GRID_VIEW_T_GAME_CG_COLOR, 'Visual', 'grid view t game cg color')
-        if self.color_checker(self.ribbon_western_color.text()):
-            app_constants.GRID_VIEW_T_WESTERN_COLOR = self.ribbon_western_color.text()
-            set(app_constants.GRID_VIEW_T_WESTERN_COLOR, 'Visual', 'grid view t western color')
-        if self.color_checker(self.ribbon_image_color.text()):
-            app_constants.GRID_VIEW_T_IMAGE_COLOR = self.ribbon_image_color.text()
-            set(app_constants.GRID_VIEW_T_IMAGE_COLOR, 'Visual', 'grid view t image color')
-        if self.color_checker(self.ribbon_non_h_color.text()):
-            app_constants.GRID_VIEW_T_NON_H_COLOR = self.ribbon_non_h_color.text()
-            set(app_constants.GRID_VIEW_T_NON_H_COLOR, 'Visual', 'grid view t non-h color')
-        if self.color_checker(self.ribbon_cosplay_color.text()):
-            app_constants.GRID_VIEW_T_COSPLAY_COLOR = self.ribbon_cosplay_color.text()
-            set(app_constants.GRID_VIEW_T_COSPLAY_COLOR, 'Visual', 'grid view t cosplay color')
-        if self.color_checker(self.ribbon_other_color.text()):
-            app_constants.GRID_VIEW_T_OTHER_COLOR = self.ribbon_other_color.text()
-            set(app_constants.GRID_VIEW_T_OTHER_COLOR, 'Visual', 'grid view t other color')
-
+        self._set_setting_with_color_check(
+            attr=self.grid_title_color,
+            const=app_constants.GRID_VIEW_TITLE_COLOR,
+            key='grid view title color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.grid_artist_color,
+            const=app_constants.GRID_VIEW_ARTIST_COLOR,
+            key='grid view artist color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.grid_label_color,
+            const=app_constants.GRID_VIEW_LABEL_COLOR,
+            key='grid view label color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_manga_color,
+            const=app_constants.GRID_VIEW_T_MANGA_COLOR,
+            key='grid view t manga color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_doujin_color,
+            const=app_constants.GRID_VIEW_T_DOUJIN_COLOR,
+            key='grid view t doujin color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_artist_cg_color,
+            const=app_constants.GRID_VIEW_T_ARTIST_CG_COLOR,
+            key='grid view t artist cg color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_game_cg_color,
+            const=app_constants.GRID_VIEW_T_GAME_CG_COLOR,
+            key='grid view t game cg color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_western_color,
+            const=app_constants.GRID_VIEW_T_WESTERN_COLOR,
+            key='grid view t western color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_image_color,
+            const=app_constants.GRID_VIEW_T_IMAGE_COLOR,
+            key='grid view t image color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_non_h_color,
+            const=app_constants.GRID_VIEW_T_NON_H_COLOR,
+            key='grid view t non-h color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_cosplay_color,
+            const=app_constants.GRID_VIEW_T_COSPLAY_COLOR,
+            key='grid view t cosplay color'
+        )
+        self._set_setting_with_color_check(
+            attr=self.ribbon_other_color,
+            const=app_constants.GRID_VIEW_T_OTHER_COLOR,
+            key='grid view t other color'
+        )
         # Advanced / Misc
         app_constants.EXTERNAL_VIEWER_ARGS = self.external_viewer_args.text()
         set(app_constants.EXTERNAL_VIEWER_ARGS, 'Advanced', 'external viewer args')
@@ -619,6 +636,15 @@ class SettingsDialog(QWidget):
 
         settings.save()
         self.close()
+
+    @classmethod
+    def _set_setting_with_color_check(cls, attr, const, key):
+        """set setting with color check."""
+        set_ = settings.set
+        attr_text = attr.text()
+        if cls.color_checker(txt=attr_text):
+            const = attr_text
+            set_(value=const, section='Visual', key=key)
 
     def init_right_panel(self):  # NOQA
         """init rigth panel."""

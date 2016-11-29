@@ -112,6 +112,11 @@ def handle_keypress_event_on_manga_view(view_obj, event, selected_idx):
         CommonView.remove_selected(view_obj, source=source)
 
 
+def open_idx_data_first_chapter_when_double_clicked(idx):
+    """open idx data first chapter when double clicked."""
+    idx.data(Qt.UserRole + 1).chapters[0].open()
+
+
 # def center_parent(parent, child):
 #   "centers child window in parent"
 #   centerparent = QPoint(

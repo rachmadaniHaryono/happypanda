@@ -51,3 +51,15 @@ def test_handle_keypress_event_on_manga_view(event_key, selected_idx):
             m_cw.remove_selected.assert_called_once_with(view_obj, source=True)
         elif event_key == 'delete':
             m_cw.remove_selected.assert_called_once_with(view_obj, source=False)
+
+
+def test_open_idx_data_first_chapter_when_double_clicked():
+    """test fun."""
+    idx = mock.Mock()
+    chapter = mock.Mock()
+    idx.data.return_value.chapters = [chapter]
+    with mock.patch('version.misc.Qt') as m_qt:
+        from version.misc import open_idx_data_first_chapter_when_double_clicked
+        open_idx_data_first_chapter_when_double_clicked(idx)
+        idx.data.assert_called_once_with(m_qt.UserRole + 1)
+        chapter.open.assert_called_once_with()
