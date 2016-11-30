@@ -13,8 +13,10 @@ from PyQt5.QtWidgets import (
 
 try:
     from base_popup import BasePopup
+    from utils import delegate_event
 except ImportError:
     from .base_popup import BasePopup
+    from .utils import delegate_event
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -86,6 +88,9 @@ class AppDialog(BasePopup):
 
         self.main_widget.setLayout(main_layout)
         self.adjustSize()
+        # showEvent
+        self.showEvent = lambda event: delegate_event(
+            attr=self.parent_widget.setEnabled, value=False, super_attr='showEvent', event=event)
 
     def closeEvent(self, event):
         """closeEvent."""
@@ -95,11 +100,6 @@ class AppDialog(BasePopup):
             return super().closeEvent(event)
         else:
             return super().closeEvent(event)
-
-    def showEvent(self, event):
-        """showEvent."""
-        self.parent_widget.setEnabled(False)
-        return super().showEvent(event)
 
     def init_restart(self):
         """init_restart."""

@@ -1088,3 +1088,16 @@ def cleanup_dir(path):
             os.remove(os.path.join(root, name))
         for name in dirs:
             os.rmdir(os.path.join(root, name))
+
+
+def delegate_event(attr, value, super_attr, event):
+    """delegate_event.
+
+    :attr: Attr of object to be changed.
+    :value: New value of attr of the object.
+    :super_attr: Name of the method name.
+    :event: Event.
+    :returns: Parent class method result.
+    """
+    attr(value)
+    return getattr(super(), super_attr)(event)

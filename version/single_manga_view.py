@@ -23,6 +23,7 @@ try:
     from gallery_model import GalleryModel
     from grid_delegate import GridDelegate
     from sort_filter_model import SortFilterModel
+    from utils import delegate_event
     from misc import (
         open_idx_data_first_chapter_when_double_clicked,
     )
@@ -36,6 +37,7 @@ except ImportError:
     from .gallery_model import GalleryModel
     from .grid_delegate import GridDelegate
     from .sort_filter_model import SortFilterModel
+    from .utils import delegate_event
     from .misc import (
         open_idx_data_first_chapter_when_double_clicked,
     )
@@ -117,6 +119,11 @@ class SingleMangaView(QListView):
         self._scroll_zero_once = True
         self._scroll_speed = 0
         self._scroll_speed_timer.start()
+        # mouseMoveEvent
+        self.mouseMoveEvent = lambda event: delegate_event(
+            attr=self.gallery_window.mouseMoveEvent, value=event, super_attr='mouseMoveEvent',
+            event=event
+        )
 
     @property
     def scroll_speed(self):
@@ -169,11 +176,6 @@ class SingleMangaView(QListView):
         if self.gallery_window.isVisible():
             self.gallery_window.hide_animation.start()
         return super().wheelEvent(event)
-
-    def mouseMoveEvent(self, event):
-        """mouse move event."""
-        self.gallery_window.mouseMoveEvent(event)
-        return super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event):
         """key press event."""
