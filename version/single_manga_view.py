@@ -234,44 +234,43 @@ class SingleMangaView(QListView):
 
     def sort(self, name):
         """sort."""
-        if not self.view_type == app_constants.ViewType.Duplicate:
-            if self._set_sort(
-                    name=name, exp_name='title', role=Qt.DisplayRole,
-                    sort_arg=Qt.AscendingOrder
-            ):
-                pass
-            elif self._set_sort(
-                    name=name, exp_name='artist', role=GalleryModel.ARTIST_ROLE,
-                    sort_arg=Qt.AscendingOrder
-            ):
-                pass
-            elif self._set_sort(
-                    name=name, exp_name='date_added', role=GalleryModel.DATE_ADDED_ROLE,
-                    sort_arg=Qt.DescendingOrder
-            ):
-                pass
-            elif self._set_sort(
-                    name=name, exp_name='pub_date', role=GalleryModel.PUB_DATE_ROLE,
-                    sort_arg=Qt.DescendingOrder
-            ):
-                pass
-            elif self._set_sort(
-                    name=name, exp_name='pub_date', role=GalleryModel.PUB_DATE_ROLE,
-                    sort_arg=Qt.DescendingOrder
-            ):
-                pass
-            elif self._set_sort(
-                    name=name, exp_name='times_read', role=GalleryModel.TIMES_READ_ROLE,
-                    sort_arg=Qt.DescendingOrder
-            ):
-                pass
-            elif self._set_sort(
-                    name=name, exp_name='last_read', role=GalleryModel.LAST_READ_ROLE,
-                    sort_arg=Qt.DescendingOrder
-            ):
-                pass
-            else:
-                log_i('Unknown name [{}]'.format(name))
+        if self.view_type == app_constants.ViewType.Duplicate:
+            return
+        #
+        kwargs = [
+            {
+                'name': name, 'exp_name': 'title', 'role': Qt.DisplayRole,
+                'sort_arg': Qt.AscendingOrder
+            },
+            {
+                'name': name, 'exp_name': 'artist', 'role': GalleryModel.ARTIST_ROLE,
+                'sort_arg': Qt.AscendingOrder
+            },
+            {
+                'name': name, 'exp_name': 'date_added', 'role': GalleryModel.DATE_ADDED_ROLE,
+                'sort_arg': Qt.DescendingOrder
+            },
+            {
+                'name': name, 'exp_name': 'pub_date', 'role': GalleryModel.PUB_DATE_ROLE,
+                'sort_arg': Qt.DescendingOrder
+            },
+            {
+                'name': name, 'exp_name': 'pub_date', 'role': GalleryModel.PUB_DATE_ROLE,
+                'sort_arg': Qt.DescendingOrder
+            },
+            {
+                'name': name, 'exp_name': 'times_read', 'role': GalleryModel.TIMES_READ_ROLE,
+                'sort_arg': Qt.DescendingOrder
+            },
+            {
+                'name': name, 'exp_name': 'last_read', 'role': GalleryModel.LAST_READ_ROLE,
+                'sort_arg': Qt.DescendingOrder
+            }
+        ]
+        for kwarg in kwargs:
+            if self._set_sort(**kwarg):
+                return
+        log_i('Unknown name [{}]'.format(name))
 
     def contextMenuEvent(self, event):
         """context menu event."""
