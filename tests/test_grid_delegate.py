@@ -53,4 +53,3 @@ def test_set_external_icon(use_external_viewer):
         else:
             file_icons.get_default_file_icon.assert_called_once_with()
             assert GridDelegate.external_icon == file_icons.get_default_file_icon.return_value
-

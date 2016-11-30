@@ -208,24 +208,16 @@ class GalleryModel(QAbstractTableModel):
             return current_gallery.fav
 
         if role == self.DATE_ADDED_ROLE:
-            date_added = "{}".format(current_gallery.date_added)
-            qdate_added = QDateTime.fromString(date_added, "yyyy-MM-dd HH:mm:ss")
-            return qdate_added
+            return self._get_qdatetime_from_string(current_gallery.date_added)
 
-        if role == self.PUB_DATE_ROLE:
-            if current_gallery.pub_date:
-                pub_date = "{}".format(current_gallery.pub_date)
-                qpub_date = QDateTime.fromString(pub_date, "yyyy-MM-dd HH:mm:ss")
-                return qpub_date
+        if role == self.PUB_DATE_ROLE and current_gallery.pub_date:
+            return self._get_qdatetime_from_string(current_gallery.pub_date)
 
         if role == self.TIMES_READ_ROLE:
             return current_gallery.times_read
 
-        if role == self.LAST_READ_ROLE:
-            if current_gallery.last_read:
-                last_read = "{}".format(current_gallery.last_read)
-                qlast_read = QDateTime.fromString(last_read, "yyyy-MM-dd HH:mm:ss")
-                return qlast_read
+        if role == self.LAST_READ_ROLE and current_gallery.last_read:
+            return self._get_qdatetime_from_string(current_gallery.last_read)
 
         if role == self.TIME_ROLE:
             return current_gallery.qtime
@@ -234,6 +226,11 @@ class GalleryModel(QAbstractTableModel):
             return StarRating(current_gallery.rating)
 
         return None
+
+    @staticmethod
+    def _get_qdatetime_from_string(value):
+        """get QDateTime from string with pre-defined format."""
+        return QDateTime.fromString("{}".format(value), "yyyy-MM-dd HH:mm:ss")
 
     def rowCount(self, index=QModelIndex()):
         """row count."""
