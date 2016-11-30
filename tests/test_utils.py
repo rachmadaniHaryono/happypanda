@@ -197,3 +197,56 @@ def test_delegate_event():
         # test
         assert res == getattr(m_super.return_value, super_attr).return_value
         attr.assert_called_once_with(value)
+
+
+@pytest.mark.parametrize(
+    'mode, value',
+    product(['L', 'RGB', 'random'], product([0, 1], repeat=2))
+)
+def test_image_greyscale(mode, value):
+    """test func."""
+    filepath = mock.Mock()
+    #
+    idx0_val = mock.Mock()
+    idx1_val = mock.Mock()
+    idx2_val = mock.Mock()
+    split_result = [idx0_val, idx1_val, idx2_val]
+    #
+    img = mock.Mock()
+    img.mode = mode
+    img.split.return_value = split_result
+    #
+    with mock.patch('version.utils.Image') as m_img, \
+            mock.patch('version.utils.ImageChops') as m_ic:
+        m_img.open.return_value.convert.return_value = img
+        m_ic.difference.return_value.getextrema.side_effect = [
+            (mock.Mock(), value[0]), (mock.Mock(), value[1])]
+        from version.utils import image_greyscale
+        # run
+        res = image_greyscale(filepath=filepath)
+        m_img.assert_has_calls([
+            mock.call.open(filepath), mock.call.open().convert('RGB')])
+        if mode not in ('L', 'RGB'):
+            assert not res
+            assert not m_ic.mock_calls
+        elif mode == 'L':
+            assert res
+            assert not m_ic.mock_calls
+        elif mode == 'RGB':
+            img.split.assert_called_once_with()
+            if value[0] != 0:
+                m_ic.assert_has_calls([
+                    mock.call.difference(idx0_val, idx1_val),
+                    mock.call.difference().getextrema(),
+                ])
+            else:
+                m_ic.assert_has_calls([
+                    mock.call.difference(idx0_val, idx1_val),
+                    mock.call.difference().getextrema(),
+                    mock.call.difference(idx0_val, idx2_val),
+                    mock.call.difference().getextrema()
+                ])
+            if any(x != 0 for x in value):
+                assert not res
+            else:
+                assert res
