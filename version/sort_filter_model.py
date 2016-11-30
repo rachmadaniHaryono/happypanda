@@ -86,17 +86,20 @@ class SortFilterModel(QSortFilterProxyModel):
         self._SET_GALLERY_LIST.emit(g_list)
         self.refresh()
 
+    @classmethod
+    def _change_view(cls, emit_value, current_view):
+        """change view."""
+        cls._CHANGE_FAV.emit(emit_value)
+        cls.refresh()
+        cls.current_view = current_view
+
     def fav_view(self):
         """fav view."""
-        self._CHANGE_FAV.emit(True)
-        self.refresh()
-        self.current_view = self.FAV_VIEW
+        self._change_view(emit_value=True, current_view=self.FAV_VIEW)
 
     def catalog_view(self):
         """catalog view."""
-        self._CHANGE_FAV.emit(False)
-        self.refresh()
-        self.current_view = self.CAT_VIEW
+        self._change_view(emit_value=False, current_view=self.CAT_VIEW)
 
     def setup_search(self):
         """setup search."""
