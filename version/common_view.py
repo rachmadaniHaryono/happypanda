@@ -33,6 +33,25 @@ log_e = log.error
 log_c = log.critical
 
 
+def handle_keypress_event_on_manga_view(view_obj, event, selected_idx):
+    """handle key event on manga view.
+
+    it will be used on:
+
+    - SingleMangaView
+    - MangaTableView
+    """
+    s_idx = selected_idx
+    if event.key() == Qt.Key_Return and s_idx:
+        list(map(view_obj.doubleClicked.emit, s_idx))
+    elif event.key() == Qt.Key_Delete:
+        if event.modifiers() == Qt.ShiftModifier:
+            source = True
+        else:
+            source = False
+        CommonView.remove_selected(view_obj, source=source)
+
+
 class CommonView:
     """Contains identical view implentations."""
 

@@ -18,13 +18,12 @@ from PyQt5.QtWidgets import (
 try:
     import app_constants
     import gallerydb
-    from common_view import CommonView
+    from common_view import CommonView, handle_keypress_event_on_manga_view
     from gallery_meta_window import GalleryMetaWindow
     from gallery_model import GalleryModel
     from grid_delegate import GridDelegate
     from sort_filter_model import SortFilterModel
     from misc import (
-        handle_keypress_event_on_manga_view,
         open_idx_data_first_chapter_when_double_clicked,
     )
 except ImportError:
@@ -32,13 +31,12 @@ except ImportError:
         gallerydb,
         app_constants,
     )
-    from .common_view import CommonView
+    from .common_view import CommonView, handle_keypress_event_on_manga_view
     from .gallery_meta_window import GalleryMetaWindow
     from .gallery_model import GalleryModel
     from .grid_delegate import GridDelegate
     from .sort_filter_model import SortFilterModel
     from .misc import (
-        handle_keypress_event_on_manga_view,
         open_idx_data_first_chapter_when_double_clicked,
     )
 
