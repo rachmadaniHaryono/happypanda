@@ -182,3 +182,18 @@ def test_get_chapter_pages_len():
         # test
         assert res == exp_res
         m_sd.scandir.assert_called_once_with(chapter_path)
+
+
+def test_delegate_event():
+    """test func."""
+    attr = mock.Mock()
+    value = mock.Mock()
+    super_attr = 'super_attr'
+    event = mock.Mock()
+    with mock.patch('version.utils.super') as m_super:
+        from version.utils import delegate_event
+        # run
+        res = delegate_event(attr=attr, value=value, super_attr=super_attr, event=event)
+        # test
+        assert res == getattr(m_super.return_value, super_attr).return_value
+        attr.assert_called_once_with(value)
