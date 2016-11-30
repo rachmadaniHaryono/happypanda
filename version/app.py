@@ -944,25 +944,16 @@ class AppWindow(QMainWindow):
         regex_search_option = search_options_menu.addAction('Regex')
         regex_search_option.setCheckable(True)
         regex_search_option.setChecked(app_constants.GALLERY_SEARCH_REGEX)
-
-        def set_search_strict(b):
-            if b and regex_search_option.isChecked():
-                regex_search_option.toggle()
-            app_constants.GALLERY_SEARCH_STRICT = b
-            settings.set(b, 'Application', 'gallery search strict')
-            settings.save()
-
-        strict_search_option.toggled.connect(set_search_strict)
-
-        def set_search_regex(b):
-            if b and strict_search_option.isChecked():
-                strict_search_option.toggle()
-            app_constants.GALLERY_SEARCH_REGEX = b
-            settings.set(b, 'Application', 'allow search regex')
-            settings.save()
-
-        regex_search_option.toggled.connect(set_search_regex)
-
+        strict_search_option.toggled.connect(
+            lambda arg: self._set_search(
+                arg=arg, option=regex_search_option, mode='search_strict'
+            )
+        )
+        regex_search_option.toggled.connect(
+            lambda arg: self._set_search(
+                arg=arg, option=strict_search_option, mode='search_regex'
+            )
+        )
         self.search_bar.setObjectName('search_bar')
         self.search_timer = QTimer(self)
         self.search_timer.setSingleShot(True)
@@ -1031,6 +1022,23 @@ class AppWindow(QMainWindow):
         spacer_end2.setFixedSize(QSize(5, 1))
         self.toolbar.addWidget(spacer_end2)
         self.addToolBar(self.toolbar)
+
+    @classmethod
+    def _set_search(cls, arg, mode, option):
+        """set search."""
+        if mode == 'search_strict':
+            constant = app_constants.GALLERY_SEARCH_STRICT
+            set_key = 'gallery search strict'
+        elif mode == 'search_regex':
+            constant = app_constants.GALLERY_SEARCH_REGEX
+            set_key = 'allow search regex'
+        else:
+            raise ValueError('Unknown mode [{}]'.format(mode))
+        if arg and option.isChecked():
+            option.toggle()
+        constant = arg  # NOQA
+        settings.set(arg, 'Application', set_key)
+        settings.save()
 
     def get_current_view(self):
         """get current view."""

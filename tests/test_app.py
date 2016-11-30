@@ -1,5 +1,6 @@
 """test module."""
 from unittest import mock
+from itertools import product
 import sys
 
 from PyQt5.QtWidgets import QApplication
@@ -71,3 +72,33 @@ def test_init(disable_excepthook):
         m_set_ad.assert_called_once_with(True)
         m_set_fp.assert_called_once_with(m_qt.NoFocus)
         m_start_up.asert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "is_check_result, mode",
+    product(
+        [True, False],
+        ['search_strict', 'search_regex', 'random']
+    )
+)
+def test_set_search(is_check_result, mode):
+    """test method."""
+    arg = mock.Mock()
+    option = mock.Mock()
+    option.isChecked.return_value = is_check_result
+    with mock.patch('version.app.settings') as m_settings:
+        from version.app import AppWindow
+        if mode not in ('search_strict', 'search_regex'):
+            with pytest.raises(ValueError):
+                AppWindow._set_search(arg=arg, option=option, mode=mode)
+            return
+        AppWindow._set_search(arg=arg, option=option, mode=mode)
+        if is_check_result:
+            option.toggle.assert_called_once_with()
+        else:
+            option.toggle.assert_not_called()
+        if mode == 'search_strict':
+            m_settings.set.assert_called_once_with(arg, 'Application', 'gallery search strict')
+        else:
+            m_settings.set.assert_called_once_with(arg, 'Application', 'allow search regex')
+        m_settings.save.assert_called_once_with()
