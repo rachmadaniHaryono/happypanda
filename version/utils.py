@@ -910,9 +910,7 @@ def image_greyscale(filepath):
 
     if im.mode == "RGB":
         rgb = im.split()
-        if ImageChops.difference(rgb[0], rgb[1]).getextrema()[1] != 0:
-            return False
-        if ImageChops.difference(rgb[0], rgb[2]).getextrema()[1] != 0:
+        if any(ImageChops.difference(rgb[0], rgb[idx]).getextrema()[1] != 0 for idx in [1, 2]):
             return False
     return True
 
