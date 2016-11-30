@@ -187,12 +187,8 @@ class GalleryModel(QAbstractTableModel):
             if app_constants.TOOLTIP_TIMES_READ:
                 add_bold.append('<b>Times read:</b>')
                 add_tips.append(current_gallery.times_read)
-            if app_constants.TOOLTIP_PUB_DATE:
-                add_bold.append('<b>Publication Date:</b>')
-                add_tips.append('{}'.format(current_gallery.pub_date).split(' ')[0])
-            if app_constants.TOOLTIP_DATE_ADDED:
-                add_bold.append('<b>Date added:</b>')
-                add_tips.append('{}'.format(current_gallery.date_added).split(' ')[0])
+            add_bold, add_tips = self._add_tips_and_bold_for_date_attr(
+                add_bold=add_bold, add_tips=add_tips, current_gallery=current_gallery)
 
             tooltip = ""
             tips = list(zip(add_bold, add_tips))
@@ -226,6 +222,25 @@ class GalleryModel(QAbstractTableModel):
             return StarRating(current_gallery.rating)
 
         return None
+
+    @staticmethod
+    def _add_tips_and_bold_for_date_attr(add_bold, add_tips, current_gallery):
+        """add tips var and bold var arg."""
+        val_packs = [
+            (
+                app_constants.TOOLTIP_PUB_DATE,
+                '<b>Publication Date:</b>', current_gallery.pub_date
+            ),
+            (
+                app_constants.TOOLTIP_DATE_ADDED,
+                '<b>Date added:</b>', current_gallery.date_added
+            ),
+        ]
+        for constant, bold, tips in val_packs:
+            if constant:
+                add_bold.append(bold)
+                add_tips.append('{}'.format(tips).split(' ')[0])
+        return add_bold, add_tips
 
     @staticmethod
     def _get_qdatetime_from_string(value):
