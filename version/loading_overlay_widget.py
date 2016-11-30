@@ -34,13 +34,18 @@ class LoadingOverlayWidget(QWidget):
         palette.setColor(palette.Background, Qt.transparent)
         self.setPalette(palette)
 
+    @classmethod
+    def _get_offset(cls, x, i):
+        """get offset."""
+        return x / 2 + 30 * math.sin(2 * math.pi * i / 6.0) - 10
+
     def paintEngine(self, event):
         """paintEngine."""
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(event.rect(),
-                         QBrush(QColor(255, 255, 255, 127)))
+        painter.fillRect(
+            event.rect(), QBrush(QColor(255, 255, 255, 127)))
         painter.setPen(QPen(Qt.NoPen))
         for i in range(6):
             if (self.counter / 5) % 6 == i:
@@ -48,10 +53,11 @@ class LoadingOverlayWidget(QWidget):
                     QBrush(QColor(127 + (self.counter % 5) * 32, 127, 127)))
             else:
                 painter.setBrush(QBrush(QColor(127, 127, 127)))
-                painter.drawEllipse(self.width() / 2 + 30 * math.cos(2 * math.pi * i / 6.0) - 10,
-                                    self.height() / 2 + 30 * math.sin(2 * math.pi * i / 6.0) - 10,
-                                    20, 20)
-
+                painter.drawEllipse(
+                    self._get_offset(self.width(), i),
+                    self._get_offset(self.height(), i),
+                    20, 20
+                )
         painter.end()
 
     def showEvent(self, event):
