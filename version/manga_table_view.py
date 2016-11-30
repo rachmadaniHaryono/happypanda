@@ -15,15 +15,13 @@ from PyQt5.QtWidgets import (
     QTableView,
 )
 try:
-    from common_view import CommonView
+    from common_view import CommonView, handle_keypress_event_on_manga_view
     from misc import (
-        handle_keypress_event_on_manga_view,
         open_idx_data_first_chapter_when_double_clicked,
     )
 except ImportError:
-    from .common_view import CommonView
+    from .common_view import CommonView, handle_keypress_event_on_manga_view
     from .misc import (
-        handle_keypress_event_on_manga_view,
         open_idx_data_first_chapter_when_double_clicked,
     )
 

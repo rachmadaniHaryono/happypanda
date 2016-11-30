@@ -29,11 +29,6 @@ from PyQt5.QtWidgets import (
     QDesktopWidget,
 )
 
-try:
-    from common_view import CommonView
-except ImportError:
-    from .common_view import CommonView
-
 log = logging.getLogger(__name__)
 log_i = log.info
 log_d = log.debug
@@ -91,25 +86,6 @@ def create_animation(parent, prop):
     """create_animation."""
     p_array = QByteArray().append(prop)
     return QPropertyAnimation(parent, p_array)
-
-
-def handle_keypress_event_on_manga_view(view_obj, event, selected_idx):
-    """handle key event on manga view.
-
-    it will be used on:
-
-    - SingleMangaView
-    - MangaTableView
-    """
-    s_idx = selected_idx
-    if event.key() == Qt.Key_Return and s_idx:
-        list(map(view_obj.doubleClicked.emit, s_idx))
-    elif event.key() == Qt.Key_Delete:
-        if event.modifiers() == Qt.ShiftModifier:
-            source = True
-        else:
-            source = False
-        CommonView.remove_selected(view_obj, source=source)
 
 
 def open_idx_data_first_chapter_when_double_clicked(idx):
