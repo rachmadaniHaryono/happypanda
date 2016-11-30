@@ -92,10 +92,7 @@ class GridDelegate(QStyledItemDelegate):
 
         # misc.FileIcon.refresh_default_icon()
         self.file_icons = FileIcon()
-        if app_constants.USE_EXTERNAL_VIEWER:
-            self.external_icon = self.file_icons.get_external_file_icon()
-        else:
-            self.external_icon = self.file_icons.get_default_file_icon()
+        self._set_external_icon()
 
         self.font_size = app_constants.GALLERY_FONT[1]
         self.font_name = 0  # app_constants.GALLERY_FONT[0]
@@ -116,6 +113,14 @@ class GridDelegate(QStyledItemDelegate):
         self.text_label_h = a_h + t_h * 2
         self.W = app_constants.THUMB_W_SIZE
         self.H = app_constants.THUMB_H_SIZE + app_constants.GRIDBOX_LBL_H
+
+    @classmethod
+    def _set_external_icon(cls):
+        """set external icon."""
+        if app_constants.USE_EXTERNAL_VIEWER:
+            cls.external_icon = cls.file_icons.get_external_file_icon()
+        else:
+            cls.external_icon = cls.file_icons.get_default_file_icon()
 
     def key(self, key):
         """Assign an unique key to indexes."""
@@ -305,10 +310,7 @@ class GridDelegate(QStyledItemDelegate):
 
             if self._paint_level > 0:
                 if app_constants._REFRESH_EXTERNAL_VIEWER:
-                    if app_constants.USE_EXTERNAL_VIEWER:
-                        self.external_icon = self.file_icons.get_external_file_icon()
-                    else:
-                        self.external_icon = self.file_icons.get_default_file_icon()
+                    self._set_external_icon()
 
                 type_w = painter.fontMetrics().width(gallery.file_type)
                 type_h = painter.fontMetrics().height()
