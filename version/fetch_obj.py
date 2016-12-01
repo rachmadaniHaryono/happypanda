@@ -415,16 +415,15 @@ class FetchObject(QObject):
         self.AUTO_METADATA_PROGRESS.emit('Finished applying metadata')
         log_i('Finished applying metadata')
 
-    @classmethod
     def _check_single_gallery(
-            cls, cond, gallery, hen_item, is_idx_end, checked_pre_url_galleries):
+            self, cond, gallery, hen_item, is_idx_end, checked_pre_url_galleries):
         """check single gallery."""
         if cond:
             gallery.temp_url = gallery._g_dialog_url
             checked_pre_url_galleries.append(gallery)
             # to process even if this gallery is last and fails
             if is_idx_end:
-                cls.fetch_metadata(hen=hen_item)
+                self.fetch_metadata(hen=hen_item)
             return True, checked_pre_url_galleries, gallery
         return False, checked_pre_url_galleries, gallery
 
