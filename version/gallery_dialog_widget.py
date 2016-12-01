@@ -348,12 +348,12 @@ class GalleryDialogWidget(QWidget):
         form.g_check.setChecked(True)
 
     @staticmethod
-    def _get_gallery_date(g_time, g_pub_date):
+    def _get_gallery_date(g_pub_date):
         """set gallery date."""
         try:
             return datetime.strptime(g_pub_date[1], '%H:%M:%S').time()
         except IndexError:
-            return g_time
+            pass
 
     def setGallery(self, gallery):  # NOQA
         """To be used for when editing a gallery."""
@@ -380,8 +380,8 @@ class GalleryDialogWidget(QWidget):
                 constant_attr=app_constants.G_DEF_STATUS, def_val=0)
 
             gallery_pub_date = "{}".format(gallery.pub_date).split(' ')
-            self.gallery_time = self._get_gallery_date(
-                g_time=self.gallery_time, g_pub_date=gallery_pub_date)
+            # initiate gallery time when not defined
+            self.gallery_time = self._get_gallery_date(g_pub_date=gallery_pub_date)
             qdate_pub_date = QDate.fromString(gallery_pub_date[0], "yyyy-MM-dd")
             self.pub_edit.setDate(qdate_pub_date)
 
@@ -414,8 +414,7 @@ class GalleryDialogWidget(QWidget):
             )
             if all(map(lambda x: x.pub_date == g.pub_date, gallery)):
                 gallery_pub_date = "{}".format(g.pub_date).split(' ')
-                self.gallery_time = self._get_gallery_date(
-                    g_time=self.gallery_time, g_pub_date=gallery_pub_date)
+                self.gallery_time = self._get_gallery_date(g_pub_date=gallery_pub_date)
                 qdate_pub_date = QDate.fromString(gallery_pub_date[0], "yyyy-MM-dd")
                 self.pub_edit.setDate(qdate_pub_date)
                 self.pub_edit.g_check.setChecked(True)
