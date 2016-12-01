@@ -53,3 +53,17 @@ def test_set_external_icon(use_external_viewer):
         else:
             file_icons.get_default_file_icon.assert_called_once_with()
             assert GridDelegate.external_icon == file_icons.get_default_file_icon.return_value
+
+
+def test_get_type_rect():
+    type_p = mock.Mock()
+    type_p.x.return_value = 0
+    type_p.y.return_value = 0
+    #
+    type_w = 0
+    type_h = 0
+    with mock.patch('version.grid_delegate.QRect') as m_qr:
+        from version.grid_delegate import GridDelegate
+        res = GridDelegate._get_type_rect(type_p=type_p, type_w=type_w, type_h=type_h)
+        assert res == m_qr.return_value
+        m_qr.assert_called_once_with(-2, -1, 4, 1)

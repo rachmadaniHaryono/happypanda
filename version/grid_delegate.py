@@ -315,7 +315,7 @@ class GridDelegate(QStyledItemDelegate):
                 type_w = painter.fontMetrics().width(gallery.file_type)
                 type_h = painter.fontMetrics().height()
                 type_p = QPoint(x + 4, y + app_constants.THUMB_H_SIZE - type_h - 5)
-                type_rect = QRect(type_p.x() - 2, type_p.y() - 1, type_w + 4, type_h + 1)
+                type_rect = self._get_type_rect(type_p=type_p, type_w=type_w, type_h=type_h)
                 if app_constants.DISPLAY_GALLERY_TYPE:
                     type_color = QColor(239, 0, 0, 200)
                     if gallery.file_type == "zip":
@@ -474,7 +474,7 @@ class GridDelegate(QStyledItemDelegate):
                 type_w = painter.fontMetrics().width(id_txt)
                 type_h = painter.fontMetrics().height()
                 type_p = QPoint(x + 4, y + 50 - type_h - 5)
-                type_rect = QRect(type_p.x() - 2, type_p.y() - 1, type_w + 4, type_h + 1)
+                type_rect = self._get_type_rect(type_p=type_p, type_w=type_w, type_h=type_h)
                 painter.fillRect(type_rect, QColor(239, 0, 0, 200))
                 painter.drawText(
                     type_p.x(), type_p.y() + painter.fontMetrics().height() - 4, id_txt)
@@ -489,6 +489,11 @@ class GridDelegate(QStyledItemDelegate):
 
             clipping = QRectF(x, y + h // 4, w, app_constants.GRIDBOX_LBL_H - 10)
             txt_layout.draw(painter, QPointF(x, y + h // 4), clip=clipping)
+
+    @staticmethod
+    def _get_type_rect(type_p, type_w, type_h):
+        """get type_rect."""
+        return QRect(type_p.x() - 2, type_p.y() - 1, type_w + 4, type_h + 1)
 
     def _ribbon_color(self, gallery_type):
         if gallery_type:
