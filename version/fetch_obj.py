@@ -391,6 +391,19 @@ class FetchObject(QObject):
         self.AUTO_METADATA_PROGRESS.emit('Finished applying metadata')
         log_i('Finished applying metadata')
 
+    @classmethod
+    def _check_single_gallery(
+            cls, cond, gallery, hen_item, is_idx_end, checked_pre_url_galleries):
+        """check single gallery."""
+        if cond:
+            gallery.temp_url = gallery._g_dialog_url
+            checked_pre_url_galleries.append(gallery)
+            # to process even if this gallery is last and fails
+            if is_idx_end:
+                cls.fetch_metadata(hen=hen_item)
+            return True, checked_pre_url_galleries, gallery
+        return False, checked_pre_url_galleries, gallery
+
     def _auto_metadata_process(self, galleries, hen, valid_url, **kwargs):  # NOQA
         hen.LAST_USED = time.time()
         self.AUTO_METADATA_PROGRESS.emit("Checking gallery urls...")
@@ -403,23 +416,28 @@ class FetchObject(QObject):
             custom_args = {}  # send to hen class
             log_i("Checking gallery url")
 
+            is_idx_end = x == len(galleries)
             # coming from GalleryDialog
             if hasattr(gallery, "_g_dialog_url"):
-                if gallery._g_dialog_url:
-                    gallery.temp_url = gallery._g_dialog_url
-                    checked_pre_url_galleries.append(gallery)
-                    # to process even if this gallery is last and fails
-                    if x == len(galleries):
-                        self.fetch_metadata(hen=hen)
+                is_match, checked_pre_url_galleries, gallery = self._check_single_gallery(
+                    cond=gallery._g_dialog_url,
+                    gallery=gallery,
+                    hen_item=hen,
+                    is_idx_end=is_idx_end,
+                    checked_pre_url_galleries=checked_pre_url_galleries
+                )
+                if is_match:
                     continue
 
             if gallery.link and app_constants.USE_GALLERY_LINK:
-                check = self._website_checker(gallery.link)
-                if check == valid_url:
-                    gallery.temp_url = gallery.link
-                    checked_pre_url_galleries.append(gallery)
-                    if x == len(galleries):
-                        self.fetch_metadata(hen=hen)
+                is_match, checked_pre_url_galleries, gallery = self._check_single_gallery(
+                    cond=self._website_checker(gallery.link) == valid_url,
+                    gallery=gallery,
+                    hen_item=hen,
+                    is_idx_end=is_idx_end,
+                    checked_pre_url_galleries=checked_pre_url_galleries
+                )
+                if is_match:
                     continue
 
             self.AUTO_METADATA_PROGRESS.emit(
