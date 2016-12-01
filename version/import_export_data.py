@@ -7,7 +7,7 @@ import datetime
 try:
     import app_constants
     import gallerydb
-    from .utils import get_gallery_tags
+    from utils import get_gallery_tags
 except ImportError:
     from . import (
         app_constants,

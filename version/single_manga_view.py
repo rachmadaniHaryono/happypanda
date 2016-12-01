@@ -215,7 +215,7 @@ class SingleMangaView(QListView):
                 gallerydb.execute(gallerydb.ChapterDB.del_chapter, True, gallery.id, chap_numb)
 
     @classmethod
-    def _set_sort(cls, name, exp_name, role, sort_arg):
+    def _set_sort(cls, name, exp_name, role, sort_arg, sort_model):
         """set sort variable.
 
         Args:
@@ -223,13 +223,14 @@ class SingleMangaView(QListView):
             exp_name(str): Expected name.
             role: Sort role.
             sort_arg: Argument for sort func.
+            sort_model: Sort model obj.
 
         Returns:
             bool: True if name is equal expected name.
         """
         if name == exp_name:
-            cls.sort_model.setSortRole(role)
-            cls.sort_model.sort(0, sort_arg)
+            sort_model.setSortRole(role)
+            sort_model.sort(0, sort_arg)
             cls.current_sort = name
             return True
         return False
@@ -242,31 +243,38 @@ class SingleMangaView(QListView):
         kwargs = [
             {
                 'name': name, 'exp_name': 'title', 'role': Qt.DisplayRole,
-                'sort_arg': Qt.AscendingOrder
+                'sort_arg': Qt.AscendingOrder,
+                'sort_model': self.sort_model
             },
             {
                 'name': name, 'exp_name': 'artist', 'role': GalleryModel.ARTIST_ROLE,
-                'sort_arg': Qt.AscendingOrder
+                'sort_arg': Qt.AscendingOrder,
+                'sort_model': self.sort_model
             },
             {
                 'name': name, 'exp_name': 'date_added', 'role': GalleryModel.DATE_ADDED_ROLE,
-                'sort_arg': Qt.DescendingOrder
+                'sort_arg': Qt.DescendingOrder,
+                'sort_model': self.sort_model
             },
             {
                 'name': name, 'exp_name': 'pub_date', 'role': GalleryModel.PUB_DATE_ROLE,
-                'sort_arg': Qt.DescendingOrder
+                'sort_arg': Qt.DescendingOrder,
+                'sort_model': self.sort_model
             },
             {
                 'name': name, 'exp_name': 'pub_date', 'role': GalleryModel.PUB_DATE_ROLE,
-                'sort_arg': Qt.DescendingOrder
+                'sort_arg': Qt.DescendingOrder,
+                'sort_model': self.sort_model
             },
             {
                 'name': name, 'exp_name': 'times_read', 'role': GalleryModel.TIMES_READ_ROLE,
-                'sort_arg': Qt.DescendingOrder
+                'sort_arg': Qt.DescendingOrder,
+                'sort_model': self.sort_model
             },
             {
                 'name': name, 'exp_name': 'last_read', 'role': GalleryModel.LAST_READ_ROLE,
-                'sort_arg': Qt.DescendingOrder
+                'sort_arg': Qt.DescendingOrder,
+                'sort_model': self.sort_model
             }
         ]
         for kwarg in kwargs:
