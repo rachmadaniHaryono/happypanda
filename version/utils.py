@@ -1099,3 +1099,8 @@ def delegate_event(attr, value, super_attr, event):
     """
     attr(value)
     return getattr(super(), super_attr)(event)
+
+
+def get_chapter_title(path):
+    """get chapter title."""
+    return title_parser(os.path.split(path)[1])['title']

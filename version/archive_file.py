@@ -137,16 +137,22 @@ class ArchiveFile():
                     x.count('/') == 1 + dir_name.count('/')]
         return []
 
+    @staticmethod
+    def _make_temp_dir(path=None):
+        """create temp dir if specified."""
+        if not path:
+            path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
+            os.mkdir(path)
+        return path
+
     def extract(self, file_to_ext, path=None):
         """Extract one file from archive to given path.
 
         Creates a temp_dir if path is not specified
         Returns path to the extracted file
         """
-        if not path:
-            path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
-            os.mkdir(path)
-
+        path = self._make_temp_dir(path=path)
+        #
         if not file_to_ext:
             return self.extract_all(path)
         else:
@@ -168,9 +174,8 @@ class ArchiveFile():
 
         If path is not specified, a temp dir will be created
         """
-        if not path:
-            path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
-            os.mkdir(path)
+        path = self._make_temp_dir(path=path)
+        #
         if member:
             self.archive.extractall(path, member)
         self.archive.extractall(path)

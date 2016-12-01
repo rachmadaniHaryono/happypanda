@@ -21,18 +21,18 @@ from PyQt5.QtWidgets import (
 )
 
 try:
-    import utils
     import gallerydb
-    from spacer_widget import SpacerWidget
-    from path_line_edit import PathLineEdit
     from archive_file import ArchiveFile
+    from path_line_edit import PathLineEdit
+    from spacer_widget import SpacerWidget
+    from utils import get_chapter_title, ARCHIVE_FILES
 except ImportError:
-    from .spacer_widget import SpacerWidget
-    from .path_line_edit import PathLineEdit
     from .archive_file import ArchiveFile
+    from .path_line_edit import PathLineEdit
+    from .spacer_widget import SpacerWidget
+    from .utils import get_chapter_title, ARCHIVE_FILES
     from . import (
         gallerydb,
-        utils,
     )
 
 log = logging.getLogger(__name__)
@@ -153,11 +153,11 @@ class ChapterAddWidget(QWidget):
             c = spin_box.value() - 1  # because of 0-based index
             if os.path.exists(p):
                 chap = chapters.create_chapter(c)
-                chap.title = utils.title_parser(os.path.split(p)[1])['title']
+                chap.title = get_chapter_title(path=p)
                 chap.path = p
                 if os.path.isdir(p):
                     chap.pages = len(list(scandir.scandir(p)))
-                elif p.endswith(utils.ARCHIVE_FILES):
+                elif p.endswith(ARCHIVE_FILES):
                     chap.in_archive = 1
                     arch = ArchiveFile(p)
                     chap.pages = len(arch.dir_contents(''))

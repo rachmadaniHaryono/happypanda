@@ -30,6 +30,7 @@ try:
     from gallerydb import Gallery, GalleryDB, HashDB, execute
     from gmetafile import GMetafile
     from pewnet import hen_list_init
+    from utils import get_chapter_title
     import app_constants
     import settings
     import utils
@@ -41,6 +42,7 @@ except ImportError:
     from .gallerydb import Gallery, GalleryDB, HashDB, execute
     from .gmetafile import GMetafile
     from .pewnet import hen_list_init
+    from .utils import get_chapter_title
     from . import (
         app_constants,
         settings,
@@ -141,7 +143,7 @@ class FetchObject(QObject):
 
                 else:  # else assume that all images are in gallery folder
                     chap = new_gallery.chapters.create_chapter()
-                    chap.title = utils.title_parser(os.path.split(path)[1])['title']
+                    chap.title = get_chapter_title(path=path)
                     chap.path = path
                     metafile.update(GMetafile(chap.path))
                     chap.pages = len(list(scandir.scandir(path)))
@@ -191,7 +193,7 @@ class FetchObject(QObject):
                                     arch.close()
                             else:
                                 chap = new_gallery.chapters.create_chapter()
-                                chap.title = utils.title_parser(os.path.split(path)[1])['title']
+                                chap.title = get_chapter_title(path=path)
                                 chap.in_archive = 1
                                 chap.path = path
                                 metafile.update(GMetafile(path, temp_p))

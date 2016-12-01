@@ -250,3 +250,21 @@ def test_image_greyscale(mode, value):
                 assert not res
             else:
                 assert res
+
+
+def test_get_chapter_title():
+    """test func."""
+    split_path_part = mock.Mock()
+    title = mock.Mock()
+    path = mock.Mock()
+    with mock.patch('version.utils.title_parser') as m_tp, \
+            mock.patch('version.utils.os') as m_os:
+        m_os.path.split.return_value = [mock.Mock(), split_path_part]
+        m_tp.return_value = {'title': title}
+        from version.utils import get_chapter_title
+        # run
+        res = get_chapter_title(path)
+        # test
+        m_tp.assert_called_once_with(split_path_part)
+        m_os.path.split.assert_called_once_with(path)
+        assert res == title
