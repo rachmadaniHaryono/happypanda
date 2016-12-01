@@ -687,7 +687,7 @@ class GalleryDialogWidget(QWidget):
         """link modify."""
         self._change_link(
             pre_link_item=self.link_lbl,
-            main_link_item=self.link_edit, text=self.self.link_lbl.text(),
+            main_link_item=self.link_edit, text=self.link_lbl.text(),
             after_link_items=[self.link_btn, self.link_btn2]
         )
 
