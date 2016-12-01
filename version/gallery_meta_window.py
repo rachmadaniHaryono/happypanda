@@ -123,6 +123,14 @@ class GalleryMetaWindow(ArrowWindow):
         if not self.underMouse() and not self._mouse_in_gallery():
             self.hide_animation.start()
 
+    @staticmethod
+    def _calculate_sides(middle, hw, margin_offset, desktop):
+        """calculate spaces on both sides either (top, bottom) or (left, right)."""
+        half_hw = hw / 2
+        return ((middle - half_hw - margin_offset) > 0), (
+            (middle + half_hw + margin_offset) < desktop
+        )
+
     def show_gallery(self, index, view):  # NOQA
         """show_gallery."""
         self.resize(app_constants.POPUP_WIDTH, app_constants.POPUP_HEIGHT)
@@ -154,10 +162,9 @@ class GalleryMetaWindow(ArrowWindow):
                 index_top_left.y() + index_btm_left.y()) / 2  # middle of gallery left side
             left = (
                 index_top_left.x() - self.width() - margin_offset) > 0  # if the width can be there
-            # if the top half of window can be there
-            top = (middle - (self.height() / 2) - margin_offset) > 0
-            # same as above, just for the bottom
-            btm = (middle + (self.height() / 2) + margin_offset) < desktop_h
+            # if the top half of window can be there and for  the bottom
+            top, btm = self._calculate_sides(
+                middle=middle, hw=self.height(), margin_offset=margin_offset, desktop=desktop_h)
             if left and top and btm:
                 self.direction = self.RIGHT
                 x = index_top_left.x() - gallery_touch_offset - self.width()
@@ -174,10 +181,9 @@ class GalleryMetaWindow(ArrowWindow):
             # if the width can be there
             right = (index_top_right.x() + self.width() +
                      margin_offset) < desktop_w
-            # if the top half of window can be there
-            top = (middle - (self.height() / 2) - margin_offset) > 0
-            # same as above, just for the bottom
-            btm = (middle + (self.height() / 2) + margin_offset) < desktop_h
+            # if the top half of window can be there and for the bottom
+            top, btm = self._calculate_sides(
+                middle=middle, hw=self.height(), margin_offset=margin_offset, desktop=desktop_h)
 
             if right and top and btm:
                 self.direction = self.LEFT
@@ -195,9 +201,8 @@ class GalleryMetaWindow(ArrowWindow):
             # if the height can be there
             top = (index_top_right.y() - self.height() - margin_offset) > 0
             # if the left half of window can be there
-            left = (middle - (self.width() / 2) - margin_offset) > 0
-            # same as above, just for the right
-            right = (middle + (self.width() / 2) + margin_offset) < desktop_w
+            left, right = self._calculate_sides(
+                middle=middle, hw=self.width(), margin_offset=margin_offset, desktop=desktop_w)
 
             if top and left and right:
                 self.direction = self.BOTTOM
