@@ -581,7 +581,7 @@ class AppWindow(QMainWindow):
         self.notification_bar.end_show()
         gallerydb.execute(database.db.DBBase.end, True)
         try:
-            self.fetch_instance.deleteLater()
+            self.get_metadata_fetch_instance.deleteLater()
         except RuntimeError:
             pass
         if not isinstance(status, bool):
