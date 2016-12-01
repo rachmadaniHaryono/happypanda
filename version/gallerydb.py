@@ -1,5 +1,6 @@
 """gallery db module."""
-# """ This file is part of Happypanda.
+# """
+# This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
@@ -26,11 +27,8 @@ from PyQt5.QtCore import QObject, pyqtSignal, QTime
 try:
     from utils import (
         IMG_FILES,
-        append_or_create_list_on_dict,
-        cleanup_dir,
         delete_path,
         generate_img_hash,
-        get_chapter_pages_len,
     )
     from archive_file import ArchiveFile
     from database import db
@@ -42,11 +40,8 @@ try:
 except ImportError:
     from .utils import (
         IMG_FILES,
-        append_or_create_list_on_dict,
-        cleanup_dir,
         delete_path,
         generate_img_hash,
-        get_chapter_pages_len,
     )
     from .archive_file import ArchiveFile
     from .database import db
@@ -365,26 +360,6 @@ class GalleryDB(DBBase):
             return False
         return True
 
-    @staticmethod
-    def _get_db_cmd(db_cmds, value, value_name, series_id, value_type=None, cmd_value_arg=None):
-        """get database cmd."""
-        cmd_value_arg = cmd_value_arg if cmd_value_arg is not None else value
-        if value_type is not None and value is not None:
-            assert isinstance(
-                value, value_type), '[{}] is not type of [{}]'.format(value, value_type)
-        if value is not None:
-            db_cmds.append([
-                "UPDATE series SET {}=? WHERE series_id=?".format(value_name),
-                (cmd_value_arg, series_id)
-            ])
-        return db_cmds
-
-    @classmethod
-    def _get_db_cmd_with_encoded_value(cls, **kwargs):
-        """get db cmd with encoded value."""
-        kwargs['cmd_value_arg'] = str.encode(kwargs['value'])
-        return cls._get_db_cmd(**kwargs)
-
     @classmethod  # NOQA
     def modify_gallery(
             cls,
@@ -416,84 +391,70 @@ class GalleryDB(DBBase):
         assert isinstance(series_id, int)
         assert not isinstance(series_id, bool)
         executing = []
-        # NOTE _get_db_cmd_with_encoded_value may not correct
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=title, value_type=str, value_name='title',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd_with_encoded_value(
-            db_cmds=executing, value=profile, value_type=str, value_name='profile',
-            series_id=series_id,
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=artist, value_type=str, value_name='artist',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=info, value_type=str, value_name='info',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=type, value_type=str, value_name='type',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=fav, value_type=int, value_name='fav',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=language, value_type=str, value_name='language',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=rating, value_type=int, value_name='rating',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=status, value_type=str, value_name='status',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=pub_date, value_type=None, value_name='pub_date',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=link, value_type=None, value_name='link',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=times_read, value_type=None, value_name='times_read',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=last_read, value_type=None, value_name='last_read',
-            series_id=series_id
-        )
-        executing = cls._get_db_cmd_with_encoded_value(
-            db_cmds=executing, value=series_path, value_type=None, value_name='series_path',
-            series_id=series_id,
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=_db_v, value_type=None, value_name='db_v',
-            series_id=series_id,
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=exed, value_type=None, value_name='exed',
-            series_id=series_id,
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=is_archive, value_type=None, value_name='is_archive',
-            series_id=series_id,
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=path_in_archive, value_type=None,
-            value_name='path_in_archive',
-            series_id=series_id,
-        )
-        executing = cls._get_db_cmd(
-            db_cmds=executing, value=view, value_type=None, value_name='view',
-            series_id=series_id,
-        )
+        if title is not None:
+            assert isinstance(title, str)
+            executing.append(["UPDATE series SET title=? WHERE series_id=?", (title, series_id)])
+        if profile is not None:
+            assert isinstance(profile, str)
+            executing.append([
+                "UPDATE series SET profile=? WHERE series_id=?",
+                (str.encode(profile), series_id)
+            ])
+        if artist is not None:
+            assert isinstance(artist, str)
+            executing.append(["UPDATE series SET artist=? WHERE series_id=?", (artist, series_id)])
+        if info is not None:
+            assert isinstance(info, str)
+            executing.append(["UPDATE series SET info=? WHERE series_id=?", (info, series_id)])
+        if type is not None:
+            assert isinstance(type, str)
+            executing.append(["UPDATE series SET type=? WHERE series_id=?", (type, series_id)])
+        if fav is not None:
+            assert isinstance(fav, int)
+            executing.append(["UPDATE series SET fav=? WHERE series_id=?", (fav, series_id)])
+        if language is not None:
+            assert isinstance(language, str)
+            executing.append(
+                ["UPDATE series SET language=? WHERE series_id=?", (language, series_id)])
+        if rating is not None:
+            assert isinstance(rating, int)
+            executing.append(
+                ["UPDATE series SET rating=? WHERE series_id=?", (rating, series_id)])
+        if status is not None:
+            assert isinstance(status, str)
+            executing.append(
+                ["UPDATE series SET status=? WHERE series_id=?", (status, series_id)])
+        if pub_date is not None:
+            executing.append(
+                ["UPDATE series SET pub_date=? WHERE series_id=?", (pub_date, series_id)])
+        if link is not None:
+            executing.append(["UPDATE series SET link=? WHERE series_id=?", (link, series_id)])
+        if times_read is not None:
+            executing.append(
+                ["UPDATE series SET times_read=? WHERE series_id=?", (times_read, series_id)])
+        if last_read is not None:
+            executing.append(
+                ["UPDATE series SET last_read=? WHERE series_id=?", (last_read, series_id)])
+        if series_path is not None:
+            executing.append([
+                "UPDATE series SET series_path=? WHERE series_id=?",
+                (str.encode(series_path), series_id)
+            ])
+        if _db_v is not None:
+            executing.append(["UPDATE series SET db_v=? WHERE series_id=?", (_db_v, series_id)])
+        if exed is not None:
+            executing.append(["UPDATE series SET exed=? WHERE series_id=?", (exed, series_id)])
+        if is_archive is not None:
+            executing.append(
+                ["UPDATE series SET is_archive=? WHERE series_id=?", (is_archive, series_id)])
+        if path_in_archive is not None:
+            executing.append([
+                "UPDATE series SET path_in_archive=? WHERE series_id=?",
+                (path_in_archive, series_id)
+            ])
+        if view is not None:
+            executing.append(["UPDATE series SET view=? WHERE series_id=?", (view, series_id)])
+
         if tags is not None:
             assert isinstance(tags, dict)
             TagDB.modify_tags(series_id, tags)
@@ -904,37 +865,6 @@ class TagDB(DBBase):
                 continue
         return tags
 
-    @classmethod
-    def _look_exists_when_add_tags(cls, tag_or_ns, what):
-        """check if tag or namespace already exists in base.
-
-        returns id, else returns None
-        """
-        c = cls.execute(
-            cls, 'SELECT {}_id FROM {}s WHERE {} = ?'.format(what, what, what), (tag_or_ns,))
-        try:  # exists
-            return c.fetchone()['{}_id'.format(what)]
-        except TypeError:  # doesnt exist
-            return None
-        except IndexError:
-            return None
-
-    @classmethod
-    def _get_id(cls, tag_or_ns, ton_name):
-        """get id from tag or namespace."""
-        try:
-            res_id = cls._look_exists_when_add_tags(tag_or_ns=tag_or_ns, what=ton_name)
-            if not res_id:
-                raise ValueError
-        except ValueError:
-            c = cls.execute(
-                cls,
-                'INSERT INTO {name}s({name}) VALUES(?)'.format(name=ton_name),
-                (tag_or_ns,)
-            )
-            res_id = c.lastrowid
-        return res_id
-
     @classmethod  # NOQA
     def add_tags(cls, object):
         """Add the given dict_of_tags to the given series_id."""
@@ -943,16 +873,43 @@ class TagDB(DBBase):
         series_id = object.id
         dict_of_tags = object.tags
 
+        def look_exists(tag_or_ns, what):
+            """check if tag or namespace already exists in base.
+
+            returns id, else returns None
+            """
+            c = cls.execute(
+                cls, 'SELECT {}_id FROM {}s WHERE {} = ?'.format(what, what, what), (tag_or_ns,))
+            try:  # exists
+                return c.fetchone()['{}_id'.format(what)]
+            except TypeError:  # doesnt exist
+                return None
+            except IndexError:
+                return None
+
         tags_mappings_id_list = []
         # first let's add the tags and namespaces to db
         for namespace in dict_of_tags:
             tags_list = dict_of_tags[namespace]
             # don't add if it already exists
-            namespace_id = cls._get_id(tag_or_ns=namespace, ton_name='namespace')
-            #
+            try:
+                namespace_id = look_exists(namespace, "namespace")
+                if not namespace_id:
+                    raise ValueError
+            except ValueError:
+                c = cls.execute(cls, 'INSERT INTO namespaces(namespace) VALUES(?)', (namespace,))
+                namespace_id = c.lastrowid
+
             tags_id_list = []
             for tag in tags_list:
-                tag_id = cls._get_id(tag_or_ns=tag, ton_name='tag')
+                try:
+                    tag_id = look_exists(tag, "tag")
+                    if not tag_id:
+                        raise ValueError
+                except ValueError:
+                    c = cls.execute(cls, 'INSERT INTO tags(tag) VALUES(?)', (tag,))
+                    tag_id = c.lastrowid
+
                 tags_id_list.append(tag_id)
 
             def look_exist_tag_map(tag_id):
@@ -960,14 +917,17 @@ class TagDB(DBBase):
 
                 returns id else None.
                 """
-                cmd = (
-                    'SELECT tags_mappings_id FROM tags_mappings '
-                    'WHERE namespace_id=? AND tag_id=?'
+                c = cls.execute(
+                    cls,
+                    'SELECT tags_mappings_id FROM tags_mappings WHERE namespace_id=? AND tag_id=?',
+                    (namespace_id, tag_id,)
                 )
-                return _fetchone_from_cursor(
-                    cls=cls, cmd=cmd, exec_last_arg=(namespace_id, tag_id,),
-                    key='tags_mappings_id'
-                )
+                try:  # exists
+                    return c.fetchone()['tags_mappings_id']
+                except TypeError:  # doesnt exist
+                    return None
+                except IndexError:
+                    return None
 
             # time to map the tags to the namespace now
             for tag_id in tags_id_list:
@@ -1040,8 +1000,10 @@ class TagDB(DBBase):
                 c = cls.execute(cls, 'SELECT tag FROM tags WHERE tag_id=?', (t['tag_id'],))
                 tag = c.fetchone()['tag']
                 # put in dict
-                ns_tags = append_or_create_list_on_dict(
-                    dict_=ns_tags, key=ns, value=tag)
+                if ns in ns_tags:
+                    ns_tags[ns].append(tag)
+                else:
+                    ns_tags[ns] = [tag]
             except:
                 continue
         return ns_tags
@@ -1060,22 +1022,18 @@ class TagDB(DBBase):
         pass
 
     @classmethod
-    def _get_all_value(cls, value_name):
-        """get all value."""
-        cursor = cls.execute(
-            cls, 'SELECT {value_name} FROM {value_name}s'.format(value_name=value_name))
-        result = [t[value_name] for t in cursor.fetchall()]
-        return result
-
-    @classmethod
     def get_all_tags(cls):
         """Return all tags in database in a list."""
-        return cls._get_all_value(value_name='tag')
+        cursor = cls.execute(cls, 'SELECT tag FROM tags')
+        tags = [t['tag'] for t in cursor.fetchall()]
+        return tags
 
     @classmethod
     def get_all_ns(cls):
         """Return all namespaces in database in a list."""
-        return cls._get_all_value(value_name='namespace')
+        cursor = cls.execute(cls, 'SELECT namespace FROM namespaces')
+        ns = [n['namespace'] for n in cursor.fetchall()]
+        return ns
 
 
 class ListDB(DBBase):
@@ -1360,11 +1318,17 @@ class HashDB(DBBase):
 
                 returns hash, else returns None
                 """
-                cmd = 'SELECT hash FROM hashes WHERE page=? AND chapter_id=?',
-                return _fetchone_from_cursor(
-                    cls=cls, cmd=cmd, exec_last_arg=(page, chap_id,),
-                    key='hash'
+                c = cls.execute(
+                    cls,
+                    'SELECT hash FROM hashes WHERE page=? AND chapter_id=?',
+                    (page, chap_id,)
                 )
+                try:  # exists
+                    return c.fetchone()['hash']
+                except TypeError:  # doesnt exist
+                    return None
+                except IndexError:
+                    return None
 
             if gallery.dead_link:
                 log_e(
@@ -1962,45 +1926,38 @@ class Gallery:
                         if self.dead_link:
                             return is_exclude
 
-                keyword_search_result = self._keyword_search(ns, tag, args=args)
-                if ns and keyword_search_result:
-                    return is_exclude
-                if app_constants.Search.Regex in args and ns:
-                    for x in self.tags:
-                        if self._return_is_exclude(
-                                cond=utils.regex_search(ns, x),
-                                key=x, search_func=utils.regex_search, tag=tag, args=args
-                        ):
+                if app_constants.Search.Regex in args:
+                    if ns:
+                        if self._keyword_search(ns, tag, args=args):
                             return is_exclude
-                elif app_constants.Search.Regex in args:
-                    if self._return_is_exclude(search_func=utils.regex_search, tag=tag, args=args):
-                        return is_exclude
-                elif self._return_is_exclude_on_simple_tag(
-                        cond=ns in self.tags, key=ns,
-                        search_func=utils.search_term, tag=tag, args=args
-                ):
-                    return is_exclude
+
+                        for x in self.tags:
+                            if utils.regex_search(ns, x):
+                                for t in self.tags[x]:
+                                    if utils.regex_search(tag, t, True, args=args):
+                                        return is_exclude
+                    else:
+                        for x in self.tags:
+                            for t in self.tags[x]:
+                                if utils.regex_search(tag, t, True, args=args):
+                                    return is_exclude
                 else:
-                    if self._return_is_exclude(search_func=utils.search_term, tag=tag, args=args):
-                        return is_exclude
+                    if ns:
+                        if self._keyword_search(ns, tag, args=args):
+                            return is_exclude
+
+                        if ns in self.tags:
+                            for t in self.tags[ns]:
+                                if utils.search_term(tag, t, True, args=args):
+                                    return is_exclude
+                    else:
+                        for x in self.tags:
+                            for t in self.tags[x]:
+                                if utils.search_term(tag, t, True, args=args):
+                                    return is_exclude
             else:
                 return is_exclude
         return default
-
-    @classmethod
-    def _return_is_exclude_on_simple_tag(cls, cond, key, search_func, tag, args):
-        """check if is_exclude var have to be returned when tag is simple."""
-        if cond and any(search_func(tag, t, True, args=args) for t in cls.tags[key]):
-            return True
-        return False
-
-    @classmethod
-    def _return_is_exclude(cls, search_func, tag, args):
-        """check if is_exclude var have to be returned."""
-        for x in cls.tags:
-            if any(search_func(tag, t, True, args=args) for t in cls.tags[x]):
-                return True
-        return False
 
     def move_gallery(self, new_path=''):
         log_i("Moving gallery...")
@@ -2203,7 +2160,7 @@ class ChaptersContainer:
                 [x for x in _archive.dir_contents(chap.path) if x.endswith(IMG_FILES)])
             _archive.close()
         else:
-            chap.pages = get_chapter_pages_len(chap.path)
+            chap.pages = len([x for x in scandir.scandir(chap.path) if x.path.endswith(IMG_FILES)])
 
         execute(ChapterDB.update_chapter, True, self, [chap.number])
         return True
@@ -2271,16 +2228,6 @@ class AdminDB(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-    @staticmethod
-    def _get_existing_gallery(galleries, unchecked_gallery, func_name):
-        """append only existing gallery."""
-        g = unchecked_gallery
-        if not os.path.exists(g.path):
-            log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
-        else:
-            getattr(galleries, func_name)(g)
-        return galleries
-
     def from_v021_to_v022(self, old_db_path=db_constants.DB_PATH):  # NOQA
         log_i("Started rebuilding database")
         if DBBase._DB_CONN:
@@ -2289,9 +2236,11 @@ class AdminDB(QObject):
         db_galleries = execute(GalleryDB.get_all_gallery, False, False, True, True)
         galleries = []
         for g in db_galleries:
-            galleries = self._get_existing_gallery(
-                galleries=galleries, unchecked_gallery=g, func_name='append')
-        #
+            if not os.path.exists(g.path):
+                log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
+            else:
+                galleries.append(g)
+
         n_galleries = []
         # get all chapters
         log_i("Getting chapters...")
@@ -2329,7 +2278,11 @@ class AdminDB(QObject):
         log_d("G: {} C:{}".format(len(n_galleries), data_count - 1))
         log_i("Database magic...")
         if os.path.exists(db_constants.THUMBNAIL_PATH):
-            cleanup_dir(path=db_constants.THUMBNAIL_PATH)
+            for root, dirs, files in scandir.walk(db_constants.THUMBNAIL_PATH, topdown=False):
+                for name in files:
+                    os.remove(os.path.join(root, name))
+                for name in dirs:
+                    os.rmdir(os.path.join(root, name))
 
         head = os.path.split(old_db_path)[0]
         DBBase._DB_CONN.close()
@@ -2375,10 +2328,10 @@ class AdminDB(QObject):
         log_i("Adding galleries...")
         GalleryDB.clear_thumb_dir()
         for n, g in enumerate(galleries):
-            # NOTE GalleryDB and  gallery is little bit difference
-            # galleries require the result because append func, and GalleryDB not.
-            self._get_existing_gallery(
-                galleries=GalleryDB, unchecked_gallery=g, func_name='add_gallery')
+            if not os.path.exists(g.path):
+                log_i("Gallery doesn't exist anymore: {}".format(g.title.encode(errors="ignore")))
+            else:
+                GalleryDB.add_gallery(g)
             self.PROGRESS.emit(n)
         DBBase.end()
         DBBase._DB_CONN.close()
@@ -2490,17 +2443,6 @@ class DatabaseStartup(QObject):
     def fetch_hashes(self):
         for g in self._loaded_galleries:
             g.hashes = execute(HashDB.get_gallery_hashes, False, g.id)
-
-
-def _fetchone_from_cursor(cls, cmd, exec_last_arg, key):
-    """fetch one row from cursor."""
-    c = cls.execute(cls, cmd, exec_last_arg)
-    try:  # exists
-        return c.fetchone()[key]
-    except TypeError:  # doesnt exist
-        return None
-    except IndexError:
-        return None
 
 
 if __name__ == '__main__':
