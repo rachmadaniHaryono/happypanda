@@ -39,20 +39,33 @@ class ArchiveFile():
 
     zip, rar = range(2)
 
+    @classmethod
+    def _check_archive(cls, filepath):
+        """check_archive.
+
+        Returns:
+            return True file is bad.
+        """
+        archive_files_1part = ARCHIVE_FILES[:2]
+        archive_files_2part = ARCHIVE_FILES[2:]
+        b_f = True
+        if filepath.endswith(ARCHIVE_FILES) and filepath.endswith(archive_files_1part):
+            cls.archive = zipfile.ZipFile(os.path.normcase(filepath))
+            b_f = cls.archive.testzip()
+            cls.type = cls.zip
+        elif filepath.endswith(ARCHIVE_FILES) and filepath.endswith(archive_files_2part):
+            cls.archive = rarfile.RarFile(os.path.normcase(filepath))
+            b_f = cls.archive.testrar()
+            cls.type = cls.rar
+        return b_f
+
     def __init__(self, filepath):
         """__init__."""
         self.type = 0
         try:
+            # check for bad file.
+            b_f = self._check_archive(filepath=filepath)
             if filepath.endswith(ARCHIVE_FILES):
-                if filepath.endswith(ARCHIVE_FILES[:2]):
-                    self.archive = zipfile.ZipFile(os.path.normcase(filepath))
-                    b_f = self.archive.testzip()
-                    self.type = self.zip
-                elif filepath.endswith(ARCHIVE_FILES[2:]):
-                    self.archive = rarfile.RarFile(os.path.normcase(filepath))
-                    b_f = self.archive.testrar()
-                    self.type = self.rar
-
                 # test for corruption
                 if b_f:
                     log_w('Bad file found in archive {}'.format(

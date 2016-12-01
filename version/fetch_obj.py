@@ -238,19 +238,38 @@ class FetchObject(QObject):
             self.skipped_paths.append((temp_p, 'Already exists or ignored'))
             return False
 
+    @classmethod
+    def _get_gallery_list_and_status(cls):
+        """Get gallery list and status.
+
+        Returns:
+            Tuple of (gallery_list, is_mixed status).
+        """
+        try:
+            gallery_l = sorted([
+                p.name for p in scandir.scandir(cls.series_path)
+            ])  # list of folders in the "Gallery" folder
+            mixed = False
+        except TypeError:
+            gallery_l = cls.series_path
+            mixed = True
+        return gallery_l, mixed
+
+    @classmethod
+    def _after_local_search(cls):
+        """function to run after local search."""
+        log_i('Local search: OK')
+        log_i('Created {} items'.format(len(cls.data)))
+        cls.FINISHED.emit(cls.data)
+        if cls.skipped_paths:
+            cls.SKIPPED.emit(cls.skipped_paths)
+
     def local(self, s_path=None):  # NOQA
         """Do a local search in the given series_path."""
         self.data.clear()
         if s_path:
             self.series_path = s_path
-        try:
-            gallery_l = sorted([
-                p.name for p in scandir.scandir(self.series_path)
-            ])  # list of folders in the "Gallery" folder
-            mixed = False
-        except TypeError:
-            gallery_l = self.series_path
-            mixed = True
+        gallery_l, mixed = self._get_gallery_list_and_status()
         if len(gallery_l) != 0:  # if gallery path list is not empty
             log_i('Gallery folder is not empty')
             if len(self.galleries_from_db) != len(app_constants.GALLERY_DATA):
@@ -266,6 +285,7 @@ class FetchObject(QObject):
                     folder_name = os.path.split(path)[1]
                 else:
                     path = os.path.join(self.series_path, folder_name)
+                #
                 if app_constants.SUBFOLDER_AS_GALLERY or \
                         app_constants.OVERRIDE_SUBFOLDER_AS_GALLERY:
                     if app_constants.OVERRIDE_SUBFOLDER_AS_GALLERY:
@@ -273,36 +293,42 @@ class FetchObject(QObject):
                     log_i("Treating each subfolder as gallery")
                     if os.path.isdir(path):
                         gallery_folders, gallery_archives = utils.recursive_gallery_check(path)
-                        for gs in gallery_folders:
-                                self.create_gallery(gs, os.path.split(gs)[1], False)
+                        list(map(
+                            lambda gs: self.create_gallery(gs, os.path.split(gs)[1], False),
+                            gallery_folders
+                        ))
                         # variable assigned but never used.
                         # p_saving = {}
-                        for gs in gallery_archives:
-                                self.create_gallery(
-                                    gs[0], os.path.split(gs[0])[1],
-                                    False,
-                                    archive=gs[1]
-                                )
+                        list(map(
+                            lambda gs: self.create_gallery(
+                                gs[0], os.path.split(gs[0])[1], False, archive=gs[1]),
+                            gallery_archives
+                        ))
                     elif path.endswith(utils.ARCHIVE_FILES):
+                        list(map(
+                            lambda g: self.create_gallery(
+                                g, os.path.split(g)[1], False, archive=path),
+                            utils.check_archive(path)
+                        ))
                         for g in utils.check_archive(path):
                             self.create_gallery(g, os.path.split(g)[1], False, archive=path)
                 else:
                     try:
-                        if os.path.isdir(path):
-                            if not list(scandir.scandir(path)):
-                                raise ValueError
+                        if os.path.isdir(path) and not list(scandir.scandir(path)):
+                            raise ValueError
                         elif not path.endswith(utils.ARCHIVE_FILES):
                             raise NotADirectoryError  # NOQA
 
                         log_i("Treating each subfolder as chapter")
                         self.create_gallery(path, folder_name, do_chapters=True)
 
-                    except ValueError:
+                    except (ValueError, NotADirectoryError) as err:  # NOQA
                         self.skipped_paths.append((path, 'Empty directory'))
-                        log_w('Directory is empty: {}'.format(path.encode(errors='ignore')))
-                    except NotADirectoryError:  # NOQA
-                        self.skipped_paths.append((path, 'Unsupported file'))
-                        log_w('Unsupported file: {}'.format(path.encode(errors='ignore')))
+                        if err == ValueError:
+                            msg_fmt = 'Directory is empty: {}'
+                        elif err == NotADirectoryError:  # NOQA
+                            msg_fmt = 'Unsupported file: {}'
+                        log_w(msg_fmt.format(path.encode(errors='ignore')))
 
                 progress += 1  # update the progress bar
                 self.PROGRESS.emit(progress)
@@ -314,11 +340,7 @@ class FetchObject(QObject):
             # might want to include an error message
         app_constants.OVERRIDE_MOVE_IMPORTED_IN_FETCH = False
         # everything went well
-        log_i('Local search: OK')
-        log_i('Created {} items'.format(len(self.data)))
-        self.FINISHED.emit(self.data)
-        if self.skipped_paths:
-            self.SKIPPED.emit(self.skipped_paths)
+        self._after_local_search()
 
     def _return_gallery_metadata(self, gallery):
         """Emit galleries."""

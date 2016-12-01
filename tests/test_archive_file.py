@@ -23,3 +23,37 @@ def test_make_temp_dir(path):
             assert res == path
             assert not m_os.mock_calls
             assert not m_uuid.mock_calls
+
+
+@pytest.mark.parametrize(
+    'ext',
+    ['.zip', '.cbz', '.cbr', '.rar', '.random']
+)
+def test_check_archive(ext):
+    """test method."""
+    filepath = 'filename{}'.format(ext)
+    with mock.patch('version.archive_file.os') as m_os, \
+            mock.patch('version.archive_file.rarfile') as m_rf, \
+            mock.patch('version.archive_file.zipfile') as m_zf:
+        from version import archive_file
+        archive_file.ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
+        # run
+        res = archive_file.ArchiveFile._check_archive(filepath=filepath)
+        # test
+        if filepath.endswith(archive_file.ARCHIVE_FILES):
+            m_os.path.normcase.assert_called_once_with(filepath)
+        else:
+            m_os.path.normcase.assert_not_called()
+            assert res
+        if ext in ('.zip', '.cbz'):
+            m_zf.assert_has_calls([
+                mock.call.ZipFile(m_os.path.normcase.return_value),
+                mock.call.ZipFile().testzip()
+            ])
+            assert res == m_zf.ZipFile.return_value.testzip.return_value
+        elif ext in ('.rar', '.cbr'):
+            m_rf.assert_has_calls([
+                mock.call.RarFile(m_os.path.normcase.return_value),
+                mock.call.RarFile().testrar()
+            ])
+            assert res == m_rf.RarFile.return_value.testrar.return_value
