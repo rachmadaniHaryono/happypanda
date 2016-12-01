@@ -369,8 +369,9 @@ class GalleryDB(DBBase):
     def _get_db_cmd(db_cmds, value, value_name, series_id, value_type=None, cmd_value_arg=None):
         """get database cmd."""
         cmd_value_arg = cmd_value_arg if cmd_value_arg is not None else value
-        if value_type is not None:
-            assert isinstance(value, value_type)
+        if value_type is not None and value is not None:
+            assert isinstance(
+                value, value_type), '[{}] is not type of [{}]'.format(value, value_type)
         if value is not None:
             db_cmds.append([
                 "UPDATE series SET {}=? WHERE series_id=?".format(value_name),

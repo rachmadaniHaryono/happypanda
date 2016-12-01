@@ -17,6 +17,7 @@ try:
     import gallerydb
     import misc
     from gallery_dialog_widget import GalleryDialogWidget
+    from gallery_menu import GalleryMenu
 except ImportError:
     from . import (
         gallerydb,
@@ -24,6 +25,7 @@ except ImportError:
         misc,
     )
     from .gallery_dialog_widget import GalleryDialogWidget
+    from .gallery_menu import GalleryMenu
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -198,10 +200,10 @@ class CommonView:
                     view_cls.gallery_window.hide_animation.start()
                 view_cls.manga_delegate.CONTEXT_ON = True
             if selected:
-                menu = misc.GalleryMenu(
+                menu = GalleryMenu(
                     view_cls, index, view_cls.sort_model, view_cls.parent_widget, select_indexes)
             else:
-                menu = misc.GalleryMenu(
+                menu = GalleryMenu(
                     view_cls, index, view_cls.sort_model, view_cls.parent_widget)
             menu.delete_galleries.connect(
                 lambda s: CommonView.remove_gallery(view_cls, select_indexes, s))

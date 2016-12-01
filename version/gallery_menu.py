@@ -146,8 +146,16 @@ class GalleryMenu(QMenu):
                 if not self.selected else [idx.data(Qt.UserRole + 1) for idx in self.selected]
             )
         )
-        #
-        self._add_op_folder_actions()
+        text = 'folder' if not self.index.data(Qt.UserRole + 1).is_archive else 'archive'
+        show_in_folder_info = 'Show in folder'
+        if not self.selected:
+            self.addAction('Open {}'.format(text), self.op_folder)
+            self.addAction(show_in_folder_info, lambda: self.op_folder(containing=True))
+        else:
+            text += 's'
+            show_in_folder_info += 's'
+            self.addAction('Open {}'.format(text), lambda: self.op_folder(True))
+            self.addAction(show_in_folder_info, lambda: self.op_folder(True, True))
         #
         if self.index.data(Qt.UserRole + 1).link and not self.selected:
             self.addAction('Open URL', self.op_link)
@@ -218,20 +226,6 @@ class GalleryMenu(QMenu):
                 else "Exclude in auto metadata fetch"
             )
         adv_menu.addAction(allow_metadata_txt, self.allow_metadata_fetch)
-
-    @classmethod
-    def _add_op_folder_actions(cls):
-        """add op folder actions."""
-        text = 'folder' if not cls.index.data(Qt.UserRole + 1).is_archive else 'archive'
-        show_in_folder_info = 'Show in folder'
-        if not cls.selected:
-            cls.addAction('Open {}'.format(text), cls.op_folder)
-            cls.addAction(show_in_folder_info, lambda: cls.op_folder(containing=True))
-        else:
-            text += 's'
-            show_in_folder_info += 's'
-            cls.addAction('Open {}'.format(text), lambda: cls.op_folder(True))
-            cls.addAction(show_in_folder_info, lambda: cls.op_folder(True, True))
 
     def add_to_ignore(self):
         """add_to_ignore."""
