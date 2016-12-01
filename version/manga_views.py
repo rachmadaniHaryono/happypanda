@@ -160,17 +160,22 @@ class MangaViews:
         self.gallery_model.rowsAboutToBeRemoved.connect(
             self._delegate_delete, Qt.DirectConnection)
 
-    def add_gallery(self, gallery, db=False, record_time=False):  # NOQA
+    @classmethod
+    def _add_single_gallery(cls, db, s_gallery, on_method):
+        """add single gallery."""
+        if db:
+            gallerydb.execute(gallerydb.GalleryDB.add_gallery, True, s_gallery)
+        elif not s_gallery.profile:
+            Executors.generate_thumbnail(s_gallery, on_method=on_method)
+
+    def add_gallery(self, gallery, db=False, record_time=False):
+        """add galery."""
         if isinstance(gallery, (list, tuple)):
             for g in gallery:
                 g.view = self.view_type
                 if self.view_type != app_constants.ViewType.Duplicate:
                     g.state = app_constants.GalleryState.New
-                if db:
-                    gallerydb.execute(gallerydb.GalleryDB.add_gallery, True, g)
-                else:
-                    if not g.profile:
-                        Executors.generate_thumbnail(g, on_method=g.set_profile)
+                self._add_single_gallery(db=db, s_gallery=g, on_method=g.set_profile)
             rows = len(gallery)
             self.list_view.gallery_model._gallery_to_add.extend(gallery)
             if record_time:
@@ -183,11 +188,8 @@ class MangaViews:
             self.list_view.gallery_model._gallery_to_add.append(gallery)
             if record_time:
                 g.qtime = QTime.currentTime()
-            if db:
-                gallerydb.execute(gallerydb.GalleryDB.add_gallery, True, gallery)
-            else:
-                if not gallery.profile:
-                    Executors.generate_thumbnail(gallery, on_method=gallery.set_profile)
+
+            self._add_single_gallery(db=db, s_gallery=gallery, on_method=gallery.set_profile)
         self.list_view.gallery_model.insertRows(self.list_view.gallery_model.rowCount(), rows)
 
     def replace_gallery(self, list_of_gallery, db_optimize=True):
