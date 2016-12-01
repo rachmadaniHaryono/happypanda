@@ -40,8 +40,10 @@ class StarRating():
 
         self.starPolygon = QPolygonF([QPointF(1.0, 0.5)])
         for i in range(5):
-            self.starPolygon << QPointF(0.5 + 0.5 * math.cos(0.8 * i * math.pi),
-                                        0.5 + 0.5 * math.sin(0.8 * i * math.pi))
+            args = list(map(
+                lambda func: 0.5 + 0.5 * func(0.8 * i * math.pi), [math.cos, math.sin]
+            ))
+            self.starPolygon << QPointF(*args)
 
         self.diamondPolygon = QPolygonF()
         self.diamondPolygon << QPointF(0.4, 0.5) \
