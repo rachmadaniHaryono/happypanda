@@ -1408,7 +1408,10 @@ class HashDB(DBBase):
                 pages = {}
                 if page is not None:
                     p = 0
-                    con = sorted(zip_.dir_contents(chap.path))
+                    con = sorted(filter(
+                        lambda x:
+                        os.path.splitext(x)[1] in IMG_FILES, zip_.dir_contents(chap.path))
+                    )
                     if color_img:
                         # if first img is colored, then return hash of that
                         f_bytes = io.BytesIO(zip_.open(con[0], False))
