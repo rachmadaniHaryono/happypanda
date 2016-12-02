@@ -1398,9 +1398,9 @@ class HashDB(DBBase):
                 is_archive = gallery.is_archive
                 try:
                     if is_archive:
-                        zip = ArchiveFile(gallery.path)
+                        zip_ = ArchiveFile(gallery.path)
                     else:
-                        zip = ArchiveFile(chap.path)
+                        zip_ = ArchiveFile(chap.path)
                 except app_constants.CreateArchiveFail:
                     log_e('Could not generate hash: CreateZipFail')
                     return {}
@@ -1408,30 +1408,31 @@ class HashDB(DBBase):
                 pages = {}
                 if page is not None:
                     p = 0
-                    con = sorted(zip.dir_contents(chap.path))
+                    con = sorted(zip_.dir_contents(chap.path))
                     if color_img:
                         # if first img is colored, then return hash of that
-                        f_bytes = io.BytesIO(zip.open(con[0], False))
-                        if not utils.image_greyscale(f_bytes):
-                            return {'color': zip.extract(con[0])}
+                        f_bytes = io.BytesIO(zip_.open(con[0], False))
+                        is_greyscale = utils.image_greyscale(f_bytes)
+                        if not is_greyscale:
+                            return {'color': zip_.extract(con[0])}
                         f_bytes.close()
                     if page == 'mid':
                         p = len(con) // 2
                         img = con[p]
-                        pages = {p: zip.open(img, True)}
+                        pages = {p: zip_.open(img, True)}
                     elif isinstance(page, list):
                         for x in page:
-                            pages[x] = zip.open(con[x], True)
+                            pages[x] = zip_.open(con[x], True)
                     else:
                         p = page
                         img = con[p]
-                        pages = {p: zip.open(img, True)}
+                        pages = {p: zip_.open(img, True)}
 
                 else:
-                    imgs = sorted(zip.dir_contents(chap.path))
+                    imgs = sorted(zip_.dir_contents(chap.path))
                     for n, img in enumerate(imgs):
-                        pages[n] = zip.open(img, True)
-                zip.close()
+                        pages[n] = zip_.open(img, True)
+                zip_.close()
 
                 hashes = {}
                 if gallery.id is not None:
@@ -2266,9 +2267,9 @@ class AdminDB(QObject):
                     chap.path = c_path
                     chap.in_archive = chap_row['in_archive']
                     if gallery.is_archive:
-                        zip = utils.ArchiveFile(gallery.path)
-                        chap.pages = len(zip.dir_contents(chap.path))
-                        zip.close()
+                        zip_ = utils.ArchiveFile(gallery.path)
+                        chap.pages = len(zip_.dir_contents(chap.path))
+                        zip_.close()
                     else:
                         chap.pages = len(list(scandir.scandir(gallery.path)))
                     n_galleries.append(gallery)
