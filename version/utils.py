@@ -23,7 +23,6 @@ import shutil
 import uuid
 import re
 import scandir
-import rarfile
 import send2trash
 import functools
 import time
@@ -35,12 +34,14 @@ from PIL import Image, ImageChops
 
 try:
     import app_constants
-    from archive_file import ArchiveFile
+    from app_constants import IMG_FILES
+    from archive_file import ArchiveFile, ARCHIVE_FILES
     from database import db_constants
     from gmetafile import GMetafile
 except ImportError:
     from . import app_constants
-    from .archive_file import ArchiveFile
+    from .app_constants import IMG_FILES
+    from .archive_file import ArchiveFile, ARCHIVE_FILES
     from .database import db_constants
     from .gmetafile import GMetafile
 
@@ -50,16 +51,6 @@ log_d = log.debug
 log_w = log.warning
 log_e = log.error
 log_c = log.critical
-
-IMG_FILES = ('.jpg', '.bmp', '.png', '.gif', '.jpeg')
-ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
-FILE_FILTER = '*.zip *.cbz *.rar *.cbr'
-IMG_FILTER = '*.jpg *.bmp *.png *.jpeg'
-rarfile.PATH_SEP = '/'
-rarfile.UNRAR_TOOL = app_constants.unrar_tool_path
-if not app_constants.unrar_tool_path:
-    FILE_FILTER = '*.zip *.cbz'
-    ARCHIVE_FILES = ('.zip', '.cbz')
 
 
 def backup_database(db_path=db_constants.DB_PATH):

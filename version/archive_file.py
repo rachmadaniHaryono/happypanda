@@ -7,8 +7,10 @@ import rarfile
 
 try:
     import app_constants
+    from app_constants import ARCHIVE_FILES
 except ImportError:
     from . import app_constants
+    from .app_constants import ARCHIVE_FILES
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -17,15 +19,9 @@ log_w = log.warning
 log_e = log.error
 log_c = log.critical
 
-IMG_FILES = ('.jpg', '.bmp', '.png', '.gif', '.jpeg')
-ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
-FILE_FILTER = '*.zip *.cbz *.rar *.cbr'
-IMG_FILTER = '*.jpg *.bmp *.png *.jpeg'
+# for rarfile.
 rarfile.PATH_SEP = '/'
 rarfile.UNRAR_TOOL = app_constants.unrar_tool_path
-if not app_constants.unrar_tool_path:
-    FILE_FILTER = '*.zip *.cbz'
-    ARCHIVE_FILES = ('.zip', '.cbz')
 
 
 class ArchiveFile():

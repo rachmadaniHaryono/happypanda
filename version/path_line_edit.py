@@ -13,11 +13,9 @@ from PyQt5.QtWidgets import (
 )
 
 try:
-    import utils
+    from app_constants import FILE_FILTER
 except ImportError:
-    from . import (
-        utils,
-    )
+    from .app_constants import FILE_FILTER
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -33,7 +31,7 @@ class PathLineEdit(QLineEdit):
     Set dir to false if you want files.
     """
 
-    def __init__(self, parent=None, dir=True, filters=utils.FILE_FILTER):
+    def __init__(self, parent=None, dir=True, filters=FILE_FILTER):
         """__init__."""
         super().__init__(parent)
         self.folder = dir

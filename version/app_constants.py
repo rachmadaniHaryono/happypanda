@@ -54,6 +54,16 @@ else:
 # path to unrar tool binary
 unrar_tool_path = get('', 'Application', 'unrar tool path')
 
+# from utils.py
+IMG_FILES = ('.jpg', '.bmp', '.png', '.gif', '.jpeg')
+IMG_FILTER = '*.jpg *.bmp *.png *.jpeg'
+#
+ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
+FILE_FILTER = '*.zip *.cbz *.rar *.cbr'
+if not unrar_tool_path:
+    FILE_FILTER = '*.zip *.cbz'
+    ARCHIVE_FILES = ('.zip', '.cbz')
+
 # default stylesheet path
 default_stylesheet_path = os.path.join(static_dir, "style.css")
 user_stylesheet_path = ""
