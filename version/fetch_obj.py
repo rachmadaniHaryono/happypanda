@@ -238,8 +238,8 @@ class FetchObject(QObject):
             self.skipped_paths.append((temp_p, 'Already exists or ignored'))
             return False
 
-    @classmethod
-    def _get_gallery_list_and_status(cls):
+    @staticmethod
+    def _get_gallery_list_and_status(series_path):
         """Get gallery list and status.
 
         Returns:
@@ -247,29 +247,28 @@ class FetchObject(QObject):
         """
         try:
             gallery_l = sorted([
-                p.name for p in scandir.scandir(cls.series_path)
+                p.name for p in scandir.scandir(series_path)
             ])  # list of folders in the "Gallery" folder
             mixed = False
         except TypeError:
-            gallery_l = cls.series_path
+            gallery_l = series_path
             mixed = True
         return gallery_l, mixed
 
-    @classmethod
-    def _after_local_search(cls):
+    def _after_local_search(self):
         """function to run after local search."""
         log_i('Local search: OK')
-        log_i('Created {} items'.format(len(cls.data)))
-        cls.FINISHED.emit(cls.data)
-        if cls.skipped_paths:
-            cls.SKIPPED.emit(cls.skipped_paths)
+        log_i('Created {} items'.format(len(self.data)))
+        self.FINISHED.emit(self.data)
+        if self.skipped_paths:
+            self.SKIPPED.emit(self.skipped_paths)
 
     def local(self, s_path=None):  # NOQA
         """Do a local search in the given series_path."""
         self.data.clear()
         if s_path:
             self.series_path = s_path
-        gallery_l, mixed = self._get_gallery_list_and_status()
+        gallery_l, mixed = self._get_gallery_list_and_status(series_path=self.series_path)
         if len(gallery_l) != 0:  # if gallery path list is not empty
             log_i('Gallery folder is not empty')
             if len(self.galleries_from_db) != len(app_constants.GALLERY_DATA):

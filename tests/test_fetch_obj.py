@@ -50,8 +50,7 @@ def test_get_gallery_list_and_status(raise_type_error):
         else:
             m_sd.scandir.return_value = [path]
         from version.fetch_obj import FetchObject
-        FetchObject.series_path = series_path
-        res = FetchObject._get_gallery_list_and_status()
+        res = FetchObject._get_gallery_list_and_status(series_path=series_path)
         if raise_type_error:
             assert res[0] == series_path
             assert res[1]
@@ -67,12 +66,13 @@ def test_after_local_search(skipped_paths):
     skipped_signal = mock.Mock()
     data = mock.Mock()
     from version.fetch_obj import FetchObject
-    FetchObject.FINISHED = finish_signal
-    FetchObject.SKIPPED = skipped_signal
-    FetchObject.skipped_paths = skipped_paths
-    FetchObject.data = [data]
+    obj = FetchObject()
+    obj.FINISHED = finish_signal
+    obj.SKIPPED = skipped_signal
+    obj.skipped_paths = skipped_paths
+    obj.data = [data]
     # run
-    FetchObject._after_local_search()
+    obj._after_local_search()
     finish_signal.emit.assert_called_once_with([data])
     if skipped_paths:
         skipped_signal.emit.assert_called_once_with(skipped_paths)

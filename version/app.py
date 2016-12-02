@@ -572,7 +572,7 @@ class AppWindow(QMainWindow):
             return
         return galleries
 
-    def _get_metadata_done(self, status):
+    def _get_metadata_done(self, status, fetch_instance):
         """function run when get_metada func done.
 
         Args:
@@ -581,7 +581,7 @@ class AppWindow(QMainWindow):
         self.notification_bar.end_show()
         gallerydb.execute(database.db.DBBase.end, True)
         try:
-            self.get_metadata_fetch_instance.deleteLater()
+            fetch_instance.deleteLater()
         except RuntimeError:
             pass
         if not isinstance(status, bool):
@@ -612,26 +612,29 @@ class AppWindow(QMainWindow):
             metadata_spinner = SpinnerWidget(self)
             metadata_spinner.set_text("Metadata")
             metadata_spinner.set_size(55)
+            #
             thread = QThread(self)
             thread.setObjectName('App.get_metadata')
-            self.get_metadata_fetch_instance = fetch_obj.FetchObject()
+            #
+            fetch_instance = fetch_obj.FetchObject()
             galleries = self.get_metadata_gallery(gal)
             if not galleries:
                 return
-            self.get_metadata_fetch_instance.galleries = galleries
+            fetch_instance.galleries = galleries
 
             self.notification_bar.begin_show()
-            self.get_metadata_fetch_instance.moveToThread(thread)
+            fetch_instance.moveToThread(thread)
 
             database.db.DBBase.begin()
-            self.get_metadata_fetch_instance.GALLERY_PICKER.connect(self._web_metadata_picker)
-            self.get_metadata_fetch_instance.GALLERY_EMITTER.connect(
+            fetch_instance.GALLERY_PICKER.connect(self._web_metadata_picker)
+            fetch_instance.GALLERY_EMITTER.connect(
                 self.default_manga_view.replace_gallery)
-            self.get_metadata_fetch_instance.AUTO_METADATA_PROGRESS.connect(
+            fetch_instance.AUTO_METADATA_PROGRESS.connect(
                 self.notification_bar.add_text)
-            thread.started.connect(self.get_metadata_fetch_instance.auto_web_metadata)
-            self.get_metadata_fetch_instance.FINISHED.connect(self._get_metadata_done)
-            self.get_metadata_fetch_instance.FINISHED.connect(metadata_spinner.before_hide)
+            thread.started.connect(fetch_instance.auto_web_metadata)
+            fetch_instance.FINISHED.connect(
+                lambda status: self._get_metadata_done(status, fetch_instance))
+            fetch_instance.FINISHED.connect(metadata_spinner.before_hide)
             thread.finished.connect(thread.deleteLater)
             thread.start()
             metadata_spinner.show()
@@ -1206,6 +1209,12 @@ class AppWindow(QMainWindow):
             data_thread.start()
             log_i('Populating DB from directory/archive')
 
+    @staticmethod
+    def _scan_finished():
+        """scan finished."""
+        log_d('Set [SCANNING_FOR_GALLERIES]:False')
+        app_constants.SCANNING_FOR_GALLERIES = False
+
     def scan_for_new_galleries(self):
         """scan for new galleries."""
         available_folders = app_constants.ENABLE_MONITOR and \
@@ -1218,19 +1227,15 @@ class AppWindow(QMainWindow):
                 new_gall_spinner = SpinnerWidget(self)
                 new_gall_spinner.set_text("Gallery Scan")
                 new_gall_spinner.show()
-
+                #
                 thread = QThread(self)
-                scan_inst = ScanDirObject(
+                self.scan_inst = ScanDirObject(
                     self.addition_tab.view, self.addition_tab, app_window=self)
-                scan_inst.moveToThread(thread)
-
-                scan_inst.finished.connect(
-                    lambda:
-                    setattr(app_constants, 'SCANNING_FOR_GALLERIES', False)
-                )
-                scan_inst.finished.connect(new_gall_spinner.before_hide)
-                thread.started.connect(scan_inst.scan_dirs)
-                thread.finished.connect(thread.deleteLater)
+                self.scan_inst.moveToThread(thread)
+                self.scan_inst.finished.connect(self._scan_finished)
+                self.scan_inst.finished.connect(new_gall_spinner.before_hide)
+                thread.started.connect(self.scan_inst.scan_dirs)
+                thread.finished.connect(new_gall_spinner.before_hide)
                 thread.start()
             except:
                 self.notification_bar.add_text(
@@ -1397,9 +1402,10 @@ class AppWindow(QMainWindow):
         duplicate_spinner = SpinnerWidget(self)
         duplicate_spinner.set_text("Duplicate Check")
         duplicate_spinner.show()
+        #
         dup_tab = self.tab_manager.addTab("Duplicate", app_constants.ViewType.Duplicate)
         dup_tab.view.set_delete_proxy(self.default_manga_view.gallery_model)
-
+        #
         self._d_checker = DuplicateCheckObject(notifbar=notifbar)
         self._d_checker.moveToThread(app_constants.GENERAL_THREAD)
         self._d_checker.found_duplicates.connect(
