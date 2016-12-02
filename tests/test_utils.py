@@ -183,6 +183,7 @@ def test_get_chapter_pages_len():
         assert res == exp_res
         m_sd.scandir.assert_called_once_with(chapter_path)
 
+
 @pytest.mark.parametrize(
     'mode, value',
     product(['L', 'RGB', 'random'], product([0, 1], repeat=2))

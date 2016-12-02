@@ -45,8 +45,7 @@ def test_set_external_icon(use_external_viewer):
     with mock.patch('version.grid_delegate.app_constants') as m_ac:
         m_ac.USE_EXTERNAL_VIEWER = use_external_viewer
         from version.grid_delegate import GridDelegate
-        GridDelegate.file_icons = file_icons
-        GridDelegate._set_external_icon()
+        GridDelegate._set_external_icon(file_icons=file_icons)
         if use_external_viewer:
             file_icons.get_external_file_icon.assert_called_once_with()
             assert GridDelegate.external_icon == file_icons.get_external_file_icon.return_value

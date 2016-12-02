@@ -150,13 +150,12 @@ def test_get_gallery_date(raise_index_error):
         g_pub_date = [mock.Mock()]
     else:
         g_pub_date = [mock.Mock(), m_time]
-    g_time = mock.Mock()
     with mock.patch('version.gallery_dialog_widget.datetime') as m_dt:
         from version.gallery_dialog_widget import GalleryDialogWidget
-        res = GalleryDialogWidget._get_gallery_date(g_time=g_time, g_pub_date=g_pub_date)
+        res = GalleryDialogWidget._get_gallery_date(g_pub_date=g_pub_date)
         if raise_index_error:
             m_dt.assert_not_called()
-            assert res == g_time
+            assert res is None
         else:
             m_dt.assert_has_calls([
                 mock.call.strptime(m_time, '%H:%M:%S'),

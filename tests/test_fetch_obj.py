@@ -17,7 +17,8 @@ def test_check_single_gallery(cond, is_idx_end):
     from version.fetch_obj import FetchObject
     FetchObject.fetch_metadata = fetch_metadata_func
     # run
-    res = FetchObject._check_single_gallery(
+    obj = FetchObject()
+    res = obj._check_single_gallery(
         cond=cond, gallery=gallery, hen_item=hen_item, is_idx_end=is_idx_end,
         checked_pre_url_galleries=checked_pre_url_galleries
     )

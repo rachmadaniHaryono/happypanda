@@ -5,6 +5,10 @@ from unittest import mock
 import pytest
 
 
+version_0_31_0_only = pytest.mark.skipif(True, reason="For v.0.31.0 only.")
+
+
+@version_0_31_0_only
 @pytest.mark.parametrize(
     'mode', ['correct_result', 'raise_type_error', 'raise_index_error']
 )
@@ -39,6 +43,7 @@ def test_fetchone_from_cursor(mode):
     ])
 
 
+@version_0_31_0_only
 @pytest.mark.parametrize(
     'is_value_none, is_cmd_value_arg_none, is_value_type_none, isinstance_result',
     product([True, False], repeat=4)
@@ -93,6 +98,7 @@ def test_get_db_cmd(is_value_none, is_cmd_value_arg_none, is_value_type_none, is
             assert res == []
 
 
+@version_0_31_0_only
 def test_get_db_cmd_with_encoded_value():
     """test method."""
     key = 'key'
@@ -112,6 +118,7 @@ def test_get_db_cmd_with_encoded_value():
     assert res == m_get_db_cmd.return_value
 
 
+@version_0_31_0_only
 @pytest.mark.parametrize('exist_result', [True, False])
 def test_get_existing_gallery(exist_result):
     """test method."""
@@ -131,6 +138,7 @@ def test_get_existing_gallery(exist_result):
             getattr(galleries, func_name).assert_not_called()
 
 
+@version_0_31_0_only
 @pytest.mark.parametrize(
     'raise_error, error_raised',
     product([True, False], [TypeError, IndexError])
@@ -166,6 +174,7 @@ def test_look_exists_when_add_tags(raise_error, error_raised):
     )
 
 
+@version_0_31_0_only
 @pytest.mark.parametrize('func_result', [None, mock.Mock()])
 def test_get_id(func_result):
     """test method."""
@@ -189,6 +198,7 @@ def test_get_id(func_result):
         exec_func.assert_not_called()
 
 
+@version_0_31_0_only
 @pytest.mark.parametrize("value_name", ['tag', 'namespace'])
 def test_get_all_value(value_name):
     """test method."""
@@ -207,6 +217,7 @@ def test_get_all_value(value_name):
     ])
 
 
+@version_0_31_0_only
 @pytest.mark.parametrize('search_func_result', [True, False])
 def test_return_is_exclude(search_func_result):
     """test method."""
@@ -231,6 +242,7 @@ def test_return_is_exclude(search_func_result):
     search_func.assert_called_once_with(tag, subkey, True, args=args)
 
 
+@version_0_31_0_only
 @pytest.mark.parametrize('search_func_result, cond', product([True, False], repeat=2))
 def test_return_is_exclude_on_simple_tag(search_func_result, cond):
     """test method."""

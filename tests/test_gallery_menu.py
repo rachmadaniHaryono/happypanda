@@ -5,6 +5,10 @@ from itertools import product
 import pytest
 
 
+version_0_31_0_only = pytest.mark.skipif(True, reason="For v.0.31.0 only.")
+
+
+@version_0_31_0_only
 @pytest.mark.parametrize('is_archive, selected', product([True, False], repeat=2))
 def test_add_op_folder_actions(is_archive, selected):
     """test method."""

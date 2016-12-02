@@ -15,14 +15,12 @@ from PyQt5.QtWidgets import (
 try:
     import app_constants
     import gallerydb
-    import misc
     from gallery_dialog_widget import GalleryDialogWidget
     from gallery_menu import GalleryMenu
 except ImportError:
     from . import (
         gallerydb,
         app_constants,
-        misc,
     )
     from .gallery_dialog_widget import GalleryDialogWidget
     from .gallery_menu import GalleryMenu

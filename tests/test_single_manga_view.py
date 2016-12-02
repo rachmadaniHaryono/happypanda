@@ -19,13 +19,15 @@ def test_set_sor(name_is_as_expected):
     role = mock.Mock()
     sort_arg = mock.Mock()
     #
+    sort_model = mock.Mock()
+    sort_model.setSortRole = set_sort_role_func
+    sort_model.sort = sort_func
+    #
     from version.single_manga_view import SingleMangaView
     SingleMangaView.current_sort = None
-    SingleMangaView.sort_model = mock.Mock()
-    SingleMangaView.sort_model.setSortRole = set_sort_role_func
-    SingleMangaView.sort_model.sort = sort_func
     # run
-    res = SingleMangaView._set_sort(name=name, exp_name=exp_name, role=role, sort_arg=sort_arg)
+    res = SingleMangaView._set_sort(
+        name=name, exp_name=exp_name, role=role, sort_arg=sort_arg, sort_model=sort_model)
     # test
     if name_is_as_expected:
         assert res

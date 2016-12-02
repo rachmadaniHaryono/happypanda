@@ -14,8 +14,9 @@ def test_change_view():
     SortFilterModel.refresh = refresh_func
     SortFilterModel._CHANGE_FAV = change_fav_func
     # run
-    SortFilterModel._change_view(emit_value=emit_value, current_view=cview)
+    obj = SortFilterModel(parent=None)
+    obj._change_view(emit_value=emit_value, current_view=cview)
     # test
     change_fav_func.emit.assert_called_once_with(emit_value)
     refresh_func.assert_called_once_with()
-    assert SortFilterModel.current_view == cview
+    assert obj.current_view == cview
