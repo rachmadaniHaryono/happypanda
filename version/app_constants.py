@@ -19,7 +19,7 @@ import os
 import sys
 import enum
 
-try:
+try:  # pragma: no cover
     import settings
     from database import db_constants
 except ImportError:
@@ -30,39 +30,57 @@ except ImportError:
 vs = '0.30'
 DEBUG = False
 
-OS_NAME = ''
-if sys.platform.startswith('darwin'):
-    OS_NAME = "darwin"
-elif os.name == 'nt':
-    OS_NAME = "windows"
-elif os.name == 'posix':
-    OS_NAME = "linux"
+
+def _get_os_name():
+    """get os name"""
+    if sys.platform.startswith('darwin'):
+        return "darwin"
+    elif os.name == 'nt':
+        return "windows"
+    elif os.name == 'posix':
+        return "linux"
+
+OS_NAME = _get_os_name()
 
 APP_RESTART_CODE = 0
 
 get = settings.get
 
-posix_program_dir = os.path.dirname(os.path.realpath(__file__))
-if os.name == 'posix':
-    static_dir = os.path.join(posix_program_dir, '../res')
-    bin_dir = os.path.join(posix_program_dir, 'bin')
-    temp_dir = os.path.join(posix_program_dir, 'temp')
-else:
-    bin_dir = os.path.join(os.getcwd(), 'bin')
-    static_dir = os.path.join(os.getcwd(), "res")
-    temp_dir = os.path.join('temp')
+
+def _get_dirs():
+    """get tuple of dirs."""
+    posix_program_dir = os.path.dirname(os.path.realpath(__file__))
+    if os.name == 'posix':
+        bin_dir = os.path.join(posix_program_dir, 'bin')
+        static_dir = os.path.join(posix_program_dir, '../res')
+        temp_dir = os.path.join(posix_program_dir, 'temp')
+    else:
+        cwd = os.getcwd()
+        bin_dir = os.path.join(cwd, 'bin')
+        static_dir = os.path.join(cwd, "res")
+        temp_dir = os.path.join('temp')
+    return posix_program_dir, bin_dir, static_dir, temp_dir
+
+posix_program_dir, bin_dir, static_dir, temp_dir = _get_dirs()
 # path to unrar tool binary
 unrar_tool_path = get('', 'Application', 'unrar tool path')
 
 # from utils.py
 IMG_FILES = ('.jpg', '.bmp', '.png', '.gif', '.jpeg')
 IMG_FILTER = '*.jpg *.bmp *.png *.jpeg'
-#
-ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
-FILE_FILTER = '*.zip *.cbz *.rar *.cbr'
-if not unrar_tool_path:
-    FILE_FILTER = '*.zip *.cbz'
-    ARCHIVE_FILES = ('.zip', '.cbz')
+
+
+def _get_archive_files_and_file_filter(unrar_tool):
+    """get archive file and file filter."""
+    archive_files = ('.zip', '.cbz', '.rar', '.cbr')
+    file_filter = '*.zip *.cbz *.rar *.cbr'
+    if not unrar_tool:
+        file_filter = '*.zip *.cbz'
+        archive_files = ('.zip', '.cbz')
+    return archive_files, file_filter
+
+
+ARCHIVE_FILES, FILE_FILTER = _get_archive_files_and_file_filter(unrar_tool=unrar_tool_path)
 
 # default stylesheet path
 default_stylesheet_path = os.path.join(static_dir, "style.css")
