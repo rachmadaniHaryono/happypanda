@@ -43,9 +43,9 @@ class EHen(CommenHen):
             return data['tags']['Artist'][0].capitalize()
         return g_artist
 
-    @classmethod  # NOQA
-    def apply_metadata(cls, g, data, append=True):
-        """Apply metadata to gallery, returns gallery."""
+    @staticmethod
+    def _get_title_from_data(data):
+        """get title from data."""
         if app_constants.USE_JPN_TITLE:
             try:
                 title = data['title']['jpn']
@@ -53,62 +53,94 @@ class EHen(CommenHen):
                 title = data['title']['def']
         else:
             title = data['title']['def']
+        return title
 
+    @staticmethod
+    def _get_lang_from_data(data):
+        """get language from data."""
         if 'Language' in data['tags']:
             try:
-                lang = [
-                    x for x in data['tags']['Language'] if not x == 'translated'
-                ][0].capitalize()
+                langs = [x for x in data['tags']['Language'] if not x == 'translated']
+                lang = langs[0].capitalize()
             except IndexError:
                 lang = ""
         else:
             lang = ""
+        return lang
 
+    @classmethod
+    def _replace_gallery_data(cls, g, data):
+        """replace gallery data."""
+        title = cls._get_title_from_data(data)
+        lang = cls._get_lang_from_data(data)
+        #
         title_artist_dict = title_parser(title)
-        if not append:
-            g.title = title_artist_dict['title']
-            if title_artist_dict['artist']:
-                g.artist = title_artist_dict['artist']
-            g.language = title_artist_dict['language'].capitalize()
-            g.artist = cls._get_g_artist(g.artist, data)
-            if lang:
-                g.language = lang
-            g.type = data['type']
-            g.pub_date = data['pub_date']
-            g.tags = data['tags']
-            if 'url' in data:
-                g.link = data['url']
-            else:
-                g.link = g.temp_url
+        #
+        g.title = title_artist_dict['title']
+        #  artist
+        if title_artist_dict['artist']:
+            g.artist = title_artist_dict['artist']
+        g.artist = cls._get_g_artist(g.artist, data)
+        #  lang
+        g.language = title_artist_dict['language'].capitalize()
+        if lang:
+            g.language = lang
+        #
+        g.type = data['type']
+        g.pub_date = data['pub_date']
+        g.tags = data['tags']
+        #
+        if 'url' in data:
+            g.link = data['url']
         else:
-            if not g.title:
-                g.title = title_artist_dict['title']
-            if not g.artist:
-                g.artist = title_artist_dict['artist']
-                g.artist = cls._get_g_artist(g.artist, data)
-            if not g.language:
-                g.language = title_artist_dict['language'].capitalize()
-                if lang:
-                    g.language = lang
-            if not g.type or g.type == 'Other':
-                g.type = data['type']
-            if not g.pub_date:
-                g.pub_date = data['pub_date']
-            if not g.tags:
-                g.tags = data['tags']
-            else:
-                for ns in data['tags']:
-                    if ns in g.tags:
-                        g.tags = get_gallery_tags(
-                            tags=data['tags'][ns], g_tags=g.tags, namespace=ns)
-                    else:
-                        g.tags[ns] = data['tags'][ns]
-            if 'url' in data:
-                if not g.link:
-                    g.link = data['url']
-            else:
-                if not g.link:
-                    g.link = g.temp_url
+            g.link = g.temp_url
+
+        return g
+
+    @classmethod  # NOQA
+    def apply_metadata(cls, g, data, append=True):
+        """Apply metadata to gallery, returns gallery.
+
+        as default it will only replace the empty value.
+        if specified, it will replace all value.
+        """
+        if not append:
+            return cls._replace_gallery_data(g=g, data=data)
+        #
+        title = cls._get_title_from_data(data)
+        lang = cls._get_lang_from_data(data)
+        #
+        title_parser_result = title_parser(title)
+        #
+        language = title_parser_result['language'].capitalize()
+        if lang:
+            language = lang
+        #
+        link = data.get('url')
+        g_link = link if link is not None else g.temp_url
+        #
+        new_metadata = {
+            'title': title_parser_result['title'],
+            'artist': cls._get_g_artist(title_parser_result['artist'], data),
+            'language': language,
+            'pub_date': data['pub_date'],
+            'link': g_link,
+        }
+        for key in new_metadata:
+            if not getattr(g, key):
+                setattr(g, key, new_metadata[key])
+        #
+        if not g.type or g.type == 'Other':
+            g.type = data['type']
+        if not g.tags:
+            g.tags = data['tags']
+        else:
+            for ns in data['tags']:
+                if ns in g.tags:
+                    g.tags = get_gallery_tags(
+                        tags=data['tags'][ns], g_tags=g.tags, namespace=ns)
+                else:
+                    g.tags[ns] = data['tags'][ns]
         return g
 
     @classmethod
@@ -121,24 +153,30 @@ class EHen(CommenHen):
         else:
             return 0
 
+    @staticmethod
+    def _add_text_to_notif_bar(txt):
+        """Add text to notif bar."""
+        try:
+            app_constants.NOTIF_BAR.add_text(txt)
+        except AttributeError:
+            txt_fmt = 'Notification bar raises Attribute error when add following text:\n{}'
+            print(txt_fmt.format(txt))
+            if app_constants.NOTIF_BAR is not None:
+                print('Unrcognized app_constants.NOTIF_BAR.')
+                raise NotImplementedError
+
     def handle_error(self, response):
         """handle error."""
         content_type = response.headers['content-type']
         text = response.text
         if 'image/gif' in content_type:
             err_msg = 'Provided exhentai credentials are incorrect!'
-            try:
-                app_constants.NOTIF_BAR.add_text(err_msg)
-            except AttributeError:
-                print(err_msg)
-                if app_constants.NOTIF_BAR is not None:
-                    print('Unrcognized app_constants.NOTIF_BAR.')
-                    raise NotImplementedError
+            self._add_text_to_notif_bar(err_msg)
             log_e('Provided exhentai credentials are incorrect!')
             time.sleep(5)
             return False
-        elif 'text/html' and 'Your IP address has been' in text:
-            app_constants.NOTIF_BAR.add_text(
+        elif 'text/html' in content_type and 'Your IP address has been' in text:
+            self._add_text_to_notif_bar(
                 "Your IP address has been temporarily banned from g.e-/exhentai")
             log_e('Your IP address has been temp banned from g.e- and ex-hentai')
             time.sleep(5)
@@ -159,6 +197,42 @@ class EHen(CommenHen):
         parsed_url = [int(gallery_id), gallery_token]
         return parsed_url
 
+    def _get_response(self, payload, cookies=None):
+        """get response."""
+        try:
+            if cookies:
+                self.check_cookie(cookies)
+                r = requests.post(
+                    self.e_url, json=payload, timeout=30, headers=self.HEADERS,
+                    cookies=self.COOKIES)
+            else:
+                r = requests.post(self.e_url, json=payload, timeout=30, headers=self.HEADERS)
+        except requests.ConnectionError as err:
+            self.end_lock()
+            log_e("Could not fetch metadata: {}".format(err))
+            raise app_constants.MetadataFetchFail("connection error")
+        return r
+
+    @staticmethod
+    def _get_dict_metadata(cls, list_of_urls):
+        """get dict_metadata from list_of_urls."""
+        dict_metadata = {}
+        for url in list_of_urls:
+            parsed_url = cls.parse_url(url.strip())
+            if parsed_url:
+                dict_metadata[parsed_url[0]] = url  # gallery id
+        return dict_metadata
+
+    @classmethod
+    def _get_gallery_id_list_from_urls(cls, list_of_urls):
+        """get gallery id list from urls."""
+        gid_list = []
+        for url in list_of_urls:
+            parsed_url = cls.parse_url(url.strip())
+            if parsed_url:
+                gid_list.append(parsed_url)
+        return gid_list
+
     def get_metadata(self, list_of_urls, cookies=None):  # NOQA
         """Fetches the metadata from the provided list of urls through the official API.
 
@@ -171,38 +245,50 @@ class EHen(CommenHen):
             return None
 
         payload = {"method": "gdata", "gidlist": [], "namespace": 1}
-        dict_metadata = {}
-        for url in list_of_urls:
-            parsed_url = EHen.parse_url(url.strip())
-            if parsed_url:
-                dict_metadata[parsed_url[0]] = url  # gallery id
-                payload['gidlist'].append(parsed_url)
+        dict_metadata = self._get_dict_metadata(list_of_urls=list_of_urls)
+        payload['gidlist'] = self._get_gallery_id_list_from_urls(list_of_urls=list_of_urls)
 
-        if payload['gidlist']:
-            self.begin_lock()
-            try:
-                if cookies:
-                    self.check_cookie(cookies)
-                    r = requests.post(
-                        self.e_url, json=payload, timeout=30, headers=self.HEADERS,
-                        cookies=self.COOKIES)
-                else:
-                    r = requests.post(self.e_url, json=payload, timeout=30, headers=self.HEADERS)
-            except requests.ConnectionError as err:
-                self.end_lock()
-                log_e("Could not fetch metadata: {}".format(err))
-                raise app_constants.MetadataFetchFail("connection error")
-            self.end_lock()
-            if not self.handle_error(r):
-                return 'error'
-        else:
+        if not payload['gidlist']:
             return None
+        #
+        self.begin_lock()
+        r = self._get_response(payload=payload, cookies=cookies)
+        self.end_lock()
+        if not self.handle_error(r):
+            return 'error'
+        #
         try:
             r.raise_for_status()
         except:
             log.exception('Could not fetch metadata: status error')
             return None
         return r.json(), dict_metadata
+
+    @staticmethod
+    def _invalid_token_check(g_dict):
+        """check if token is invalid."""
+        if 'error' in g_dict:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def _fix_titles(text):
+        t = html.unescape(text)
+        t = " ".join(t.split())
+        return t
+
+    @classmethod
+    def _filter_gallery_from_metadata_json(cls, metadata_json, dict_metadata):
+        """filter gallery from metadata json."""
+        valid_galleries = []
+        for gallery in metadata_json['gmetadata']:
+            url = dict_metadata[gallery['gid']]
+            if cls._invalid_token_check(gallery):
+                valid_galleries.append((url, gallery))
+            else:
+                log_e("Error in received response with URL: {}".format(url))
+        return valid_galleries
 
     @classmethod  # NOQA
     def parse_metadata(cls, metadata_json, dict_metadata):
@@ -213,47 +299,34 @@ class EHen(CommenHen):
 
         returns a dict with url as key and gallery metadata as value
         """
-        def invalid_token_check(g_dict):
-            if 'error' in g_dict:
-                return False
-            else:
-                return True
-
         parsed_metadata = {}
-        for gallery in metadata_json['gmetadata']:
-            url = dict_metadata[gallery['gid']]
-            if invalid_token_check(gallery):
-                new_gallery = {}
+        valid_galleries = cls._filter_gallery_from_metadata_json(
+            metadata_json=metadata_json, dict_metadata=dict_metadata)
+        for url, gallery in valid_galleries:
+            new_gallery = {}
+            try:
+                gallery['title_jpn'] = cls._fix_titles(gallery['title_jpn'])
+                gallery['title'] = cls._fix_titles(gallery['title'])
+                new_gallery['title'] = {'def': gallery['title'], 'jpn': gallery['title_jpn']}
+            except KeyError:
+                gallery['title'] = cls._fix_titles(gallery['title'])
+                new_gallery['title'] = {'def': gallery['title']}
 
-                def fix_titles(text):
-                    t = html.unescape(text)
-                    t = " ".join(t.split())
-                    return t
-                try:
-                    gallery['title_jpn'] = fix_titles(gallery['title_jpn'])
-                    gallery['title'] = fix_titles(gallery['title'])
-                    new_gallery['title'] = {'def': gallery['title'], 'jpn': gallery['title_jpn']}
-                except KeyError:
-                    gallery['title'] = fix_titles(gallery['title'])
-                    new_gallery['title'] = {'def': gallery['title']}
-
-                new_gallery['type'] = gallery['category']
-                new_gallery['pub_date'] = datetime.fromtimestamp(int(gallery['posted']))
-                tags = {'default': []}
-                for t in gallery['tags']:
-                    if ':' in t:
-                        ns_tag = t.split(':')
-                        namespace = ns_tag[0].capitalize()
-                        tag = ns_tag[1].lower().replace('_', ' ')
-                        if namespace not in tags:
-                            tags[namespace] = []
-                        tags[namespace].append(tag)
-                    else:
-                        tags['default'].append(t.lower().replace('_', ' '))
-                new_gallery['tags'] = tags
-                parsed_metadata[url] = new_gallery
-            else:
-                log_e("Error in received response with URL: {}".format(url))
+            new_gallery['type'] = gallery['category']
+            new_gallery['pub_date'] = datetime.fromtimestamp(int(gallery['posted']))
+            tags = {'default': []}
+            for t in gallery['tags']:
+                if ':' in t:
+                    ns_tag = t.split(':')
+                    namespace = ns_tag[0].capitalize()
+                    tag = ns_tag[1].lower().replace('_', ' ')
+                    if namespace not in tags:
+                        tags[namespace] = []
+                    tags[namespace].append(tag)
+                else:
+                    tags['default'].append(t.lower().replace('_', ' '))
+            new_gallery['tags'] = tags
+            parsed_metadata[url] = new_gallery
 
         return parsed_metadata
 
