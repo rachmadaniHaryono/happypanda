@@ -33,6 +33,7 @@ from PyQt5.QtCore import (
 )
 
 try:
+    from app_constants import ARCHIVE_FILES, FILE_FILTER
     from clicked_label import ClickedLabel
     from completer_text_edit import CompleterTextEdit
     from fetch_obj import FetchObject
@@ -43,6 +44,7 @@ try:
     import gallerydb
     import utils
 except ImportError:
+    from .app_constants import ARCHIVE_FILES, FILE_FILTER
     from .clicked_label import ClickedLabel
     from .completer_text_edit import CompleterTextEdit
     from .fetch_obj import FetchObject
@@ -450,7 +452,7 @@ class GalleryDialogWidget(QWidget):
         self.done.show()
         self.file_exists_lbl.hide()
         if mode == 'a':
-            name = QFileDialog.getOpenFileName(self, 'Choose archive', filter=utils.FILE_FILTER)
+            name = QFileDialog.getOpenFileName(self, 'Choose archive', filter=FILE_FILTER)
             name = name[0]
         elif mode == 'f':
             name = QFileDialog.getExistingDirectory(self, 'Choose folder')
@@ -477,7 +479,7 @@ class GalleryDialogWidget(QWidget):
             self.file_exists_lbl.show()
         # check galleries
         gs = 1
-        if name.endswith(utils.ARCHIVE_FILES):
+        if name.endswith(ARCHIVE_FILES):
             gs = len(utils.check_archive(name))
         elif os.path.isdir(name):
             g_dirs, g_archs = utils.recursive_gallery_check(name)
