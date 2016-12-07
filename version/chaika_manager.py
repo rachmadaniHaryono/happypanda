@@ -3,7 +3,7 @@ import requests
 import logging
 import os
 
-try:
+try:  # pragma: no cover
     from dl_manager_obj import DLManagerObject
     from downloader_obj import DownloaderObject
     from hen_item import HenItem

@@ -2,6 +2,7 @@
 import requests
 import logging
 import re as regex
+from json import JSONDecodeError
 
 
 try:
@@ -49,6 +50,14 @@ class ChaikaHen(CommenHen):
             x[h] = [("", self.url + h)]
         return x
 
+    @staticmethod
+    def _get_json_response(response):
+        """get json response."""
+        try:
+            return response.json()
+        except JSONDecodeError:
+            log_w('Error decoding json for following url:\n{}'.format(response.url))
+
     def get_metadata(self, list_of_urls):  # NOQA
         """Fetch the metadata from the provided list of urls through the official API.
 
@@ -81,7 +90,7 @@ class ChaikaHen(CommenHen):
                     log_e("Could not fetch metadata: {}".format(err))
                     raise app_constants.MetadataFetchFail("connection error")
                 r.raise_for_status()
-                if not r.json():
+                if not self._get_json_response(response=r):
                     return None
                 if hash_search:
                     g_data = r.json()[0]  # TODO: multiple archives can be returned! Please fix!
