@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-try:
+try:  # pragma: no cover
     import app_constants
     from misc import text_layout
     from gallery_model import GalleryModel
@@ -310,7 +310,7 @@ class GridDelegate(QStyledItemDelegate):
 
             if self._paint_level > 0:
                 if app_constants._REFRESH_EXTERNAL_VIEWER:
-                    self._set_external_icon()
+                    self._set_external_icon(file_icons=self.file_icons)
 
                 type_w = painter.fontMetrics().width(gallery.file_type)
                 type_h = painter.fontMetrics().height()
