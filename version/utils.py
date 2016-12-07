@@ -357,6 +357,16 @@ def _find_filepath(path):
     return os.path.join(path, first_page)
 
 
+def _get_temp_path():
+    """get temp path."""
+    temp_dir = app_constants.temp_dir
+    t_p = os.path.join(temp_dir, str(uuid.uuid4()))
+    if not os.path.isdir(temp_dir):
+        os.mkdir(temp_dir)
+    os.mkdir(t_p)
+    return t_p
+
+
 def open_chapter(chapterpath, archive=None):  # NOQA
     """open_chapter."""
     is_archive = True if archive else False
@@ -389,8 +399,7 @@ def open_chapter(chapterpath, archive=None):  # NOQA
         zip = ArchiveFile(temp_p)
         if extract:
             app_constants.NOTIF_BAR.add_text('Extracting...')
-            t_p = os.path.join('temp', str(uuid.uuid4()))
-            os.mkdir(t_p)
+            t_p = _get_temp_path()
             if is_archive or chapterpath.endswith(ARCHIVE_FILES):
                 if os.path.isdir(chapterpath):
                     t_p = chapterpath

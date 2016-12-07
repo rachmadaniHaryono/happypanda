@@ -253,3 +253,23 @@ def test_get_chapter_title():
         m_tp.assert_called_once_with(split_path_part)
         m_os.path.split.assert_called_once_with(path)
         assert res == title
+
+
+@pytest.mark.parametrize('is_dir_retval', [True, False])
+def test_get_temp_path(is_dir_retval):
+    """test function."""
+    with mock.patch('version.utils.app_constants') as m_ac, \
+            mock.patch('version.utils.uuid') as m_uuid, \
+            mock.patch('version.utils.os') as m_os:
+        from version.utils import _get_temp_path
+        m_os.path.isdir.return_value = is_dir_retval
+        res = _get_temp_path()
+        os_calls = [
+            mock.call.path.join(m_ac.temp_dir, str(m_uuid.uuid4.return_value)),
+            mock.call.path.isdir(m_ac.temp_dir),
+        ]
+        if not is_dir_retval:
+            os_calls.append(mock.call.mkdir(m_ac.temp_dir))
+        os_calls.append(mock.call.mkdir(m_os.path.join.return_value))
+        m_os.assert_has_calls(os_calls)
+        assert m_os.path.join.return_value == res
