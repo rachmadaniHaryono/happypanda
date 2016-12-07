@@ -16,7 +16,7 @@
 import logging
 import re as regex
 
-try:
+try:  # pragma: no cover
     import app_constants
     import settings
     from chaika_hen import ChaikaHen
