@@ -22,7 +22,7 @@ import scandir
 
 from PyQt5.QtCore import QObject, pyqtSignal  # need this for interaction with main thread
 
-try:
+try:  # pragma: no cover
     from archive_file import ArchiveFile
     from chaika_hen import ChaikaHen
     from ehen import EHen
@@ -415,10 +415,11 @@ class FetchObject(QObject):
         log_i('Finished applying metadata')
 
     def _check_single_gallery(
-            self, cond, gallery, hen_item, is_idx_end, checked_pre_url_galleries):
+            self, cond, gallery, hen_item, is_idx_end, checked_pre_url_galleries,
+            gallery_temp_url):
         """check single gallery."""
         if cond:
-            gallery.temp_url = gallery._g_dialog_url
+            gallery.temp_url = gallery_temp_url
             checked_pre_url_galleries.append(gallery)
             # to process even if this gallery is last and fails
             if is_idx_end:
@@ -446,7 +447,8 @@ class FetchObject(QObject):
                     gallery=gallery,
                     hen_item=hen,
                     is_idx_end=is_idx_end,
-                    checked_pre_url_galleries=checked_pre_url_galleries
+                    checked_pre_url_galleries=checked_pre_url_galleries,
+                    gallery_temp_url=gallery._g_dialog_url
                 )
                 if is_match:
                     continue
@@ -457,7 +459,8 @@ class FetchObject(QObject):
                     gallery=gallery,
                     hen_item=hen,
                     is_idx_end=is_idx_end,
-                    checked_pre_url_galleries=checked_pre_url_galleries
+                    checked_pre_url_galleries=checked_pre_url_galleries,
+                    gallery_temp_url=gallery.link
                 )
                 if is_match:
                     continue

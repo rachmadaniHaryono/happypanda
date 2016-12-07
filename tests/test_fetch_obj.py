@@ -11,6 +11,7 @@ def test_check_single_gallery(cond, is_idx_end):
     gallery = mock.Mock()
     fetch_metadata_func = mock.Mock()
     hen_item = mock.Mock()
+    gallery_temp_url = mock.Mock()
     #
     checked_pre_url_galleries = []
     #
@@ -20,7 +21,8 @@ def test_check_single_gallery(cond, is_idx_end):
     obj = FetchObject()
     res = obj._check_single_gallery(
         cond=cond, gallery=gallery, hen_item=hen_item, is_idx_end=is_idx_end,
-        checked_pre_url_galleries=checked_pre_url_galleries
+        checked_pre_url_galleries=checked_pre_url_galleries,
+        gallery_temp_url=gallery_temp_url
     )
     # test
     if cond and is_idx_end:
@@ -28,7 +30,7 @@ def test_check_single_gallery(cond, is_idx_end):
     else:
         fetch_metadata_func.assert_not_called()
     if cond:
-        assert res[2].temp_url == gallery._g_dialog_url
+        assert res[2].temp_url == gallery_temp_url
         assert res[0]
     else:
         assert res[2].temp_url != gallery._g_dialog_url
