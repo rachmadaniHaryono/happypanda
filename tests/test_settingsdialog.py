@@ -17,7 +17,8 @@ def test_set_setting_with_color_check(color_checker_result):
         from version.settingsdialog import SettingsDialog
         SettingsDialog.color_checker = color_check_func
         # run
-        SettingsDialog._set_setting_with_color_check(attr=attr, const=const, key=key)
+        SettingsDialog._set_setting_with_color_check(
+            attr=attr, const=const, key=key, color_checker=color_check_func)
         # test
         attr.text.assert_called_once_with()
         if color_checker_result:

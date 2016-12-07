@@ -43,7 +43,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPalette, QPixmapCache
 
-try:
+try:  # pragma: no cover
     from app_dialog import AppDialog
     from flow_layout import FlowLayout
     from import_export_obj import ImportExportObject
@@ -541,62 +541,74 @@ class SettingsDialog(QWidget):
         self._set_setting_with_color_check(
             attr=self.grid_title_color,
             const=app_constants.GRID_VIEW_TITLE_COLOR,
-            key='grid view title color'
+            key='grid view title color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.grid_artist_color,
             const=app_constants.GRID_VIEW_ARTIST_COLOR,
-            key='grid view artist color'
+            key='grid view artist color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.grid_label_color,
             const=app_constants.GRID_VIEW_LABEL_COLOR,
-            key='grid view label color'
+            key='grid view label color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_manga_color,
             const=app_constants.GRID_VIEW_T_MANGA_COLOR,
-            key='grid view t manga color'
+            key='grid view t manga color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_doujin_color,
             const=app_constants.GRID_VIEW_T_DOUJIN_COLOR,
-            key='grid view t doujin color'
+            key='grid view t doujin color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_artist_cg_color,
             const=app_constants.GRID_VIEW_T_ARTIST_CG_COLOR,
-            key='grid view t artist cg color'
+            key='grid view t artist cg color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_game_cg_color,
             const=app_constants.GRID_VIEW_T_GAME_CG_COLOR,
-            key='grid view t game cg color'
+            key='grid view t game cg color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_western_color,
             const=app_constants.GRID_VIEW_T_WESTERN_COLOR,
-            key='grid view t western color'
+            key='grid view t western color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_image_color,
             const=app_constants.GRID_VIEW_T_IMAGE_COLOR,
-            key='grid view t image color'
+            key='grid view t image color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_non_h_color,
             const=app_constants.GRID_VIEW_T_NON_H_COLOR,
-            key='grid view t non-h color'
+            key='grid view t non-h color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_cosplay_color,
             const=app_constants.GRID_VIEW_T_COSPLAY_COLOR,
-            key='grid view t cosplay color'
+            key='grid view t cosplay color',
+            color_checker=self.color_checker
         )
         self._set_setting_with_color_check(
             attr=self.ribbon_other_color,
             const=app_constants.GRID_VIEW_T_OTHER_COLOR,
-            key='grid view t other color'
+            key='grid view t other color',
+            color_checker=self.color_checker
         )
         # Advanced / Misc
         app_constants.EXTERNAL_VIEWER_ARGS = self.external_viewer_args.text()
@@ -638,11 +650,11 @@ class SettingsDialog(QWidget):
         self.close()
 
     @classmethod
-    def _set_setting_with_color_check(cls, attr, const, key):
+    def _set_setting_with_color_check(cls, attr, const, key, color_checker):
         """set setting with color check."""
         set_ = settings.set
         attr_text = attr.text()
-        if cls.color_checker(txt=attr_text):
+        if color_checker(txt=attr_text):
             const = attr_text
             set_(value=const, section='Visual', key=key)
 
