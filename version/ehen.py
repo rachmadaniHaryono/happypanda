@@ -213,9 +213,13 @@ class EHen(CommenHen):
             raise app_constants.MetadataFetchFail("connection error")
         return r
 
-    @staticmethod
+    @classmethod
     def _get_dict_metadata(cls, list_of_urls):
-        """get dict_metadata from list_of_urls."""
+        """get dict_metadata from list_of_urls.
+
+        Returns:
+            Dict with gallery id as the key and the url as value.
+        """
         dict_metadata = {}
         for url in list_of_urls:
             parsed_url = cls.parse_url(url.strip())

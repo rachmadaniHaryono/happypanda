@@ -520,6 +520,16 @@ def test_get_gallery_id_list_from_urls():
             mock.call(url1.strip.return_value), mock.call(url2.strip.return_value)])
 
 
+def test_get_gallery_id_list_with_single_url():
+    """test method."""
+    url = 'http://g.e-hentai.org/g/1004208/ee717823cd/'
+    exp_res = [[1004208, 'ee717823cd']]
+    from version.ehen import EHen
+    obj = EHen()
+    res = obj._get_gallery_id_list_from_urls([url])
+    assert exp_res == res
+
+
 def test_get_dict_metadata():
     """get method."""
     url1 = mock.Mock()
@@ -534,6 +544,16 @@ def test_get_dict_metadata():
         assert res == {parsed_url_part: url1}
         parse_url_func.assert_has_calls([
             mock.call(url1.strip.return_value), mock.call(url2.strip.return_value)])
+
+
+def test_get_dict_metadata_with_single_url():
+    """test method."""
+    url = "http://g.e-hentai.org/g/1004208/ee717823cd/"
+    exp_res = {1004208: 'http://g.e-hentai.org/g/1004208/ee717823cd/'}
+    from version.ehen import EHen
+    obj = EHen()
+    res = obj._get_dict_metadata(list_of_urls=[url])
+    assert res == exp_res
 
 
 @pytest.mark.parametrize(
@@ -604,3 +624,49 @@ def test_fix_titles(text, exp_res):
     """test method."""
     from version.ehen import EHen
     assert exp_res == EHen._fix_titles(text)
+
+
+def test_get_metadata_single_url():
+    """test method."""
+    url = 'http://g.e-hentai.org/g/1004208/ee717823cd/'
+    exp_dict_metadata = {1004208: 'http://g.e-hentai.org/g/1004208/ee717823cd/'}
+    json_response = {
+        'gmetadata': [
+            {
+                'title':
+                    '(COMIC1☆10) [Yokoshimanchi. (Ash Yokoshima)] Bon-nou Seven [English] '
+                    '[Tigoris Translates]',
+                'rating': '3.72',
+                'title_jpn': '(COMIC1☆10) [横島んち。 (Ash横島)] ぼんのうせぶん [英訳]',
+                'tags': [
+                    'language:english', 'language:translated', 'group:yokoshimanchi.',
+                    'artist:ash yokoshima', 'female:dark skin', 'female:sex toys'
+                ],
+                'uploader': 'Spideyguy',
+                'filecount': '18',
+                'thumb': 'http://ehgt.org/0f/69/'
+                '0f69fb9ff5711cc99d72f4d1280b623c4e8a6a0c-6982739-2858-4019-jpg_l.jpg',
+                'gid': 1004208,
+                'filesize': 61517759,
+                'token': 'ee717823cd',
+                'archiver_key': '411459--0732e06cb1094aed375a39f6c4d4e67cef73bf62',
+                'expunged': False,
+                'posted': '1481250175',
+                'torrentcount': '1',
+                'category': 'Doujinshi'
+            }
+        ]
+    }
+    with mock.patch('version.ehen.EHen._get_response') as m_gr:
+        m_gr.return_value.json.return_value = json_response
+        from version.ehen import EHen
+        obj = EHen()
+        json_res, dict_metadata_res = obj.get_metadata(list_of_urls=[url])
+        assert json_res == json_response
+        assert dict_metadata_res == exp_dict_metadata
+        m_gr.assert_has_calls([
+            mock.call(cookies=None, payload={
+                'method': 'gdata', 'gidlist': [[1004208, 'ee717823cd']], 'namespace': 1}),
+            mock.call().raise_for_status(),
+            mock.call().json()
+        ], any_order=True)
