@@ -58,15 +58,24 @@ class ChaikaHen(CommenHen):
         except JSONDecodeError:
             log_w('Error decoding json for following url:\n{}'.format(response.url))
 
+    @staticmethod
+    def _get_response_from_url(url):
+        """get response from url."""
+        try:
+            return requests.get(url)
+        except requests.ConnectionError as err:
+            log_e("Could not fetch metadata: {}".format(err))
+            raise app_constants.MetadataFetchFail("connection error")
+
     def get_metadata(self, list_of_urls):  # NOQA
         """Fetch the metadata from the provided list of urls through the official API.
 
         Returns:
-            raw api data and a dict with gallery id as key and url as value
+            Tuple of raw api data and a dict with gallery id as key and url as value
         """
         data = []
         g_id_data = {}
-        g_id = 1
+        g_id = 1  # Counter for succesful fetched gallery data
         for url in list_of_urls:
             hash_search = True
             chaika_g_id = None
@@ -84,14 +93,11 @@ class ChaikaHen(CommenHen):
                     url = self.a_api_url + g_or_a_id
                 hash_search = False
             try:
-                try:
-                    r = requests.get(url)
-                except requests.ConnectionError as err:
-                    log_e("Could not fetch metadata: {}".format(err))
-                    raise app_constants.MetadataFetchFail("connection error")
+                r = self._get_response_from_url(url=url)
                 r.raise_for_status()
                 if not self._get_json_response(response=r):
                     return None
+                # create g_data
                 if hash_search:
                     g_data = r.json()[0]  # TODO: multiple archives can be returned! Please fix!
                 else:
