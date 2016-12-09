@@ -78,8 +78,8 @@ class AppDialog(BasePopup):
             main_layout.addWidget(self.restart_info)
         elif mode == self.MESSAGE:
             self.info_lbl.setText(
-                "<font color='red'>An exception has ben encountered.\n"
-                "Contact the developer to get this fixed.\n"
+                "<font color='red'>An exception has ben encountered.<br>"
+                "Contact the developer to get this fixed.<br>"
                 "Stability from this point onward cannot be guaranteed.</font>"
             )
             self.setWindowTitle("It was too big!")
