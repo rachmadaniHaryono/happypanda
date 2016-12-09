@@ -540,7 +540,8 @@ def test_get_dict_metadata():
     with mock.patch('version.ehen.EHen.parse_url') as parse_url_func:
         parse_url_func.side_effect = [parsed_url, None]
         from version.ehen import EHen
-        res = EHen._get_dict_metadata(cls=EHen, list_of_urls=list_of_urls)
+        obj = EHen()
+        res = obj._get_dict_metadata(list_of_urls=list_of_urls)
         assert res == {parsed_url_part: url1}
         parse_url_func.assert_has_calls([
             mock.call(url1.strip.return_value), mock.call(url2.strip.return_value)])
