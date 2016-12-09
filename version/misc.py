@@ -13,6 +13,7 @@
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
 import logging
+import sys
 
 from PyQt5.QtCore import (
     QByteArray,
@@ -28,6 +29,7 @@ from PyQt5.QtWidgets import (
     QCommonStyle,
     QDesktopWidget,
 )
+from PyQt5 import QtWidgets
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -91,6 +93,18 @@ def create_animation(parent, prop):
 def open_idx_data_first_chapter_when_double_clicked(idx):
     """open idx data first chapter when double clicked."""
     idx.data(Qt.UserRole + 1).chapters[0].open()
+
+
+def show_widget(widget_obj, use_parent=True):
+    """show widget func."""
+    app = QtWidgets.QApplication(sys.argv)
+    if use_parent:
+        parent_widget = QtWidgets.QWidget()
+        widget = widget_obj(parent=parent_widget)
+        widget.show()
+    else:
+        raise NotImplementedError
+    sys.exit(app.exec_())
 
 
 # def center_parent(parent, child):
