@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-try:
+try:  # pragma: no cover
     import app_constants
     from gallery_downloader_list_widget import GalleryDownloaderListWidget
     from gallery_downloader_url_extractor_widget import GalleryDownloaderUrlExtractorWidget
@@ -112,6 +112,16 @@ class GalleryDownloaderWidget(QWidget):
         self._batch_url = GalleryDownloaderUrlExtractorWidget()
         self._batch_url.url_emit.connect(self.add_download_entry)
 
+    def _get_url(self, url=None):
+        """get url."""
+        if not url:
+            url = self.url_inserter.text()
+            if not url:
+                return
+            self.url_inserter.clear()
+        url = url.lower()
+        return url
+
     def add_download_entry(self, url=None):
         """add download entry.
 
@@ -121,31 +131,26 @@ class GalleryDownloaderWidget(QWidget):
         log_i('Adding download entry: {}'.format(url))
         self.info_lbl.hide()
         h_item = None
+        url = self._get_url(url=url)
+        if url is None:
+            return
         try:
-            if not url:
-                url = self.url_inserter.text()
-                if not url:
-                    return
-                self.url_inserter.clear()
-            url = url.lower()
-
             manager = website_validator(url)
             h_item = manager.from_gallery_url(url)
-        except app_constants.WrongURL:
-            self.info_lbl.setText(
-                "<font color='red'>Failed to add:\n{}</font>".format(url))
+        except (app_constants.WrongURL, app_constants.NeedLogin, app_constants.WrongLogin) as e:
+            wrong_url_fmt_txt = "<font color='red'>Failed to add:<br>{}</font>"
+            need_login_fmt_txt = "<font color='red'>Login is required to download:<br>{}</font>"
+            wrong_login_fmt_txt = "<font color='red'Wrong login info to download:<br>{}</font>"
+            text_dict = {
+                app_constants.WrongURL: wrong_url_fmt_txt.format(url),
+                app_constants.NeedLogin: need_login_fmt_txt.format(url),
+                app_constants.WrongLogin: wrong_login_fmt_txt.format(url)
+            }
+            text = text_dict[type(e)]
+            self.info_lbl.setText(text)
             self.info_lbl.show()
             return
-        except app_constants.NeedLogin:
-            self.info_lbl.setText(
-                "<font color='red'>Login is required to download:\n{}</font>".format(url))
-            self.info_lbl.show()
-            return
-        except app_constants.WrongLogin:
-            self.info_lbl.setText(
-                "<font color='red'Wrong login info to download:\n{}</font>".format(url))
-            self.info_lbl.show()
-            return
+
         if h_item:
             log_i('Successfully added download entry')
             self.download_list.add_entry(h_item)
@@ -156,3 +161,8 @@ class GalleryDownloaderWidget(QWidget):
             self.activateWindow()
         else:
             super().show()
+
+
+if __name__ == "__main__":
+    from misc import show_widget
+    show_widget(widget_obj=GalleryDownloaderWidget)
