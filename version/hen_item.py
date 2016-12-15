@@ -33,8 +33,8 @@ class HenItem(DownloaderItemObject):
     def __init__(self, session=None):
         """init func."""
         super().__init__(session=session)
+        # see also EH API on wiki https://ehwiki.org/wiki/API
         self.thumb_url = ""  # an url to gallery thumb
-        self.thumb = None
         self.cost = "0"
         self.size = ""
         self.metadata = {}
@@ -42,6 +42,9 @@ class HenItem(DownloaderItemObject):
         self.gallery_url = ""
         self.download_type = app_constants.HEN_DOWNLOAD_TYPE
         self.torrents_found = 0
+        #  will be filled later in fetch_thumb
+        self.thumb = None
+        #
         self.file_rdy.connect(self.check_type)
 
     def fetch_thumb(self):
@@ -64,29 +67,32 @@ class HenItem(DownloaderItemObject):
         Recommended way of inserting metadata. Keeps the original EH API response structure
         Remember to call commit_metadata when done!
         """
+        default_metadata = {
+            "gid": 1,
+            "title": "",
+            "title_jpn": "",
+            "category": "Manga",
+            "uploader": "",
+            "Posted": "",
+            "filecount": "0",
+            "filesize": 0,
+            "expunged": False,
+            "rating": "0",
+            "torrentcount": "0",
+            "tags": []
+        }
         if not self.metadata:
             self.metadata = {
-                "gmetadata": [{
-                    "gid": 1,
-                    "title": "",
-                    "title_jpn": "",
-                    "category": "Manga",
-                    "uploader": "",
-                    "Posted": "",
-                    "filecount": "0",
-                    "filesize": 0,
-                    "expunged": False,
-                    "rating": "0",
-                    "torrentcount": "0",
-                    "tags": []
-                }]
+                "gmetadata": [default_metadata]
             }
         try:
             metadata = self.metadata['gmetadata'][0]
         except KeyError:
             return
-
+        # replace new value
         metadata[key] = value
+        # reapply the obj attribute
+        self.metadata['gmetadata'][0] = metadata
 
     def commit_metadata(self):
         """Call this method when done updating metadata."""
