@@ -318,3 +318,21 @@ def test_download(interrupt_retval, rename_raise_error):
             assert item.file != filename
             remove_file_func.assert_called_once_with(filename=filename_part)
         obj._inc_queue.task_done.assert_called_once_with()
+
+
+def test_start_manager():
+    """test method."""
+    with mock.patch('version.downloader_obj.threading') as m_threading, \
+            mock.patch('version.downloader_obj.DownloaderObject._set_base'):
+        from version.downloader_obj import DownloaderObject
+        obj = DownloaderObject()
+        # run
+        obj.start_manager(max_tasks=1)
+        # test
+        m_threading.assert_has_calls([
+            mock.call.Thread(
+                daemon=True, name='Downloader 0',
+                target=obj._downloading
+            ),
+            mock.call.Thread().start()
+        ])
