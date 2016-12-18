@@ -120,7 +120,7 @@ def test_from_gallery_url():
         # test
         assert res.download_type == exp_download_type
         assert res.gallery_url == url
-        assert res.thumb_url == 'https' + thumb_url
+        assert res.thumb_url == 'https:' + thumb_url
         res.fetch_thumb.assert_called_once_with()
         assert res.gallery_name == title
         assert res.download_url == obj._get_dl_urls.return_value

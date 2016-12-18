@@ -101,7 +101,7 @@ class AsmManager(DLManagerObject):
         # ex/g.e
         log_d("Opening {}".format(g_url))
         dict_metadata = self._get_metadata(g_url=g_url)
-        h_item.thumb_url = 'https' + self._browser.select('.cover img')[0].get('src')
+        h_item.thumb_url = 'https:' + self._browser.select('.cover img')[0].get('src')
         h_item.fetch_thumb()
         h_item.gallery_name = dict_metadata['title']
         # get dl link
