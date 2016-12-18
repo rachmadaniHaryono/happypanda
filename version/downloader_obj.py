@@ -69,89 +69,135 @@ class DownloaderObject(QObject):
 
         return item
 
+    @staticmethod
+    def remove_file(filename):
+        """remove file and ignore any error when doing it."""
+        try:
+            os.remove(filename)
+        except:
+            pass
+
+    @staticmethod
+    def _get_total_size(response):
+        """get total size from requests response."""
+        try:
+            return int(response.headers['content-length'])
+        except KeyError:
+            return 0
+
+    def _get_response(self, url):
+        """get response from url."""
+        if self._browser_session:
+            r = self._browser_session.get(url, stream=True)
+        else:
+            r = requests.get(url, stream=True)
+        return r
+
+    def _get_item_and_temp_base(self):
+        """get item and temporary folder if specified."""
+        item = self._inc_queue.get()
+        temp_base = None
+        if isinstance(item, dict):
+            temp_base = item['dir']
+            item = item['item']
+        return item, temp_base
+
+    def _get_filename(self, item, temp_base=None):
+        """get filename based on input."""
+        file_name = item.name if item.name else str(uuid.uuid4())
+        invalid_chars = '\\/:*?"<>|'
+        for x in invalid_chars:
+            file_name = file_name.replace(x, '')
+        file_name = os.path.join(self.base, file_name) if not temp_base else \
+            os.path.join(temp_base, file_name)
+        return file_name
+
+    @staticmethod
+    def _download_single_file(target_file, response, item, interrupt_state):
+        """download single file from url response and return changed item and interrupt state."""
+        with open(target_file, 'wb') as f:
+            for data in response.iter_content(chunk_size=1024):
+                if item.current_state == item.CANCELLED:
+                    interrupt_state = True
+                    break
+                if data:
+                    item.current_size += len(data)
+                    f.write(data)
+                    f.flush()
+        return item, interrupt_state
+
+    @staticmethod
+    def _rename_file(filename, filename_part, max_loop=100):
+        """Custom rename file method."""
+        # compatibility
+        file_name = filename
+        file_name_part = filename_part
+
+        n = 0
+        file_split = os.path.split(file_name)
+        while n < max_loop:
+            try:
+                if file_split[1]:
+                    src_file = file_split[0]
+                    target_file = "({}){}".format(n, file_split[1])
+                else:
+                    src_file = file_name_part
+                    target_file = "({}){}".format(n, file_name)
+                os.rename(src_file, target_file)
+                break
+            except:
+                n += 1
+        if n > max_loop:
+            file_name = file_name_part
+        return file_name
+
     def _downloading(self):  # NOQA
         """The downloader. Put in a thread.
 
         TODO:
 
         - customize it for multiple urls.
-        - simplify
         """
         while True:
             log_d("Download items in queue: {}".format(self._inc_queue.qsize()))
             interrupt = False
-            item = self._inc_queue.get()
-            temp_base = None
-            if isinstance(item, dict):
-                temp_base = item['dir']
-                item = item['item']
+            item, temp_base = self._get_item_and_temp_base()
 
-            log_d("Stating item download")
+            log_d("Starting item download")
             item.current_state = item.DOWNLOADING
-            file_name = item.name if item.name else str(uuid.uuid4())
 
-            invalid_chars = '\\/:*?"<>|'
-            for x in invalid_chars:
-                file_name = file_name.replace(x, '')
-
-            file_name = os.path.join(self.base, file_name) if not temp_base else \
-                os.path.join(temp_base, file_name)
+            # filename
+            file_name = self._get_filename(item=item, temp_base=temp_base)
             file_name_part = file_name + '.part'
 
             download_url = item.download_url
             log_d("Download url:{}".format(download_url))
-
             self.active_items.append(item)
 
-            if self._browser_session:
-                r = self._browser_session.get(download_url, stream=True)
-            else:
-                r = requests.get(download_url, stream=True)
-            try:
-                item.total_size = int(r.headers['content-length'])
-            except KeyError:
-                item.total_size = 0
+            # response
+            r = self._get_response(url=download_url)
+            # get total size
+            item.total_size = self._get_total_size(response=r)
 
-            with open(file_name_part, 'wb') as f:
-                for data in r.iter_content(chunk_size=1024):
-                    if item.current_state == item.CANCELLED:
-                        interrupt = True
-                        break
-                    if data:
-                        item.current_size += len(data)
-                        f.write(data)
-                        f.flush()
+            # downloading to temp file (file_name_part)
+            item, interrupt = self._download_single_file(
+                target_file=file_name_part, response=r, item=item, interrupt_state=interrupt)
+
             if not interrupt:
+                # post operation when no interrupt
                 try:
                     os.rename(file_name_part, file_name)
                 except OSError:
-                    n = 0
-                    file_split = os.path.split(file_name)
-                    while n < 100:
-                        try:
-                            if file_split[1]:
-                                os.rename(
-                                    file_name_part, os.path.join(
-                                        file_split[0], "({}){}".format(n, file_split[1])
-                                    )
-                                )
-                            else:
-                                os.rename(file_name_part, "({}){}".format(n, file_name))
-                            break
-                        except:
-                            n += 1
-                    if n > 100:
-                        file_name = file_name_part
+                    file_name = self._rename_file(
+                        filename=file_name, filename_part=file_name_part)
 
                 item.file = file_name
                 item.current_state = item.FINISHED
+                # emit
                 item.file_rdy.emit(item)
                 self.item_finished.emit(item)
             else:
-                try:
-                    os.remove(file_name_part)
-                except:
-                    pass
+                self.remove_file(filename=file_name_part)
             log_d("Items in queue {}".format(self._inc_queue.empty()))
             log_d("Finished downloading: {}".format(download_url))
             self.active_items.remove(item)
