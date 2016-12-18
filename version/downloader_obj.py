@@ -10,7 +10,7 @@ from queue import Queue
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
-try:
+try:  # pragma: no cover
     import app_constants
     from downloader_item_obj import DownloaderItemObject
 except ImportError:
@@ -43,6 +43,13 @@ class DownloaderObject(QObject):
         """init func."""
         super().__init__()
         # download dir
+        self._set_base()
+
+    def _set_base(self):
+        """set base attribute, which will be used as download directory.
+
+        helper function for init method.
+        """
         self.base = os.path.abspath(app_constants.DOWNLOAD_DIRECTORY)
         if not os.path.exists(self.base):
             os.mkdir(self.base)
@@ -200,7 +207,10 @@ class DownloaderObject(QObject):
                 self.remove_file(filename=file_name_part)
             log_d("Items in queue {}".format(self._inc_queue.empty()))
             log_d("Finished downloading: {}".format(download_url))
+
+            # remove recently added item from list
             self.active_items.remove(item)
+            # task finished
             self._inc_queue.task_done()
 
     def start_manager(self, max_tasks):

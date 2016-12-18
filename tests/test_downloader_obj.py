@@ -253,3 +253,68 @@ def test_rename_file(max_loop_reached, filename_is_splittable, raise_error_once)
             ])
         else:
             m_os.rename.assert_called_once_with(src_filename, '(0){}'.format(target_filename))
+
+
+@pytest.mark.parametrize(
+    'interrupt_retval, rename_raise_error',
+    product([False, True], repeat=2)
+)
+def test_download(interrupt_retval, rename_raise_error):
+    default_interrupt_state = False
+    item = mock.Mock()
+    temp_base = mock.Mock()
+    filename = 'filename'
+    get_filename_func = mock.Mock(return_value=filename)
+    get_total_size_func = mock.Mock()
+    get_response_func = mock.Mock()
+    filename_part = filename + '.part'
+    download_single_file_func = mock.Mock(return_value=(item, interrupt_retval))
+    item_finished_signal = mock.Mock()
+    remove_file_func = mock.Mock()
+    rename_file_func = mock.Mock()
+    # raise error to exit infinite loop on the func.
+    queue_obj = mock.Mock()
+    queue_obj.task_done.side_effect = ValueError
+    with mock.patch('version.downloader_obj.os') as m_os, \
+            mock.patch('version.downloader_obj.DownloaderObject._set_base'):
+        if rename_raise_error:
+            m_os.rename.side_effect = OSError
+        from version.downloader_obj import DownloaderObject
+        obj = DownloaderObject()
+        obj._get_item_and_temp_base = mock.Mock(return_value=(item, temp_base))
+        obj._get_filename = get_filename_func
+        obj._get_total_size = get_total_size_func
+        obj._get_response = get_response_func
+        obj._download_single_file = download_single_file_func
+        obj._rename_file = rename_file_func
+        obj.remove_file = remove_file_func
+        obj.item_finished = item_finished_signal
+        obj._inc_queue = queue_obj
+        # run
+        try:
+            obj._downloading()
+        except ValueError:
+            # expected error
+            pass
+        # test
+        assert item.total_size == get_total_size_func.return_value
+        get_filename_func.assert_called_once_with(item=item, temp_base=temp_base)
+        get_response_func.assert_called_once_with(url=item.download_url)
+        download_single_file_func.assert_called_once_with(
+            target_file=filename_part, response=get_response_func.return_value,
+            item=item, interrupt_state=default_interrupt_state
+        )
+        if not interrupt_retval:
+            assert item.current_state == item.FINISHED
+            m_os.rename.assert_called_once_with(filename_part, filename)
+            if rename_raise_error:
+                assert item.file == rename_file_func.return_value
+            else:
+                assert item.file == filename
+            item.file_rdy.emit.assert_called_once_with(item)
+            item_finished_signal.emit.assert_called_once_with(item)
+        else:
+            assert item.current_state == item.DOWNLOADING
+            assert item.file != filename
+            remove_file_func.assert_called_once_with(filename=filename_part)
+        obj._inc_queue.task_done.assert_called_once_with()
