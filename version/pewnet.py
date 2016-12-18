@@ -19,7 +19,7 @@ import re as regex
 try:  # pragma: no cover
     import app_constants
     import settings
-    from asmhen_manager import AsmManager
+    from asm_manager import AsmManager
     from chaika_hen import ChaikaHen
     from chaika_manager import ChaikaManager
     from ehen import EHen
@@ -30,7 +30,7 @@ except ImportError:
         app_constants,
         settings,
     )
-    from .asmhen_manager import AsmManager
+    from .asm_manager import AsmManager
     from .chaika_hen import ChaikaHen
     from .chaika_manager import ChaikaManager
     from .ehen import EHen

@@ -22,7 +22,7 @@ def test_get_dl_urls():
     ]
     browser = mock.Mock()
     browser.select.return_value = select_retval
-    from version.asmhen_manager import AsmManager
+    from version.asm_manager import AsmManager
     obj = AsmManager()
     browser.select.return_value = select_retval
     obj._browser = browser
@@ -68,7 +68,7 @@ def test_get_metadata():
     browser.select.side_effect = select_side_effect
     find_tags_func = mock.Mock(return_value=exp_res['tags'])
     ensure_browser_on_url_func = mock.Mock()
-    from version.asmhen_manager import AsmManager
+    from version.asm_manager import AsmManager
     obj = AsmManager()
     obj._browser = browser
     obj.ensure_browser_on_url = ensure_browser_on_url_func
@@ -94,7 +94,7 @@ def test_find_tags():
     html_soup = BeautifulSoup(html_txt)
     browser = mock.Mock()
     browser.select.return_value = html_soup.select('.tags h3')
-    from version.asmhen_manager import AsmManager
+    from version.asm_manager import AsmManager
     res = AsmManager._find_tags(browser)
     assert res == exp_res
 
@@ -108,9 +108,9 @@ def test_from_gallery_url():
     browser = mock.Mock()
     thumb_url = '//www.example.com/thumb.jpg'
     browser.select.return_value = [{'src': thumb_url}]
-    with mock.patch('version.asmhen_manager.HenItem') as m_hi, \
-            mock.patch('version.asmhen_manager.DownloaderObject') as m_do:
-        from version.asmhen_manager import AsmManager
+    with mock.patch('version.asm_manager.HenItem') as m_hi, \
+            mock.patch('version.asm_manager.DownloaderObject') as m_do:
+        from version.asm_manager import AsmManager
         obj = AsmManager()
         obj._browser = browser
         obj._get_metadata = mock.Mock(return_value=m_metadata)
