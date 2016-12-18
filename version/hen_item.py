@@ -7,6 +7,7 @@ try:
     import app_constants
     import utils
     from downloader_item_obj import DownloaderItemObject
+    from downloader_obj import DownloaderObject
     from ehen import EHen
 except ImportError:
     from . import (
@@ -14,8 +15,8 @@ except ImportError:
         utils,
     )
     from .downloader_item_obj import DownloaderItemObject
-    from .ehen import EHen
     from .downloader_obj import DownloaderObject
+    from .ehen import EHen
 
 log = logging.getLogger(__name__)
 log_i = log.info

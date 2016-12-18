@@ -82,6 +82,11 @@ def _get_archive_files_and_file_filter(unrar_tool):
 
 ARCHIVE_FILES, FILE_FILTER = _get_archive_files_and_file_filter(unrar_tool=unrar_tool_path)
 
+# type of download needed by download manager for each site parser
+DOWNLOAD_TYPE_ARCHIVE = 0
+DOWNLOAD_TYPE_TORRENT = 1
+DOWNLOAD_TYPE_OTHER = 2
+
 # default stylesheet path
 default_stylesheet_path = os.path.join(static_dir, "style.css")
 user_stylesheet_path = ""

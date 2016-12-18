@@ -12,6 +12,7 @@ import pytest
             'https://exhentai.org/g/a1002386/1002386/',
             'https://panda.chaika.moe/archive/19970/',
             'http://g.e-hentai.org/g/1003511/5f82a225fb/',
+            "http://asmhentai.com/g/168735/",
             'http://example.com'
         ],
         [True, False]
@@ -22,6 +23,7 @@ def test_website_validator(url, check_result):
     with mock.patch('version.pewnet.HenManager') as m_hm, \
             mock.patch('version.pewnet.ExHenManager') as m_ehm, \
             mock.patch('version.pewnet.ChaikaManager') as m_cm, \
+            mock.patch('version.pewnet.AsmManager') as m_am, \
             mock.patch('version.pewnet.settings') as m_settings:
         from version.pewnet import website_validator
         from version import app_constants
@@ -30,6 +32,7 @@ def test_website_validator(url, check_result):
             ('g.e-hentai', m_hm.return_value),
             ('exhentai', m_ehm.return_value),
             ('panda.chaika.moe', m_cm.return_value),
+            ('asmhentai', m_am.return_value)
         ]
         # test
         if not all(x[0] in url for x in exp_res_packs):

@@ -15,11 +15,9 @@ from PyQt5.QtWidgets import (
 )
 
 try:
-    import pewnet
+    from hen_item import HenItem
 except ImportError:
-    from . import (
-        pewnet,
-    )
+    from .hen_item import HenItem
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
@@ -62,7 +60,7 @@ class GalleryDownloaderItemObject(QObject):
         super().__init__()
         self.d_item_ready.connect(self.d_item_ready_finished)
         # item
-        assert isinstance(hitem, pewnet.HenItem)
+        assert isinstance(hitem, HenItem)
         self.item = hitem
         url = self.item.gallery_url
         # profile item

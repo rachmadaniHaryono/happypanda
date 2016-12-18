@@ -4,19 +4,15 @@ import logging
 from robobrowser.exceptions import RoboError
 
 try:
+    from app_constants import DOWNLOAD_TYPE_OTHER
     from dl_manager_obj import DLManagerObject
     from downloader_obj import DownloaderObject
     from hen_item import HenItem
-    from pewnet import (
-        DOWNLOAD_TYPE_OTHER,
-    )
 except ImportError:
+    from .app_constants import DOWNLOAD_TYPE_OTHER
     from .dl_manager_obj import DLManagerObject
     from .downloader_obj import DownloaderObject
     from .hen_item import HenItem
-    from .pewnet import (
-        DOWNLOAD_TYPE_OTHER,
-    )
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""

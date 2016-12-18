@@ -70,7 +70,13 @@ class DownloaderObject(QObject):
         return item
 
     def _downloading(self):  # NOQA
-        "The downloader. Put in a thread."
+        """The downloader. Put in a thread.
+
+        TODO:
+
+        - customize it for multiple urls.
+        - simplify
+        """
         while True:
             log_d("Download items in queue: {}".format(self._inc_queue.qsize()))
             interrupt = False

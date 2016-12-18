@@ -136,6 +136,7 @@ class GalleryDownloaderWidget(QWidget):
             return
         try:
             manager = website_validator(url)
+            log_d('Manager:{}'.format(manager))
             h_item = manager.from_gallery_url(url)
         except (app_constants.WrongURL, app_constants.NeedLogin, app_constants.WrongLogin) as e:
             wrong_url_fmt_txt = "<font color='red'>Failed to add:<br>{}</font>"

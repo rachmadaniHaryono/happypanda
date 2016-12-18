@@ -21,6 +21,7 @@ try:
     import pewnet
     from fetch_obj import FetchObject
     from gallery_downloader_item_obj import GalleryDownloaderItemObject
+    from hen_item import HenItem
 except ImportError:
     from .fetch_obj import FetchObject
     from .gallery_downloader_item_obj import GalleryDownloaderItemObject
@@ -120,7 +121,7 @@ class GalleryDownloaderListWidget(QTableWidget):
         Args:
             hitem(:class:`.pewnet.HenItem`):H-item
         """
-        assert isinstance(hitem, pewnet.HenItem)
+        assert isinstance(hitem, HenItem)
         g_item = GalleryDownloaderItemObject(hitem)
         if hitem.download_type == 0:
             g_item.d_item_ready.connect(self._init_gallery)

@@ -102,6 +102,7 @@ def test_find_tags():
 def test_from_gallery_url():
     """test method."""
     url = 'http://asmhentai.com/g/154801/'
+    exp_download_type = 2
     title = mock.Mock()
     m_metadata = {'title': title}
     browser = mock.Mock()
@@ -109,7 +110,7 @@ def test_from_gallery_url():
     browser.select.return_value = [{'src': thumb_url}]
     with mock.patch('version.asmhen_manager.HenItem') as m_hi, \
             mock.patch('version.asmhen_manager.DownloaderObject') as m_do:
-        from version.asmhen_manager import AsmManager, DOWNLOAD_TYPE_OTHER
+        from version.asmhen_manager import AsmManager
         obj = AsmManager()
         obj._browser = browser
         obj._get_metadata = mock.Mock(return_value=m_metadata)
@@ -117,7 +118,7 @@ def test_from_gallery_url():
         # run
         res = obj.from_gallery_url(g_url=url)
         # test
-        assert res.download_type == DOWNLOAD_TYPE_OTHER
+        assert res.download_type == exp_download_type
         assert res.gallery_url == url
         assert res.thumb_url == 'https' + thumb_url
         res.fetch_thumb.assert_called_once_with()
