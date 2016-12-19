@@ -5,25 +5,109 @@ version
    :maxdepth: 4
 
    app
+   app_bubble
    app_constants
+   app_dialog
+   archive_file
+   arrow_handle_widget
+   arrow_window
+   asm_manager
+   base_move_widget
+   base_popup
+   base_user_choice
+   chaika_hen
+   chaika_manager
+   chapter_add_widget
+   chapter_list_item_frame
+   clicked_label
+   commenhen
+   common_view
+   completer_popup_view
+   completer_text_edit
+   custom_list_item
+   custom_table_item
    database
-   db_activity_check
-   duplicate_check
+   db_activity_checker_obj
+   db_overview_widget
+   deleted_popup
+   dl_manager_obj
+   downloader_item_obj
+   downloader_obj
+   duplicate_check_obj
+   ehen
+   elided_label
    executors
-   fetch
-   gallery
+   exhen
+   exhen_manager
+   fetch_obj
+   file_icon
+   flow_layout
+   gallery_artists_list_view
    gallery_context_menu
+   gallery_dialog_widget
+   gallery_downloader_item_obj
+   gallery_downloader_list_widget
+   gallery_downloader_url_extractor_widget
+   gallery_downloader_widget
+   gallery_handler
+   gallery_list_context_menu
+   gallery_list_edit
+   gallery_list_view_widget
+   gallery_lists_widget
+   gallery_menu
+   gallery_meta_window
+   gallery_model
+   gallery_popup
+   gallery_search_obj
+   gallery_showcase_widget
    gallerydb
-   gallerydialog
+   gcompleter
+   gmetafile
+   grid_delegate
+   hen_item
+   hen_manager
    hplugins
-   io_misc
+   import_export_data
+   import_export_obj
+   line_edit
+   line_frame
+   list_delegate
+   loading_overlay_widget
+   loading_popup
    main
+   manga_table_view
+   manga_views
    misc
    misc_app
-   misc_db
+   models
+   modified_popup
+   moved_popup
+   nhen
+   no_tooltip_model
+   notification_overlay_widget
+   path_line_edit
    pewnet
-   scan_dir
+   scan_dir_obj
    settings
    settingsdialog
-   update_check
+   sidebar_widget_frame
+   single_gallery_choices
+   single_manga_view
+   sort_filter_model
+   sort_menu
+   spacer_widget
+   spinner_widget
+   star_rating
+   system_tray
+   tag_text_button
+   tags_tree_view_widget
+   toolbar_button
+   toolbar_tab_manager_obj
+   torrent_item
+   torrent_user_choice
+   transparent_widget
+   unique_info_model
+   update_checker_obj
    utils
+   version
+   watchers

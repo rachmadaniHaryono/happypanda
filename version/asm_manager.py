@@ -29,12 +29,19 @@ log_c = log.critical
 
 
 class AsmManager(DLManagerObject):
-    """asmhentai manager."""
+    """asmhentai manager.
+
+    Attributes:
+        url (str): Base url for manager.
+    """
 
     url = 'http://asmhentai.com/'
 
     def ensure_browser_on_url(self, url):
-        """open browser on input url if not already."""
+        """open browser on input url if not already.
+
+        url: Url where browser to open (or alreadery opened)
+        """
         open_url = False  # assume not opening the url
         try:
             current_url = self._browser.url
@@ -47,7 +54,14 @@ class AsmManager(DLManagerObject):
 
     @staticmethod
     def _find_tags(browser):
-        """find tags from browser."""
+        """find tags from browser.
+
+        Args:
+            browser: Robobrowser instance.
+
+        Returns:
+            list: List of doujin/manga tags on the page.
+        """
         sibling_tags = browser.select('.tags h3')
         tags = list(map(
             lambda x: (
@@ -66,6 +80,12 @@ class AsmManager(DLManagerObject):
         """get metadata.
 
         for key to fill see HenItem class.
+
+        Args:
+            g_url: Gallery url.
+
+        Returns:
+            dict: Metadata from gallery url.
         """
         self.ensure_browser_on_url(url=g_url)
         html_soup = self._browser
@@ -79,7 +99,14 @@ class AsmManager(DLManagerObject):
         return res
 
     def _get_dl_urls(self, g_url):
-        """get image urls from gallery url."""
+        """get image urls from gallery url.
+
+        Args:
+            g_url: Gallery url.
+
+        Returns:
+            list: Image from gallery url.
+        """
         # ensure the url
         self.ensure_browser_on_url(url=g_url)
         links = self._browser.select('.preview_thumb a')
@@ -93,8 +120,15 @@ class AsmManager(DLManagerObject):
         ))
         return imgs
 
-    def from_gallery_url(self, g_url):  # NOQA
-        """Find gallery download url and puts it in download queue."""
+    def from_gallery_url(self, g_url):
+        """Find gallery download url and puts it in download queue.
+
+        Args:
+            g_url: Gallery url.
+
+        Returns:
+            Download item
+        """
         h_item = HenItem(self._browser.session)
         h_item.download_type = DOWNLOAD_TYPE_OTHER
         h_item.gallery_url = g_url

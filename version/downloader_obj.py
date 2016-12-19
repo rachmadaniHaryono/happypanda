@@ -31,6 +31,13 @@ class DownloaderObject(QObject):
     """A download manager.
 
     Emits signal item_finished with tuple of url and path to file when a download finishes
+
+    Attributes:
+        _inc_queue (Queue): Queue object contain item or dict of item and directory if defined.
+        _browser_session: Robobrowser session if defined.
+        _threads (list): List contain thread.
+        item_finished (PyQt5.QtCore.pyqtSignal): signal when item finished.
+        active_items (list): List of currently processed item.
     """
 
     _inc_queue = Queue()
@@ -61,8 +68,13 @@ class DownloaderObject(QObject):
         An optional requests.Session object can be specified
         A temp dir to be used can be specified
 
+        Args:
+            item: Item to be added to queue.
+            session: Optional robobrowser session.
+            dir: Optional directory for item.
+
         Returns:
-            a downloader item
+            A downloader item.
         """
         if isinstance(item, str):
             item = DownloaderItemObject(item)
@@ -78,7 +90,11 @@ class DownloaderObject(QObject):
 
     @staticmethod
     def remove_file(filename):
-        """remove file and ignore any error when doing it."""
+        """Remove file and ignore any error when doing it.
+
+        Args:
+            filename: filename to be removed.
+        """
         try:
             os.remove(filename)
         except:
@@ -86,14 +102,25 @@ class DownloaderObject(QObject):
 
     @staticmethod
     def _get_total_size(response):
-        """get total size from requests response."""
+        """get total size from requests response.
+
+        Args:
+            response (requests.Response): Response from request.
+        """
         try:
             return int(response.headers['content-length'])
         except KeyError:
             return 0
 
     def _get_response(self, url):
-        """get response from url."""
+        """get response from url.
+
+        Args:
+            url : Url of the response
+
+        Returns:
+            requests.Response: Response from url
+        """
         if self._browser_session:
             r = self._browser_session.get(url, stream=True)
         else:
@@ -101,7 +128,11 @@ class DownloaderObject(QObject):
         return r
 
     def _get_item_and_temp_base(self):
-        """get item and temporary folder if specified."""
+        """get item and temporary folder if specified.
+
+        Returns:
+            tuple: (item, temp_base), where temp_base is the temporary folder.
+        """
         item = self._inc_queue.get()
         temp_base = None
         if isinstance(item, dict):
@@ -110,7 +141,15 @@ class DownloaderObject(QObject):
         return item, temp_base
 
     def _get_filename(self, item, temp_base=None):
-        """get filename based on input."""
+        """get filename based on input.
+
+        Args:
+            item: Download item
+            temp_base: Optional temporary folder
+
+        Returns:
+            str: Edited filename
+        """
         file_name = item.name if item.name else str(uuid.uuid4())
         invalid_chars = '\\/:*?"<>|'
         for x in invalid_chars:
@@ -121,7 +160,18 @@ class DownloaderObject(QObject):
 
     @staticmethod
     def _download_single_file(target_file, response, item, interrupt_state):
-        """download single file from url response and return changed item and interrupt state."""
+        """Download single file from url response and return changed item and interrupt state.
+
+        Args:
+            target_file: Target filename where url will be downloaded.
+            response (requests.Response): Response from url.
+            item: Download item.
+            interrupt_state (bool): Interrupt state.
+
+        Returns:
+            tuple: (item, interrupt_state) where both variables
+                is the changed variables from input.
+        """
         with open(target_file, 'wb') as f:
             for data in response.iter_content(chunk_size=1024):
                 if item.current_state == item.CANCELLED:
@@ -135,7 +185,16 @@ class DownloaderObject(QObject):
 
     @staticmethod
     def _rename_file(filename, filename_part, max_loop=100):
-        """Custom rename file method."""
+        """Custom rename file method.
+
+        Args:
+            filename: Target filename.
+            filename_part: Temporary filename
+            max_loop (int): Maximal loop  on error when renaming the file.
+
+        Returns:
+            str: Filename or filename_part
+        """
         # compatibility
         file_name = filename
         file_name_part = filename_part
@@ -159,11 +218,12 @@ class DownloaderObject(QObject):
         return file_name
 
     def _downloading(self):  # NOQA
-        """The downloader. Put in a thread.
+        """The downloader.
+
+        Put in a thread.
 
         TODO:
-
-        - customize it for multiple urls.
+            * customize it for multiple urls.
         """
         while True:
             log_d("Download items in queue: {}".format(self._inc_queue.qsize()))
@@ -214,7 +274,11 @@ class DownloaderObject(QObject):
             self._inc_queue.task_done()
 
     def start_manager(self, max_tasks):
-        """Start download manager where max simultaneous is mask_tasks."""
+        """Start download manager where max simultaneous is mask_tasks.
+
+        Args:
+            max_tasks (int): Maximal threading used.
+        """
         log_i("Starting download manager with {} jobs".format(max_tasks))
         for x in range(max_tasks):
             thread = threading.Thread(
