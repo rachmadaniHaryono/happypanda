@@ -14,10 +14,12 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
 )
 
-try:
+try:  # pragma: no cover
     from hen_item import HenItem
+    from app_constants import DOWNLOAD_TYPE_DICT_CONSTANT
 except ImportError:
     from .hen_item import HenItem
+    from .app_constants import DOWNLOAD_TYPE_DICT_CONSTANT
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
@@ -82,8 +84,8 @@ class GalleryDownloaderItemObject(QObject):
         self.size_item = QTableWidgetItem(self.item.size)
         self.size_item.setToolTip(url)
         # type_item
-        type = 'Archive' if hitem.download_type == 0 else 'Torrent'
-        self.type_item = QTableWidgetItem(type)
+        type_ = DOWNLOAD_TYPE_DICT_CONSTANT[hitem.download_type]
+        self.type_item = QTableWidgetItem(type_)
         self.type_item.setToolTip(url)
         # status_timer
         self.status_timer = QTimer()
