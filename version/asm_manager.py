@@ -137,7 +137,12 @@ class AsmManager(DLManagerObject):
         dict_metadata = self._get_metadata(g_url=g_url)
         h_item.thumb_url = 'http:' + self._browser.select('.cover img')[0].get('src')
         h_item.fetch_thumb()
+
+        # name
         h_item.gallery_name = dict_metadata['title']
+        # name is the name folder
+        h_item.name = dict_metadata['title']
+
         # get dl link
         log_d("Getting download URL!")
         h_item.download_url = self._get_dl_urls(g_url=g_url)
