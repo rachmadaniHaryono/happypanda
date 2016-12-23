@@ -11,9 +11,9 @@ def test_get_dl_urls():
     """test method."""
     url = 'http://asmhentai.com/g/168260/'
     subset_list = [
-        'https://images.asmhentai.com/006/168260/1.jpg',
-        'https://images.asmhentai.com/006/168260/2.jpg',
-        'https://images.asmhentai.com/006/168260/22.jpg',
+        'http://images.asmhentai.com/006/168260/1.jpg',
+        'http://images.asmhentai.com/006/168260/2.jpg',
+        'http://images.asmhentai.com/006/168260/22.jpg',
     ]
     select_retval = [
         {'href': "/gallery/168260/1/"},
@@ -120,7 +120,7 @@ def test_from_gallery_url():
         # test
         assert res.download_type == exp_download_type
         assert res.gallery_url == url
-        assert res.thumb_url == 'https:' + thumb_url
+        assert res.thumb_url == 'http:' + thumb_url
         res.fetch_thumb.assert_called_once_with()
         assert res.gallery_name == title
         assert res.download_url == obj._get_dl_urls.return_value

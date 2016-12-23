@@ -115,7 +115,7 @@ class AsmManager(DLManagerObject):
         links = [(x.split('/')[2], x.split('/')[-2]) for x in links]
         imgs = list(map(
             lambda x:
-            'https://images.asmhentai.com/006/{}/{}.jpg'.format(x[0], x[1]),
+            'http://images.asmhentai.com/006/{}/{}.jpg'.format(x[0], x[1]),
             links
         ))
         return imgs
@@ -135,7 +135,7 @@ class AsmManager(DLManagerObject):
         # ex/g.e
         log_d("Opening {}".format(g_url))
         dict_metadata = self._get_metadata(g_url=g_url)
-        h_item.thumb_url = 'https:' + self._browser.select('.cover img')[0].get('src')
+        h_item.thumb_url = 'http:' + self._browser.select('.cover img')[0].get('src')
         h_item.fetch_thumb()
         h_item.gallery_name = dict_metadata['title']
         # get dl link
