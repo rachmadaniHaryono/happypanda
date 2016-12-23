@@ -217,6 +217,7 @@ class DownloaderObject(QObject):
             file_name = file_name_part
         return file_name
 
+    @staticmethod
     def _get_total_size_prediction(known_filesize, urls_len):
         """get total size prediction.
         Args:
