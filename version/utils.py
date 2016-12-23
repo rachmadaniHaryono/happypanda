@@ -34,14 +34,14 @@ from PIL import Image, ImageChops
 
 try:
     import app_constants
-    from app_constants import IMG_FILES
-    from archive_file import ArchiveFile, ARCHIVE_FILES
+    from app_constants import IMG_FILES, ARCHIVE_FILES
+    from archive_file import ArchiveFile
     from database import db_constants
     from gmetafile import GMetafile
 except ImportError:
     from . import app_constants
-    from .app_constants import IMG_FILES
-    from .archive_file import ArchiveFile, ARCHIVE_FILES
+    from .app_constants import IMG_FILES, ARCHIVE_FILES
+    from .archive_file import ArchiveFile
     from .database import db_constants
     from .gmetafile import GMetafile
 

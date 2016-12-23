@@ -80,3 +80,38 @@ def test_after_local_search(skipped_paths):
         skipped_signal.emit.assert_called_once_with(skipped_paths)
     else:
         assert not skipped_signal.mock_calls
+
+
+@pytest.mark.parametrize(
+    'path_is_dir, scandir_return_list, path_ext',
+    product(
+        [True, False],
+        [True, False],
+        [None, '.zip', '.cbz']
+    )
+)
+def test_create_gallery_from_path_as_chapter(path_is_dir, scandir_return_list, path_ext):
+    """test method."""
+    create_gallery_func = mock.Mock()
+    path = 'random_path'
+    if path_ext is not None:
+        path += path_ext
+    folder_name = mock.Mock()
+    with mock.patch('version.fetch_obj.os') as m_os, \
+            mock.patch('version.fetch_obj.scandir') as m_scandir, \
+            mock.patch('version.fetch_obj.app_constants') as m_app_constants:
+        m_app_constants.ARCHIVE_FILES = ('.zip', '.cbz')
+        m_os.path.isdir.return_value = path_is_dir
+        if scandir_return_list:
+            m_scandir.scandir.return_value = [mock.Mock()]
+        else:
+            m_scandir.scandir.return_value = []
+        from version.fetch_obj import FetchObject
+        obj = FetchObject()
+        obj.create_gallery = create_gallery_func
+        # run
+        obj._create_gallery_from_path_as_chapter(path=path, folder_name=folder_name)
+        # test
+        if path_is_dir and scandir_return_list and \
+                path.endswith(m_app_constants.ARCHIVE_FILES):
+            create_gallery_func.assert_called_once_with(path, folder_name, do_chapters=True)

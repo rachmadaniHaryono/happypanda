@@ -124,7 +124,7 @@ class FetchObject(QObject):
                 chapters = sorted([
                     sub.path
                     for sub in con
-                    if sub.is_dir() or sub.name.endswith(utils.ARCHIVE_FILES)
+                    if sub.is_dir() or sub.name.endswith(app_constants.ARCHIVE_FILES)
                 ]) if do_chapters else []  # subfolders
                 # if gallery has chapters divided into sub folders
                 numb_of_chapters = len(chapters)
@@ -151,7 +151,7 @@ class FetchObject(QObject):
                 parsed = utils.title_parser(folder_name)
             except NotADirectoryError:  # NOQA
                 try:
-                    if is_archive or temp_p.endswith(utils.ARCHIVE_FILES):
+                    if is_archive or temp_p.endswith(app_constants.ARCHIVE_FILES):
                         log_i('Gallery source is an archive')
                         contents = utils.check_archive(temp_p)
                         if contents:
@@ -162,9 +162,9 @@ class FetchObject(QObject):
                                 fn = os.path.split(folder_name)
                                 folder_name = fn[1] or fn[2]
                             folder_name = folder_name.replace('/', '')
-                            if folder_name.endswith(utils.ARCHIVE_FILES):
+                            if folder_name.endswith(app_constants.ARCHIVE_FILES):
                                 n = folder_name
-                                for ext in utils.ARCHIVE_FILES:
+                                for ext in app_constants.ARCHIVE_FILES:
                                     n = n.replace(ext, '')
                                 parsed = utils.title_parser(n)
                             else:
@@ -303,7 +303,7 @@ class FetchObject(QObject):
                                 gs[0], os.path.split(gs[0])[1], False, archive=gs[1]),
                             gallery_archives
                         ))
-                    elif path.endswith(utils.ARCHIVE_FILES):
+                    elif path.endswith(app_constants.ARCHIVE_FILES):
                         list(map(
                             lambda g: self.create_gallery(
                                 g, os.path.split(g)[1], False, archive=path),
@@ -312,23 +312,7 @@ class FetchObject(QObject):
                         for g in utils.check_archive(path):
                             self.create_gallery(g, os.path.split(g)[1], False, archive=path)
                 else:
-                    try:
-                        if os.path.isdir(path) and not list(scandir.scandir(path)):
-                            raise ValueError
-                        elif not path.endswith(utils.ARCHIVE_FILES):
-                            raise NotADirectoryError  # NOQA
-
-                        log_i("Treating each subfolder as chapter")
-                        self.create_gallery(path, folder_name, do_chapters=True)
-
-                    except (ValueError, NotADirectoryError) as err:  # NOQA
-                        self.skipped_paths.append((path, 'Empty directory'))
-                        if err == ValueError:
-                            msg_fmt = 'Directory is empty: {}'
-                        elif err == NotADirectoryError:  # NOQA
-                            msg_fmt = 'Unsupported file: {}'
-                        log_w(msg_fmt.format(path.encode(errors='ignore')))
-
+                    self._create_gallery_from_path_as_chapter(path=path, folder_name=folder_name)
                 progress += 1  # update the progress bar
                 self.PROGRESS.emit(progress)
         else:  # if gallery folder is empty
@@ -340,6 +324,35 @@ class FetchObject(QObject):
         app_constants.OVERRIDE_MOVE_IMPORTED_IN_FETCH = False
         # everything went well
         self._after_local_search()
+
+    def _create_gallery_from_path_as_chapter(self, path, folder_name):
+        """create gallery from path and folder name.
+
+        each subfolder will be treated as chapter.
+
+        Args:
+            path: Archive path or folder without subfolder.
+            folder_name: Folder name.
+        """
+        try:
+            if os.path.isdir(path) and not list(scandir.scandir(path)):
+                raise ValueError
+            elif not path.endswith(app_constants.ARCHIVE_FILES):
+                raise NotADirectoryError  # NOQA
+
+            log_i("Treating each subfolder as chapter")
+            self.create_gallery(path, folder_name, do_chapters=True)
+
+        except (ValueError, NotADirectoryError) as err:  # NOQA
+            self.skipped_paths.append((path, 'Empty directory'))
+            if type(err) == ValueError:
+                msg_fmt = 'Directory is empty: {}'
+            elif type(err) == NotADirectoryError:  # NOQA
+                msg_fmt = 'Unsupported file: {}'
+            else:
+                msg_fmt = 'Unknown error:[{}]\ntype:{}'.format(err, type(err))
+                msg_fmt += '\npath:{}'
+            log_w(msg_fmt.format(path.encode(errors='ignore')))
 
     def _return_gallery_metadata(self, gallery):
         """Emit galleries."""
