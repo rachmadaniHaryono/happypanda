@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     qApp,
 )
 
-try:
+try:  # pragma: no cover
     import app_constants
     import pewnet
     from fetch_obj import FetchObject
@@ -162,11 +162,7 @@ class GalleryDownloaderListWidget(QTableWidget):
             if hitem.current_state == hitem.FINISHED:
                 menu.addAction("Open", hitem.open)
                 menu.addAction("Show in folder", lambda: hitem.open(True))
-            menu.addAction("Copy path", lambda: clipboard.setText(hitem.file))
-            menu.addAction("Copy gallery URL",
-                           lambda: clipboard.setText(hitem.gallery_url))
-            menu.addAction("Copy download URL",
-                           lambda: clipboard.setText(hitem.download_url))
+            menu = self._add_copy_action(menu=menu, clipboard=clipboard, hitem=hitem)
             if not hitem.current_state == hitem.DOWNLOADING:
                 menu.addAction("Remove", lambda: self.removeRow(idx.row()))
             menu.exec_(event.globalPos())
@@ -174,6 +170,30 @@ class GalleryDownloaderListWidget(QTableWidget):
             del menu
         else:
             event.ignore()
+
+    def _add_copy_action(self, menu, clipboard, hitem):
+        """add copy action."""
+        menu.addAction(
+            "Copy path",
+            lambda: self.set_clipboard_text(clipboard=clipboard, text=hitem.gallery_url)
+        )
+        menu.addAction(
+            "Copy gallery URL",
+            lambda: self.set_clipboard_text(clipboard=clipboard, text=hitem.gallery_url)
+        )
+        menu.addAction(
+            "Copy download URL",
+            lambda: self.set_clipboard_text(clipboard=clipboard, text=hitem.download_url)
+        )
+        return menu
+
+    @staticmethod
+    def set_clipboard_text(clipboard, text):
+        """set clipboard text."""
+        if isinstance(text, list):
+            clipboard.setText('\n'.join(text))
+        else:
+            clipboard.setText(text)
 
     def _init_gallery(self, download_item):
         """Init gallery.
