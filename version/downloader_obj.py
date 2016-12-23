@@ -344,7 +344,7 @@ class DownloaderObject(QObject):
             log_d("Download url:{}".format(download_url))
             self.active_items.append(item)
 
-            if not isinstance(item.download_url, str):
+            if isinstance(item.download_url, list):
                 # NOTE: file_name will be used as folder name when multiple url.
                 item = self._download_item_with_multiple_dl_url(
                     item=item, folder=file_name, interrupt_state=interrupt)

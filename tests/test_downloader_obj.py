@@ -256,16 +256,18 @@ def test_rename_file(max_loop_reached, filename_is_splittable, raise_error_once)
 
 
 @pytest.mark.parametrize(
-    'interrupt_retval, rename_raise_error',
-    product([False, True], repeat=2)
+    'interrupt_retval, rename_raise_error, download_url_is_a_list',
+    product([False, True], repeat=3)
 )
-def test_download(interrupt_retval, rename_raise_error):
+def test_download(interrupt_retval, rename_raise_error, download_url_is_a_list):
     """test method.
 
     This will also test _download_item_with_single_dl_url method.
     """
     default_interrupt_state = False
     item = mock.Mock()
+    # for item with multiple download url
+    download_item_with_multiple_dl_url_func = mock.Mock()
     temp_base = mock.Mock()
     filename = 'filename'
     get_filename_func = mock.Mock(return_value=filename)
@@ -281,7 +283,13 @@ def test_download(interrupt_retval, rename_raise_error):
     queue_obj.task_done.side_effect = ValueError
     with mock.patch('version.downloader_obj.os') as m_os, \
             mock.patch('version.downloader_obj.DownloaderObject._set_base'), \
-            mock.patch('version.downloader_obj.isinstance', return_value=True):
+            mock.patch('version.downloader_obj.isinstance') as m_isinstance:
+        # side effect for isinstance
+        if download_url_is_a_list:
+            m_isinstance.return_value = True
+        else:
+            m_isinstance.side_effect = lambda _, y: False if y == list else True
+        #
         if rename_raise_error:
             m_os.rename.side_effect = OSError
         from version.downloader_obj import DownloaderObject
@@ -293,6 +301,7 @@ def test_download(interrupt_retval, rename_raise_error):
         obj._download_single_file = download_single_file_func
         obj._rename_file = rename_file_func
         obj.remove_file = remove_file_func
+        obj._download_item_with_multiple_dl_url = download_item_with_multiple_dl_url_func
         obj.item_finished = item_finished_signal
         obj._inc_queue = queue_obj
         # run
@@ -302,6 +311,10 @@ def test_download(interrupt_retval, rename_raise_error):
             # expected error
             pass
         # test
+        if download_url_is_a_list:
+            download_item_with_multiple_dl_url_func.assert_called_once_with(
+                item=item, folder=filename, interrupt_state=default_interrupt_state)
+            return
         assert item.total_size == get_total_size_func.return_value
         get_filename_func.assert_called_once_with(item=item, temp_base=temp_base)
         get_response_func.assert_called_once_with(url=item.download_url)
@@ -349,6 +362,7 @@ def test_start_manager():
         ([], 10, 0),
         ([1, 1], 10, 10),
         ([1, 1], 9, 9),
+        ([1, 1], 2, 2),
     ]
 )
 def test_get_total_size_prediction(known_filesize, urls_len, exp_res):
