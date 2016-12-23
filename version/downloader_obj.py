@@ -1,10 +1,10 @@
 """downloader_obj."""
 
-import requests
 import logging
+import os
+import requests
 import threading
 import uuid
-import os
 
 from queue import Queue
 
@@ -217,6 +217,110 @@ class DownloaderObject(QObject):
             file_name = file_name_part
         return file_name
 
+    def _get_total_size_prediction(known_filesize, urls_len):
+        """get total size prediction.
+        Args:
+            known_filesize (list): List of known filesize.
+            urls_len (int): Number of urls_len
+
+        Returns:
+            int: Total size predictions.
+        """
+        if not known_filesize:  # empty list
+            return 0
+        if len(known_filesize) == urls_len:
+            return int(sum(known_filesize))
+        return int(sum(known_filesize) * urls_len / len(known_filesize))
+
+    def _download_item_with_multiple_dl_url(self, item, folder, interrupt_state):
+        """download item with multiple download url.
+
+        This method is modified from _download_item_with_single_dl_url method.
+        Important changes::
+
+        - Create new folder for download.
+        - Method to calculate total size
+
+        Args:
+            item: Item with single download url.
+            folder (str): Folder for downloaded file.
+            interrupt_state (bool): Interrupt state
+
+        Returns:
+            Modified item
+        """
+        download_url = item.download_url
+        total_known_filesize = []
+        download_url_len = len(download_url)
+
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        for single_url in download_url:
+            # response
+            r = self._get_response(url=single_url)
+            # get total size
+            current_response_filesize = self._get_total_size(response=r)
+            total_known_filesize.append(current_response_filesize)
+            item.total_size = self._get_total_size_prediction(
+                known_filesize=total_known_filesize, urls_len=download_url_len)
+
+            url_basename = os.path.basename(single_url)
+            target_file = os.path.join(folder, url_basename)
+            # downloading to temp file (file_name_part)
+            item, interrupt_state = self._download_single_file(
+                target_file=target_file, response=r, item=item, interrupt_state=interrupt_state)
+
+        if not interrupt_state:
+            item.current_state = item.FINISHED
+            # emit
+            item.file_rdy.emit(item)
+            self.item_finished.emit(item)
+        return item
+
+    def _download_item_with_single_dl_url(self, item, filename, interrupt_state):
+        """download item with single download url.
+
+        Args:
+            item: Item with single download url.
+            filename (str): Filename for downloaded file.
+            interrupt_state (bool): Interrupt state
+
+        Returns:
+            Modified item
+        """
+        # compatibility
+        file_name = filename
+        interrupt = interrupt_state
+        download_url = item.download_url
+        file_name_part = file_name + '.part'
+
+        # response
+        r = self._get_response(url=download_url)
+        # get total size
+        item.total_size = self._get_total_size(response=r)
+
+        # downloading to temp file (file_name_part)
+        item, interrupt = self._download_single_file(
+            target_file=file_name_part, response=r, item=item, interrupt_state=interrupt)
+
+        if not interrupt:
+            # post operation when no interrupt
+            try:
+                os.rename(file_name_part, file_name)
+            except OSError:
+                file_name = self._rename_file(
+                    filename=file_name, filename_part=file_name_part)
+
+            item.file = file_name
+            item.current_state = item.FINISHED
+            # emit
+            item.file_rdy.emit(item)
+            self.item_finished.emit(item)
+        else:
+            self.remove_file(filename=file_name_part)
+        return item
+
     def _downloading(self):  # NOQA
         """The downloader.
 
@@ -235,36 +339,18 @@ class DownloaderObject(QObject):
 
             # filename
             file_name = self._get_filename(item=item, temp_base=temp_base)
-            file_name_part = file_name + '.part'
 
             download_url = item.download_url
             log_d("Download url:{}".format(download_url))
             self.active_items.append(item)
 
-            # response
-            r = self._get_response(url=download_url)
-            # get total size
-            item.total_size = self._get_total_size(response=r)
-
-            # downloading to temp file (file_name_part)
-            item, interrupt = self._download_single_file(
-                target_file=file_name_part, response=r, item=item, interrupt_state=interrupt)
-
-            if not interrupt:
-                # post operation when no interrupt
-                try:
-                    os.rename(file_name_part, file_name)
-                except OSError:
-                    file_name = self._rename_file(
-                        filename=file_name, filename_part=file_name_part)
-
-                item.file = file_name
-                item.current_state = item.FINISHED
-                # emit
-                item.file_rdy.emit(item)
-                self.item_finished.emit(item)
+            if not isinstance(item.download_url, str):
+                # NOTE: file_name will be used as folder name when multiple url.
+                item = self._download_item_with_multiple_dl_url(
+                    item=item, folder=file_name, interrupt_state=interrupt)
             else:
-                self.remove_file(filename=file_name_part)
+                item = self._download_item_with_single_dl_url(
+                    item=item, filename=file_name, interrupt_state=interrupt)
             log_d("Items in queue {}".format(self._inc_queue.empty()))
             log_d("Finished downloading: {}".format(download_url))
 
