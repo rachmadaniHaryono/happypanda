@@ -93,6 +93,20 @@ DOWNLOAD_TYPE_DICT_CONSTANT = {
     DOWNLOAD_TYPE_OTHER: 'Other'
 }
 
+# VALID gallery category
+VALID_GALLERY_CATEGORY = (
+    'Doujinshi',
+    'Manga',
+    'Artist CG',
+    'Game CG',
+    'Western',
+    'Non-H',
+    'Image Set',
+    'Cosplay',
+    'Miscellaneous',
+    'Private'
+)
+
 # default stylesheet path
 default_stylesheet_path = os.path.join(static_dir, "style.css")
 user_stylesheet_path = ""

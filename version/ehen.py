@@ -5,6 +5,7 @@ import random
 import time
 import html
 import re as regex
+from pprint import pformat
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -104,6 +105,7 @@ class EHen(CommenHen):
         as default it will only replace the empty value.
         if specified, it will replace all value.
         """
+        log_d('data:\n{}'.format(pformat(data)))
         if not append:
             return cls._replace_gallery_data(g=g, data=data)
         #
@@ -116,16 +118,21 @@ class EHen(CommenHen):
         if lang:
             language = lang
         #
+        g_link = None
         link = data.get('url')
-        g_link = link if link is not None else g.temp_url
+        if hasattr(g, 'temp_url'):
+            g_link = link if link is not None else g.temp_url
+        elif link is not None:
+            g_link = link
         #
         new_metadata = {
             'title': title_parser_result['title'],
             'artist': cls._get_g_artist(title_parser_result['artist'], data),
             'language': language,
             'pub_date': data['pub_date'],
-            'link': g_link,
         }
+        if g_link is not None:
+            new_metadata['link'] = g_link
         for key in new_metadata:
             if not getattr(g, key):
                 setattr(g, key, new_metadata[key])

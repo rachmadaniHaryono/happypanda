@@ -1,6 +1,7 @@
 """moduel for list widget in gallery downloader."""
 import logging
 import os
+from pprint import pformat
 
 from PyQt5.QtCore import (
     Qt,
@@ -18,16 +19,16 @@ from PyQt5.QtWidgets import (
 
 try:  # pragma: no cover
     import app_constants
-    import pewnet
     from fetch_obj import FetchObject
     from gallery_downloader_item_obj import GalleryDownloaderItemObject
+    from ehen import EHen
     from hen_item import HenItem
 except ImportError:
     from .fetch_obj import FetchObject
     from .gallery_downloader_item_obj import GalleryDownloaderItemObject
+    from .ehen import EHen
     from . import (
         app_constants,
-        pewnet,
     )
 
 log = logging.getLogger(__name__)
@@ -87,7 +88,8 @@ class GalleryDownloaderListWidget(QTableWidget):
         self.setHorizontalHeaderLabels(
             [' ', 'Status', 'Size', 'Cost', 'Type'])
         self.horizontalHeader().setStretchLastSection(True)
-        self.horizontalHeader().setSectionResizeMode(0, self.horizontalHeader().Stretch)
+        self.horizontalHeader().setSectionResizeMode(
+            0, self.horizontalHeader().Stretch)
         self.horizontalHeader().setSectionResizeMode(
             1, self.horizontalHeader().ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(
@@ -211,9 +213,10 @@ class GalleryDownloaderListWidget(QTableWidget):
         """Gallery to model.
 
         Args:
-            gallery_list:Gallery list.
+            gallery_list (list):Gallery list.
         """
         log_i("Adding downloaded gallery to library")
+        log_d(pformat(gallery_list))
         try:
             d_item = self.fetch_instance.download_items.pop(0)
         except IndexError:
@@ -221,9 +224,9 @@ class GalleryDownloaderListWidget(QTableWidget):
         if gallery_list:
             gallery = gallery_list[0]
             gallery.link = d_item.item.gallery_url
+            log_d('gallery:\n{}\ngallery link:\n{}'.format(pformat(gallery)), gallery.link)
             if d_item.item.metadata:
-                gallery = pewnet.EHen.apply_metadata(
-                    gallery, d_item.item.metadata)
+                gallery = EHen.apply_metadata(gallery, d_item.item.metadata)
             if app_constants.DOWNLOAD_GALLERY_TO_LIB:
                 self.app_inst.default_manga_view.add_gallery(gallery, True)
                 d_item.status_item.setText('Added to library!')

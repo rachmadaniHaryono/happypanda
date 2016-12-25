@@ -1,4 +1,5 @@
 """test module."""
+from itertools import product
 from unittest import mock
 
 import pytest
@@ -108,6 +109,7 @@ def test_from_gallery_url():
     browser = mock.Mock()
     thumb_url = '//www.example.com/thumb.jpg'
     browser.select.return_value = [{'src': thumb_url}]
+    set_metadata_func = mock.Mock()
     with mock.patch('version.asm_manager.HenItem') as m_hi, \
             mock.patch('version.asm_manager.DownloaderObject') as m_do:
         from version.asm_manager import AsmManager
@@ -115,18 +117,49 @@ def test_from_gallery_url():
         obj._browser = browser
         obj._get_metadata = mock.Mock(return_value=m_metadata)
         obj._get_dl_urls = mock.Mock()
+        obj._set_metadata = set_metadata_func
         # run
         res = obj.from_gallery_url(g_url=url)
         # test
-        assert res.download_type == exp_download_type
-        assert res.gallery_url == url
-        assert res.thumb_url == 'http:' + thumb_url
-        res.fetch_thumb.assert_called_once_with()
-        assert res.gallery_name == title
-        assert res.download_url == obj._get_dl_urls.return_value
-        m_do.add_to_queue.assert_called_once_with(res, browser.session)
+        assert res == set_metadata_func.return_value
+        assert m_hi.return_value.download_type == exp_download_type
+        assert m_hi.return_value.gallery_url == url
+        assert m_hi.return_value.thumb_url == 'http:' + thumb_url
+        m_hi.return_value.fetch_thumb.assert_called_once_with()
+        assert m_hi.return_value.gallery_name == title
+        assert m_hi.return_value.download_url == obj._get_dl_urls.return_value
+        m_do.add_to_queue.assert_called_once_with(
+            set_metadata_func.return_value, browser.session)
         #
         m_hi.assert_has_calls([
             mock.call(browser.session),
             mock.call().fetch_thumb()
         ])
+
+
+@pytest.mark.parametrize(
+    'key, catg_val',
+    product(
+        ['title_jpn', "title", "filecount", 'tags'],
+        [None, 'manga', 'doujin']
+    )
+)
+def test_set_metadata(key, catg_val):
+    """test method."""
+    h_item = mock.Mock()
+    value = mock.Mock()
+    dict_metadata = {}
+    dict_metadata[key] = value
+    dict_metadata['category'] = catg_val
+    from version.asm_manager import AsmManager
+    res = AsmManager._set_metadata(h_item=h_item, dict_metadata=dict_metadata)
+    assert res == h_item
+    h_item_calls = []
+    h_item_calls.append(mock.call.update_metadata(key=key, value=value))
+    if not catg_val:
+        pass
+    elif catg_val.lower() == 'manga':
+        h_item_calls.append(mock.call.update_metadata(key='category', value='Manga'))
+    elif catg_val.lower() == 'doujinshi':
+        h_item_calls.append(mock.call.update_metadata(key='category', value='Doujinshi'))
+    h_item.assert_has_calls(h_item_calls)

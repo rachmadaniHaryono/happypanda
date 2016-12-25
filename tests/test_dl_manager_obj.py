@@ -4,19 +4,27 @@ from unittest import mock
 import pytest
 
 
-@pytest.mark.parametrize('hen_download_type', [0, 1])
-def test_init(hen_download_type):
+@pytest.mark.parametrize('constant_dl_type', ['archive', 'torrent', 'other'])
+def test_init(constant_dl_type):
     """test init."""
     with mock.patch('version.dl_manager_obj.app_constants') as m_ac:
-        m_ac.HEN_DOWNLOAD_TYPE = hen_download_type
+        if constant_dl_type == 'archive':
+            m_ac.HEN_DOWNLOAD_TYPE = m_ac.DOWNLOAD_TYPE_ARCHIVE
+        elif constant_dl_type == 'torrent':
+            m_ac.HEN_DOWNLOAD_TYPE = m_ac.DOWNLOAD_TYPE_TORRENT
+        else:
+            m_ac.HEN_DOWNLOAD_TYPE = m_ac.DOWNLOAD_TYPE_OTHER
         from version.dl_manager_obj import DLManagerObject
         obj = DLManagerObject()
-        if hen_download_type == 0:
+        if constant_dl_type == 'archive':
             assert obj.ARCHIVE
             assert not obj.TORRENT
-        elif hen_download_type == 1:
+        elif constant_dl_type == 'torrent':
             assert not obj.ARCHIVE
             assert obj.TORRENT
+        else:
+            assert not obj.ARCHIVE
+            assert not obj.TORRENT
 
 
 def test_error():

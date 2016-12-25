@@ -5,7 +5,7 @@ import os
 import requests
 import threading
 import uuid
-
+from pprint import pformat
 from queue import Queue
 
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -81,7 +81,7 @@ class DownloaderObject(QObject):
         if isinstance(item, str):
             item = DownloaderItemObject(item)
 
-        log_i("Adding item to download queue: {}".format(item.download_url))
+        log_i("Adding item to download queue:\n{}".format(pformat(item.download_url)))
         if dir:
             DownloaderObject._inc_queue.put({'dir': dir, 'item': item})
         else:
@@ -222,6 +222,7 @@ class DownloaderObject(QObject):
     @staticmethod
     def _get_total_size_prediction(known_filesize, urls_len):
         """get total size prediction.
+
         Args:
             known_filesize (list): List of known filesize.
             urls_len (int): Number of urls_len
@@ -362,7 +363,7 @@ class DownloaderObject(QObject):
             file_name = self._get_filename(item=item, temp_base=temp_base)
 
             download_url = item.download_url
-            log_d("Download url:{}".format(download_url))
+            log_d("Download url:\n{}".format(pformat(download_url)))
             self.active_items.append(item)
 
             if isinstance(item.download_url, list):
@@ -373,7 +374,7 @@ class DownloaderObject(QObject):
                 item = self._download_item_with_single_dl_url(
                     item=item, filename=file_name, interrupt_state=interrupt)
             log_d("Items in queue {}".format(self._inc_queue.empty()))
-            log_d("Finished downloading: {}".format(download_url))
+            log_d("Finished downloading:\n{}".format(pformat(download_url)))
 
             # remove recently added item from list
             self.active_items.remove(item)

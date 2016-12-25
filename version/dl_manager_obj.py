@@ -26,9 +26,9 @@ class DLManagerObject(QObject):
         """init func."""
         super().__init__()
         self.ARCHIVE, self.TORRENT = False, False
-        if app_constants.HEN_DOWNLOAD_TYPE == 0:
+        if app_constants.HEN_DOWNLOAD_TYPE == app_constants.DOWNLOAD_TYPE_ARCHIVE:
             self.ARCHIVE = True
-        elif app_constants.HEN_DOWNLOAD_TYPE == 1:
+        elif app_constants.HEN_DOWNLOAD_TYPE == app_constants.DOWNLOAD_TYPE_TORRENT:
             self.TORRENT = True
 
     def _error(self):

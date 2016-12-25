@@ -4,12 +4,12 @@ import logging
 from robobrowser.exceptions import RoboError
 
 try:
-    from app_constants import DOWNLOAD_TYPE_OTHER
+    from app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
     from dl_manager_obj import DLManagerObject
     from downloader_obj import DownloaderObject
     from hen_item import HenItem
 except ImportError:
-    from .app_constants import DOWNLOAD_TYPE_OTHER
+    from .app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
     from .dl_manager_obj import DLManagerObject
     from .downloader_obj import DownloaderObject
     from .hen_item import HenItem
@@ -120,6 +120,25 @@ class AsmManager(DLManagerObject):
         ))
         return imgs
 
+    @staticmethod
+    def _set_metadata(h_item, dict_metadata):
+        """set metadata on item from dict_metadata."""
+        keys = ['title_jpn', 'title', 'filecount', "tags"]
+        for key in keys:
+            value = dict_metadata.get(key, None)
+            if value:
+                h_item.update_metadata(key=key, value=value)
+        # for hitem gallery value
+        catg_val = dict_metadata.get('category', None)
+        category_dict = {vcatg.lower(): vcatg for vcatg in VALID_GALLERY_CATEGORY}
+        category_value = category_dict.get(catg_val, catg_val)
+        if category_value and category_value in VALID_GALLERY_CATEGORY:
+            h_item.update_metadata(key='category', value=category_value)
+        elif category_value:
+            log_w('Unknown manga category:{}'.format(category_value))
+
+        return h_item
+
     def from_gallery_url(self, g_url):
         """Find gallery download url and puts it in download queue.
 
@@ -146,5 +165,23 @@ class AsmManager(DLManagerObject):
         # get dl link
         log_d("Getting download URL!")
         h_item.download_url = self._get_dl_urls(g_url=g_url)
+
+        h_item = self._set_metadata(h_item=h_item, dict_metadata=dict_metadata)
+
         DownloaderObject.add_to_queue(h_item, self._browser.session)
         return h_item
+
+    @classmethod
+    def apply_metadata(cls, gallery, data):
+        """Apply metadata to gallery.
+
+        This is this module's method for ehen module.
+
+        Args:
+            gallery: Gallery.
+            data: Metatadata of the gallery.
+
+        Returns:
+            Edited gallery.
+        """
+        pass
