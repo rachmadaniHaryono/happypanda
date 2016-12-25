@@ -16,10 +16,10 @@ from PyQt5.QtWidgets import (
 
 try:  # pragma: no cover
     from hen_item import HenItem
-    from app_constants import DOWNLOAD_TYPE_DICT_CONSTANT
+    import app_constants
 except ImportError:
     from .hen_item import HenItem
-    from .app_constants import DOWNLOAD_TYPE_DICT_CONSTANT
+    from . import app_constants
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
@@ -84,7 +84,7 @@ class GalleryDownloaderItemObject(QObject):
         self.size_item = QTableWidgetItem(self.item.size)
         self.size_item.setToolTip(url)
         # type_item
-        type_ = DOWNLOAD_TYPE_DICT_CONSTANT[hitem.download_type]
+        type_ = app_constants.DOWNLOAD_TYPE_DICT_CONSTANT[hitem.download_type]
         self.type_item = QTableWidgetItem(type_)
         self.type_item.setToolTip(url)
         # status_timer
@@ -116,7 +116,11 @@ class GalleryDownloaderItemObject(QObject):
     def d_item_ready_finished(self):
         """Run the function when d-item ready."""
         self.status_timer.stop()
-        if self.item.download_type == 0:
-            self.status_item.setText("Creating gallery...")
+        if self.item.download_type == app_constants.DOWNLOAD_TYPE_ARCHIVE:
+            status_item_text = "Creating gallery..."
+        elif self.item.download_type == app_constants.DOWNLOAD_TYPE_TORRENT:
+            status_item_text = "Sent to torrent client!"
         else:
-            self.status_item.setText("Sent to torrent client!")
+            status_item_text = 'Finished.'
+
+        self.status_item.setText(status_item_text)
