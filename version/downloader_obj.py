@@ -13,11 +13,13 @@ from PyQt5.QtCore import QObject, pyqtSignal
 try:  # pragma: no cover
     import app_constants
     from downloader_item_obj import DownloaderItemObject
+    from utils import makedirs_if_not_exists
 except ImportError:
     from . import (
         app_constants,
     )
     from .downloader_item_obj import DownloaderItemObject
+    from .utils import makedirs_if_not_exists
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -233,6 +235,21 @@ class DownloaderObject(QObject):
             return int(sum(known_filesize))
         return int(sum(known_filesize) * urls_len / len(known_filesize))
 
+    @staticmethod
+    def _get_local_filesize(path):
+        """Get local filesize.
+
+        Args:
+            path: Path of the file.
+
+        Returns:
+            filesize of the file or zero.
+        """
+        try:
+            return os.path.getsize(path)
+        except OSError:
+            return 0
+
     def _download_item_with_multiple_dl_url(self, item, folder, interrupt_state):
         """download item with multiple download url.
 
@@ -254,12 +271,11 @@ class DownloaderObject(QObject):
         total_known_filesize = []
         download_url_len = len(download_url)
 
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
+        makedirs_if_not_exists(folder)
         for single_url in download_url:
             # response
             r = self._get_response(url=single_url)
+
             # get total size
             current_response_filesize = self._get_total_size(response=r)
             total_known_filesize.append(current_response_filesize)
@@ -268,9 +284,16 @@ class DownloaderObject(QObject):
 
             url_basename = os.path.basename(single_url)
             target_file = os.path.join(folder, url_basename)
-            # downloading to temp file (file_name_part)
-            item, interrupt_state = self._download_single_file(
-                target_file=target_file, response=r, item=item, interrupt_state=interrupt_state)
+            target_filesize = self._get_local_filesize(path=target_file)
+            if target_filesize == current_response_filesize and target_filesize != 0:
+                item.current_size += current_response_filesize
+                log_d('File is already downloaded.\n{}'.format(target_file))
+            else:
+                # downloading to temp file (file_name_part)
+                item, interrupt_state = self._download_single_file(
+                    target_file=target_file, response=r, item=item,
+                    interrupt_state=interrupt_state
+                )
 
         if not interrupt_state:
             item.current_state = item.FINISHED
@@ -326,9 +349,6 @@ class DownloaderObject(QObject):
         """The downloader.
 
         Put in a thread.
-
-        TODO:
-            * customize it for multiple urls.
         """
         while True:
             log_d("Download items in queue: {}".format(self._inc_queue.qsize()))

@@ -1091,3 +1091,9 @@ def cleanup_dir(path):
 def get_chapter_title(path):
     """get chapter title."""
     return title_parser(os.path.split(path)[1])['title']
+
+
+def makedirs_if_not_exists(folder):
+    """Create directory if not exists."""
+    if not os.path.exists(folder):
+        os.makedirs(folder)

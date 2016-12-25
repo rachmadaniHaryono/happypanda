@@ -372,81 +372,66 @@ def test_get_total_size_prediction(known_filesize, urls_len, exp_res):
 
 
 @pytest.mark.parametrize(
-    'interrupt_state, path_exists_retval, last_interrupt_state',
-    product([False, True], repeat=3))
+    'interrupt_state, path_exists_retval, last_interrupt_state, size_is_equal, '
+    'target_filesize_is_0',
+    product([False, True], repeat=5))
 def test_download_item_with_multiple_dl_url(
-        interrupt_state, path_exists_retval, last_interrupt_state):
+        interrupt_state, path_exists_retval, last_interrupt_state, size_is_equal,
+        target_filesize_is_0
+):
     """test method."""
     item = mock.Mock()
-    url1 = mock.Mock()
-    url2 = mock.Mock()
-    item.download_url = [url1, url2]
+    url = mock.Mock()
+    item.download_url = [url]
+    default_item_size = 0
+    item.current_size = default_item_size
+    if target_filesize_is_0:
+        target_filesize = 0
+    else:
+        target_filesize = 1
+    if size_is_equal:
+        current_response_filesize = target_filesize
     folder = mock.Mock()
     get_response_func = mock.Mock()
     get_total_size_func = mock.Mock()
     get_total_size_prediction_func = mock.Mock()
+    get_local_filesize_func = mock.Mock()
     download_single_file_func = mock.Mock()
-    download_single_file_func.side_effect = [
-        (item, interrupt_state),
-        (item, last_interrupt_state)
-    ]
+    download_single_file_func.return_value = [item, last_interrupt_state]
     item_finished_signal = mock.Mock()
     with mock.patch('version.downloader_obj.os') as m_os, \
-            mock.patch('version.downloader_obj.DownloaderObject._set_base'):
-        m_os.path.exists.return_value = path_exists_retval
+            mock.patch('version.downloader_obj.DownloaderObject._set_base'), \
+            mock.patch('version.downloader_obj.makedirs_if_not_exists') as m_mine:
         from version.downloader_obj import DownloaderObject
         obj = DownloaderObject()
         obj._get_response = get_response_func
         obj._get_total_size = get_total_size_func
         obj._get_total_size_prediction = get_total_size_prediction_func
+        obj._get_local_filesize = get_local_filesize_func
         obj._download_single_file = download_single_file_func
         obj.item_finished = item_finished_signal
         # run
         res = obj._download_item_with_multiple_dl_url(
             item=item, folder=folder, interrupt_state=interrupt_state)
         # test
-        os_calls = [mock.call.path.exists(folder)]
-        if not path_exists_retval:
-            os_calls.append(mock.call.makedirs(folder))
-        os_calls.extend([
-            mock.call.path.basename(url1),
-            mock.call.path.join(folder, m_os.path.basename.return_value),
-            mock.call.path.basename(url2),
+        m_mine.assert_called_once_with(folder)
+        get_response_func.assert_called_once_with(url=url)
+        get_total_size_func.assert_called_once_with(response=get_response_func.return_value)
+        get_total_size_prediction_func(
+            known_filesize=[get_total_size_func.return_value], urls_len=2)
+        m_os.assert_has_calls([
+            mock.call.path.basename(url),
             mock.call.path.join(folder, m_os.path.basename.return_value)
         ])
-        m_os.assert_has_calls(os_calls)
         assert res == item
-        get_response_func.assert_has_calls(
-            [mock.call(url=url1), mock.call(url=url2)])
-        get_total_size_func.assert_has_calls([
-            mock.call(response=get_response_func.return_value),
-            mock.call(response=get_response_func.return_value)
-        ])
-        get_total_size_prediction_func.assert_has_calls([
-            mock.call(
-                known_filesize=[
-                    get_total_size_func.return_value,
-                    get_total_size_func.return_value
-                ],
-                urls_len=2
-            ),
-            mock.call(
-                known_filesize=[
-                    get_total_size_func.return_value,
-                    get_total_size_func.return_value
-                ],
-                urls_len=2
-            )
-        ])
-        download_single_file_func.assert_has_calls([
-            mock.call(
-                interrupt_state=interrupt_state, item=item,
-                response=get_response_func.return_value, target_file=m_os.path.join.return_value),
-            mock.call(
-                interrupt_state=interrupt_state, item=item,
-                response=get_response_func.return_value, target_file=m_os.path.join.return_value)
-        ])
         if not last_interrupt_state:
-            item.file_rdy.emit.assert_called_once_with(item)
-            assert item.current_state == item.FINISHED
-            item_finished_signal.emit.assert_called_once_with(item)
+            res.current_state == res.FINISHED
+            res.file_rdy.emit(res)
+            item_finished_signal.emit.assert_called_once_with(res)
+        if size_is_equal and not target_filesize_is_0:
+            res.current_size == default_item_size + current_response_filesize
+        else:
+            download_single_file_func.assert_called_once_with(
+                interrupt_state=interrupt_state, item=item,
+                response=get_response_func.return_value, target_file=m_os.path.join.return_value
+            )
