@@ -129,12 +129,15 @@ def test_set_g_artist(artist_in_tags):
 
 
 @pytest.mark.parametrize(
-    'use_jpn_title, only_def_title_in_data',
-    product([True, False], repeat=2)
+    'use_jpn_title, only_def_title_in_data, jpn_title_empty',
+    product([True, False], repeat=3)
 )
-def test_title_get_title_from_data(use_jpn_title, only_def_title_in_data):
+def test_title_get_title_from_data(use_jpn_title, only_def_title_in_data, jpn_title_empty):
     """test method."""
-    jpn = mock.Mock()
+    if jpn_title_empty:
+        jpn = ''
+    else:
+        jpn = mock.Mock()
     def_title = mock.Mock()
     if only_def_title_in_data:
         data = {'title': {'def': def_title}}
@@ -144,7 +147,7 @@ def test_title_get_title_from_data(use_jpn_title, only_def_title_in_data):
         m_ac.USE_JPN_TITLE = use_jpn_title
         from version.ehen import EHen
         res = EHen._get_title_from_data(data)
-        if use_jpn_title and not only_def_title_in_data:
+        if use_jpn_title and not only_def_title_in_data and not jpn_title_empty:
             assert res == jpn
         else:
             assert res == def_title

@@ -50,11 +50,11 @@ class EHen(CommenHen):
         if app_constants.USE_JPN_TITLE:
             try:
                 title = data['title']['jpn']
+                if title:
+                    return title
             except KeyError:
-                title = data['title']['def']
-        else:
-            title = data['title']['def']
-        return title
+                log_d("Item don't have japanese title.")
+        return data['title']['def']
 
     @staticmethod
     def _get_lang_from_data(data):
@@ -104,50 +104,66 @@ class EHen(CommenHen):
 
         as default it will only replace the empty value.
         if specified, it will replace all value.
+
+        Args:
+            g: Gallery
+            data: Metadata to be applied to gallery.
+            append (bool): Replace or update the metadata on gallery.
+
+        Returns:
+            Gallery with updated metadata
         """
         log_d('data:\n{}'.format(pformat(data)))
         if not append:
             return cls._replace_gallery_data(g=g, data=data)
-        #
+
         title = cls._get_title_from_data(data)
         lang = cls._get_lang_from_data(data)
-        #
         title_parser_result = title_parser(title)
-        #
+
+        # language
         language = title_parser_result['language'].capitalize()
         if lang:
             language = lang
-        #
+
+        # gallery link
         g_link = None
         link = data.get('url')
         if hasattr(g, 'temp_url'):
             g_link = link if link is not None else g.temp_url
         elif link is not None:
             g_link = link
-        #
+
         new_metadata = {
             'title': title_parser_result['title'],
             'artist': cls._get_g_artist(title_parser_result['artist'], data),
             'language': language,
             'pub_date': data['pub_date'],
         }
+        log_d('New metadata:\n{}'.format(pformat(new_metadata)))
         if g_link is not None:
             new_metadata['link'] = g_link
         for key in new_metadata:
             if not getattr(g, key):
                 setattr(g, key, new_metadata[key])
-        #
+
         if not g.type or g.type == 'Other':
             g.type = data['type']
+
         if not g.tags:
             g.tags = data['tags']
         else:
+            old_gallery_tags = g.tags
             for ns in data['tags']:
                 if ns in g.tags:
                     g.tags = get_gallery_tags(
                         tags=data['tags'][ns], g_tags=g.tags, namespace=ns)
                 else:
                     g.tags[ns] = data['tags'][ns]
+            log_d('old tags:\n{}\nnew tags:\n{}'.format(
+                pformat(old_gallery_tags),
+                pformat(g.tags))
+            )
         return g
 
     @classmethod
