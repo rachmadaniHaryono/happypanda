@@ -1,5 +1,6 @@
 """asmhentai module."""
 import logging
+from pprint import pformat
 
 from robobrowser.exceptions import RoboError
 
@@ -98,6 +99,25 @@ class AsmManager(DLManagerObject):
             res['category'] = [tag.split(':')[1] for tag in res['tags'] if 'Category:' in tag][0]
         return res
 
+    def _get_server_id(self, link_parts):
+        """get server id.
+
+        Args:
+            link_parts (tuple): Tuple of (gallery_id, url_basename)
+
+        Returns:
+            server_id (str): server id.
+        """
+        gallery_id, url_basename = link_parts
+        url = 'http://asmhentai.com/gallery/{gallery_id}/{url_basename}/'.format(
+            gallery_id=gallery_id, url_basename=url_basename)
+        self._browser.open(url)
+        link_tags = self._browser.select('img.no_image')
+        # e.g.
+        # link_tag_src = '//images.asmhentai.com/001/12623/1.jpg'
+        link_tag_src = link_tags[0].get('src')
+        return link_tag_src.split('//images.asmhentai.com/')[1].split('/')[0]
+
     def _get_dl_urls(self, g_url):
         """get image urls from gallery url.
 
@@ -112,11 +132,13 @@ class AsmManager(DLManagerObject):
         links = self._browser.select('.preview_thumb a')
         links = [x.get('href') for x in links]
         # link = '/gallery/168260/22/'
-        links = [(x.split('/')[2], x.split('/')[-2]) for x in links]
+        links_parts = [(x.split('/')[2], x.split('/')[-2]) for x in links]
+        server_id = self._get_server_id(links_parts[0])
+        log_d('Server id: {}'.format(server_id))
         imgs = list(map(
             lambda x:
-            'http://images.asmhentai.com/006/{}/{}.jpg'.format(x[0], x[1]),
-            links
+            'http://images.asmhentai.com/{}/{}/{}.jpg'.format(server_id, x[0], x[1]),
+            links_parts
         ))
         return imgs
 
@@ -154,6 +176,7 @@ class AsmManager(DLManagerObject):
         # ex/g.e
         log_d("Opening {}".format(g_url))
         dict_metadata = self._get_metadata(g_url=g_url)
+        log_d('dict_metadata:\n{}'.format(pformat(dict_metadata)))
         h_item.thumb_url = 'http:' + self._browser.select('.cover img')[0].get('src')
         h_item.fetch_thumb()
 

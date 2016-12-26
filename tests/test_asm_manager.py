@@ -5,7 +5,18 @@ from unittest import mock
 import pytest
 from bs4 import BeautifulSoup
 
-not_finished = pytest.mark.skip(reason='Not finished')
+
+def test_get_server_id():
+    """test method."""
+    link_parts = ('12623', 1)
+    exp_res = '001'
+    browser = mock.Mock()
+    browser.select.return_value = [{'src': '//images.asmhentai.com/001/12623/1.jpg'}]
+    from version.asm_manager import AsmManager
+    obj = AsmManager()
+    obj._browser = browser
+    res = obj._get_server_id(link_parts=link_parts)
+    assert res == exp_res
 
 
 def test_get_dl_urls():
@@ -27,6 +38,8 @@ def test_get_dl_urls():
     obj = AsmManager()
     browser.select.return_value = select_retval
     obj._browser = browser
+    obj._get_server_id = mock.Mock()
+    obj._get_server_id.return_value = ('006')
     # run
     res = obj._get_dl_urls(g_url=url)
     # test
