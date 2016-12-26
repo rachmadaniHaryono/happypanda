@@ -110,7 +110,7 @@ def test_login_with_existing_cookies():
 
 
 @pytest.mark.parametrize('artist_in_tags', [False, True])
-def test_set_g_artist(artist_in_tags):
+def test_get_g_artist(artist_in_tags):
     """test method."""
     artist = mock.Mock()
     if not artist_in_tags:
@@ -126,6 +126,34 @@ def test_set_g_artist(artist_in_tags):
         assert res == g_artist
     else:
         assert res == artist.capitalize.return_value
+
+
+@pytest.mark.parametrize(
+    'temp_url_in_gallery, url_is_none, no_url_on_data',
+    product([False, True], repeat=3)
+)
+def test_get_g_link(temp_url_in_gallery, url_is_none, no_url_on_data):
+    """test method."""
+    gallery = mock.Mock()
+    url = mock.Mock()
+    if no_url_on_data:
+        data = {}
+    elif url_is_none:
+        data = {'url': None}
+    else:
+        data = {'url': url}
+    with mock.patch('version.ehen.hasattr') as m_ha:
+        m_ha.return_value = True if temp_url_in_gallery else False
+        from version.ehen import EHen
+        # run
+        res = EHen._get_g_link(gallery=gallery, data=data)
+        # test
+        if temp_url_in_gallery and (url_is_none or no_url_on_data):
+            assert res == gallery.temp_url
+        elif not url_is_none and not no_url_on_data:
+            assert res == url
+        else:
+            assert res is None
 
 
 @pytest.mark.parametrize(

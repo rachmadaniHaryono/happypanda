@@ -98,6 +98,25 @@ class EHen(CommenHen):
 
         return g
 
+    @staticmethod
+    def _get_g_link(gallery, data):
+        """Get gallery link.
+
+        Args:
+            Gallery: Gallery.
+            data: Metadata.
+
+        Returns:
+            Gallery link
+        """
+        g_link = None
+        link = data.get('url', None)
+        if link is not None:
+            g_link = link
+        elif hasattr(gallery, 'temp_url'):
+            g_link = gallery.temp_url
+        return g_link
+
     @classmethod  # NOQA
     def apply_metadata(cls, g, data, append=True):
         """Apply metadata to gallery, returns gallery.
@@ -126,23 +145,24 @@ class EHen(CommenHen):
         if lang:
             language = lang
 
-        # gallery link
-        g_link = None
-        link = data.get('url')
-        if hasattr(g, 'temp_url'):
-            g_link = link if link is not None else g.temp_url
-        elif link is not None:
-            g_link = link
-
         new_metadata = {
             'title': title_parser_result['title'],
             'artist': cls._get_g_artist(title_parser_result['artist'], data),
             'language': language,
-            'pub_date': data['pub_date'],
         }
-        log_d('New metadata:\n{}'.format(pformat(new_metadata)))
+
+        # pub date
+        g_pub_date = data.get('pub_date', None)
+        if g_pub_date:
+            new_metadata["pub_date"] = g_pub_date
+
+        # gallery link
+        g_link = cls._get_g_link(gallery=g, data=data)
         if g_link is not None:
             new_metadata['link'] = g_link
+
+        log_d('New metadata:\n{}'.format(pformat(new_metadata)))
+
         for key in new_metadata:
             if not getattr(g, key):
                 setattr(g, key, new_metadata[key])
