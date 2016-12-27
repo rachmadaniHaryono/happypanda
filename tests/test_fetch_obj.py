@@ -115,3 +115,54 @@ def test_create_gallery_from_path_as_chapter(path_is_dir, scandir_return_list, p
         if path_is_dir and scandir_return_list and \
                 path.endswith(m_app_constants.ARCHIVE_FILES):
             create_gallery_func.assert_called_once_with(path, folder_name, do_chapters=True)
+
+
+@pytest.mark.parametrize('path_type', ['folder', 'archive'])
+def test_create_gallery_from_path_with_subfolder_as_gallery(path_type):
+    """test method."""
+    create_gallery_func = mock.Mock()
+    arg_folder_name = mock.Mock()
+    # utils module result when path type is folder
+    g_folder = mock.Mock()
+    g_dirpath_path = mock.Mock()
+    g_dirpath_archive = mock.Mock()
+    # utils module result when path type is archive
+    g_archive = mock.Mock()
+
+    if path_type == 'folder':
+        path = mock.Mock()
+    elif path_type == 'archive':
+        path = 'path_archive.zip'
+    with mock.patch('version.fetch_obj.os') as m_os, \
+            mock.patch('version.fetch_obj.app_constants') as m_app_constants, \
+            mock.patch('version.fetch_obj.utils') as m_utils:
+        m_app_constants.ARCHIVE_FILES = ('.zip', '.cbz')
+        m_utils.recursive_gallery_check.return_value = (
+            [g_folder], [(g_dirpath_path, g_dirpath_archive)])
+        m_utils.check_archive.return_value = [g_archive]
+        m_os.path.isdir.return_value = True if path_type == 'folder' else False
+        m_os.path.split.return_value = [None, arg_folder_name]
+        from version.fetch_obj import FetchObject
+        obj = FetchObject()
+        obj.create_gallery = create_gallery_func
+        # run
+        obj._create_gallery_from_path_with_subfolder_as_gallery(path=path)
+        # test
+        if path_type == 'folder':
+            m_os.assert_has_calls([
+                mock.call.path.isdir(path),
+                mock.call.path.split(g_folder),
+                mock.call.path.split(g_dirpath_path)
+            ])
+            create_gallery_func.assert_has_calls([
+                mock.call(g_folder, arg_folder_name, False),
+                mock.call(g_dirpath_path, arg_folder_name, False, archive=g_dirpath_archive)
+            ])
+        elif path_type == 'archive':
+            m_os.assert_has_calls([
+                mock.call.path.isdir(path),
+                mock.call.path.split(g_archive)
+            ])
+            create_gallery_func.assert_called_once_with(
+                g_archive, arg_folder_name, False, archive=path
+            )

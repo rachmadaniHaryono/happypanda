@@ -109,6 +109,15 @@ class FetchObject(QObject):
             self.galleries_from_db = sorted(filter_list)
 
     def create_gallery(self, path, folder_name, do_chapters=True, archive=None):  # NOQA
+        """create gallery.
+
+        Args:
+            path: Path of the gallery.
+            folder_name: Folder name of the gallery.
+            do_chapters (bool): Do chapter or not.
+            archive: Archive gallery.
+
+        """
         is_archive = True if archive else False
         temp_p = archive if is_archive else path
         folder_name = folder_name or path if folder_name or path else os.path.split(archive)[1]
@@ -292,21 +301,7 @@ class FetchObject(QObject):
                     if app_constants.OVERRIDE_SUBFOLDER_AS_GALLERY:
                         app_constants.OVERRIDE_SUBFOLDER_AS_GALLERY = False
                     log_i("Treating each subfolder as gallery")
-                    if os.path.isdir(path):
-                        gallery_folders, gallery_archives = utils.recursive_gallery_check(path)
-                        list(map(
-                            lambda gs: self.create_gallery(gs, os.path.split(gs)[1], False),
-                            gallery_folders
-                        ))
-                        list(map(
-                            lambda gs: self.create_gallery(
-                                gs[0], os.path.split(gs[0])[1], False, archive=gs[1]),
-                            gallery_archives
-                        ))
-                    elif path.endswith(app_constants.ARCHIVE_FILES):
-                        for gs in utils.check_archive(path):
-                            self.create_gallery(gs, os.path.split(gs)[1], False, archive=path)
-
+                    self._create_gallery_from_path_with_subfolder_as_gallery(path=path)
                 else:
                     self._create_gallery_from_path_as_chapter(path=path, folder_name=folder_name)
                 progress += 1  # update the progress bar
@@ -321,13 +316,34 @@ class FetchObject(QObject):
         # everything went well
         self._after_local_search()
 
+    def _create_gallery_from_path_with_subfolder_as_gallery(self, path):
+        """create galleries from path with subfolder also included as gallery.
+
+        Args:
+            path: Archive path or folder.
+        """
+        if os.path.isdir(path):
+            gallery_folders, gallery_archives = utils.recursive_gallery_check(path)
+            list(map(
+                lambda gs: self.create_gallery(gs, os.path.split(gs)[1], False),
+                gallery_folders
+            ))
+            list(map(
+                lambda gs: self.create_gallery(
+                    gs[0], os.path.split(gs[0])[1], False, archive=gs[1]),
+                gallery_archives
+            ))
+        elif path.endswith(app_constants.ARCHIVE_FILES):
+            for gs in utils.check_archive(path):
+                self.create_gallery(gs, os.path.split(gs)[1], False, archive=path)
+
     def _create_gallery_from_path_as_chapter(self, path, folder_name):
         """create gallery from path and folder name.
 
         each subfolder will be treated as chapter.
 
         Args:
-            path: Archive path or folder without subfolder.
+            path: Archive path or folder.
             folder_name: Folder name.
         """
         try:
