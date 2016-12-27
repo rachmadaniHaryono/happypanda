@@ -298,21 +298,15 @@ class FetchObject(QObject):
                             lambda gs: self.create_gallery(gs, os.path.split(gs)[1], False),
                             gallery_folders
                         ))
-                        # variable assigned but never used.
-                        # p_saving = {}
                         list(map(
                             lambda gs: self.create_gallery(
                                 gs[0], os.path.split(gs[0])[1], False, archive=gs[1]),
                             gallery_archives
                         ))
                     elif path.endswith(app_constants.ARCHIVE_FILES):
-                        list(map(
-                            lambda g: self.create_gallery(
-                                g, os.path.split(g)[1], False, archive=path),
-                            utils.check_archive(path)
-                        ))
-                        for g in utils.check_archive(path):
-                            self.create_gallery(g, os.path.split(g)[1], False, archive=path)
+                        for gs in utils.check_archive(path):
+                            self.create_gallery(gs, os.path.split(gs)[1], False, archive=path)
+
                 else:
                     self._create_gallery_from_path_as_chapter(path=path, folder_name=folder_name)
                 progress += 1  # update the progress bar
