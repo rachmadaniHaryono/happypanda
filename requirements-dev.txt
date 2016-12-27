@@ -7,3 +7,4 @@ pytest-cov==2.4.0
 vext.pyqt5==0.5.20
 Sphinx==1.4.8
 sphinx-autobuild==0.6.0
+gitchangelog==2.4.1
