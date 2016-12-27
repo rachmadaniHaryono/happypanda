@@ -273,3 +273,53 @@ def test_get_temp_path(is_dir_retval):
         os_calls.append(mock.call.mkdir(m_os.path.join.return_value))
         m_os.assert_has_calls(os_calls)
         assert m_os.path.join.return_value == res
+
+
+@pytest.mark.parametrize(
+    'os_name, select, raise_error',
+    product(
+        ['darwin', 'windows', 'linux', None],
+        [None, '', mock.Mock()],
+        [False, True]
+    )
+)
+def test_open_path(os_name, select, raise_error):
+    """test function."""
+    path = mock.Mock()
+    with mock.patch('version.utils.app_constants') as m_ac, \
+            mock.patch('version.utils.subprocess') as m_sp, \
+            mock.patch('version.utils.os') as m_os:
+        if raise_error:
+            m_sp.Popen.side_effect = lambda _: OSError()
+            m_os.startfile.side_effect = lambda _: OSError()
+        m_ac.OS_NAME = os_name
+        from version.utils import open_path
+        # run
+        try:
+            if select is None:
+                open_path(path=path)
+            else:
+                open_path(path=path, select=select)
+        except OSError as err:
+            if raise_error:
+                m_ac.NOTIF_BAR.add_text.assert_called_once_with(
+                    'Could not open specified location. It might not exist anymore.')
+                return
+            else:
+                raise err
+        # test
+        if os_name == 'darwin':
+            m_sp.Popen.assert_called_once_with(['open', path])
+        elif os_name == 'windows' and select:
+            m_os.path.normcase.assert_called_once_with(select)
+            m_sp.Popen.assert_called_once_with(
+                r'explorer.exe /select,"{}"'.format(m_os.path.normcase.return_value), shell=True)
+        elif os_name == 'windows':
+            m_os.startfile.assert_called_once_with(path)
+        elif os_name == 'linux':
+            m_sp.Popen(('xdg-open', path))
+        elif os_name not in ('darwin', 'windows', 'linux'):
+            m_ac.NOTIF_BAR.add_text.assert_called_once_with(
+                "I don't know how you've managed to do this.. "
+                "If you see this, you're in deep trouble..."
+            )

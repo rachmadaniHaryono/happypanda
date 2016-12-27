@@ -730,28 +730,34 @@ def open_web_link(url):
 
 
 def open_path(path, select=''):
-    """open_path."""
+    """Open path.
+
+    Args:
+        path: Path to open.
+        select: Argument for select flag on explorer.exe in Windows os
+    """
+    notif_bar_text = None
     try:
-        if sys.platform.startswith('darwin'):
+        if app_constants.OS_NAME == 'darwin':
             subprocess.Popen(['open', path])
-        elif os.name == 'nt':
-            if select:
-                subprocess.Popen(
-                    r'explorer.exe /select,"{}"'.format(os.path.normcase(select)), shell=True)
-            else:
-                os.startfile(path)
-        elif os.name == 'posix':
+        elif app_constants.OS_NAME == 'windows' and select:
+            subprocess.Popen(
+                r'explorer.exe /select,"{}"'.format(os.path.normcase(select)), shell=True)
+        elif app_constants.OS_NAME == 'windows':
+            os.startfile(path)
+        elif app_constants.OS_NAME == 'linux':
             subprocess.Popen(('xdg-open', path))
         else:
-            app_constants.NOTIF_BAR.add_text(
+            notif_bar_text = (
                 "I don't know how you've managed to do this.. "
                 "If you see this, you're in deep trouble..."
             )
-            log_e('Could not open path: no OS found')
+            log_e('Could not open path: Unknown os [{}]'.format(os.name))
     except:
-        app_constants.NOTIF_BAR.add_text(
-            "Could not open specified location. It might not exist anymore.")
+        notif_bar_text = "Could not open specified location. It might not exist anymore."
         log_e('Could not open path')
+    if notif_bar_text:
+        app_constants.NOTIF_BAR.add_text(notif_bar_text)
 
 
 def open_torrent(path):
