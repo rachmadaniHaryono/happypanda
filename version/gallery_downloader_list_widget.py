@@ -113,8 +113,9 @@ class GalleryDownloaderListWidget(QTableWidget):
             idx:Index
         """
         item = self._get_hitem(idx)
-        if item.current_state == item.DOWNLOADING:
-            item.open(True)
+        if item:
+            if item.current_state == item.DOWNLOADING:
+                item.open(True)
 
     def add_entry(self, hitem):
         """Add entry.
