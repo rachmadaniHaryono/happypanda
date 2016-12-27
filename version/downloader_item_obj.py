@@ -20,7 +20,23 @@ log_c = log.critical
 
 
 class DownloaderItemObject(QObject):
-    """Convenience class."""
+    """Convenience class for downloader item object.
+
+    Attributes:
+        IN_QUEUE (int): 'IN_QUEUE' state.
+        DOWNLOADING (int): 'DOWNLOADING' state.
+        FINISHED (int): 'FINISHED' state.
+        CANCELLED (int): 'CANCEl' state.
+        file_rdy (PyQt5.QtCore.pyqtSignal): Signal when file is ready.
+        session: Session for item.
+        download_url (str): Download url.
+        file (str): item's File.
+        name (str): Item's name.
+        total_size (int): Item's total size.
+        current_size (int): Item's current size.
+        current_state (int): Item's current state.
+
+    """
 
     IN_QUEUE, DOWNLOADING, FINISHED, CANCELLED = range(4)
     file_rdy = pyqtSignal(object)
@@ -38,11 +54,15 @@ class DownloaderItemObject(QObject):
         self.current_state = self.IN_QUEUE
 
     def cancel(self):
-        """cancel."""
+        """Set current state to 'CANCELLED'."""
         self.current_state = self.CANCELLED
 
     def open(self, containing=False):
-        """open."""
+        """Open item.
+
+        Args:
+            containing (bool): Open parent directory if True
+        """
         if self.file:
             if containing:
                 p = os.path.split(self.file)[0]

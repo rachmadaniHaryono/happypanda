@@ -85,11 +85,10 @@ class GalleryDownloaderListWidget(QTableWidget):
         palette.setColor(palette.HighlightedText, QColor('black'))
         self.setPalette(palette)
         #
-        self.setHorizontalHeaderLabels(
-            [' ', 'Status', 'Size', 'Cost', 'Type'])
+        self.setHorizontalHeaderLabels(['Status', 'Size', 'Cost', 'Type', 'Item'])
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setSectionResizeMode(
-            0, self.horizontalHeader().Stretch)
+            0, self.horizontalHeader().ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(
             1, self.horizontalHeader().ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(
@@ -113,28 +112,26 @@ class GalleryDownloaderListWidget(QTableWidget):
         Args:
             idx:Index
         """
-        hitem = self._get_hitem(idx)
-        if hitem.current_state == hitem.DOWNLOADING:
-            hitem.open(True)
+        item = self._get_hitem(idx)
+        if item.current_state == item.DOWNLOADING:
+            item.open(True)
 
     def add_entry(self, hitem):
         """Add entry.
 
         Args:
-            hitem(:class:`.pewnet.HenItem`):H-item
+            hitem(:class:`.hen_item.HenItem`):H-item
         """
         assert isinstance(hitem, HenItem)
         g_item = GalleryDownloaderItemObject(hitem)
-        if hitem.download_type == 0:
-            g_item.d_item_ready.connect(self._init_gallery)
-
+        g_item.d_item_ready.connect(self._init_gallery)
         self.insertRow(0)
         self.setSortingEnabled(False)
-        self.setItem(0, 0, g_item.profile_item)
-        self.setItem(0, 1, g_item.status_item)
-        self.setItem(0, 2, g_item.size_item)
-        self.setItem(0, 3, g_item.cost_item)
-        self.setItem(0, 4, g_item.type_item)
+        self.setItem(0, 0, g_item.status_item)
+        self.setItem(0, 1, g_item.size_item)
+        self.setItem(0, 2, g_item.cost_item)
+        self.setItem(0, 3, g_item.type_item)
+        self.setItem(0, 4, g_item.profile_item)
         self.setSortingEnabled(True)
 
     def _get_hitem(self, idx):
@@ -142,6 +139,7 @@ class GalleryDownloaderListWidget(QTableWidget):
 
         Args:
             idx:Index
+
         Returns:
             Item.
         """
@@ -159,14 +157,16 @@ class GalleryDownloaderListWidget(QTableWidget):
             hitem = self._get_hitem(idx)
             clipboard = qApp.clipboard()
             menu = QMenu()
-            if hitem.current_state == hitem.DOWNLOADING:
-                menu.addAction("Cancel", hitem.cancel)
-            if hitem.current_state == hitem.FINISHED:
-                menu.addAction("Open", hitem.open)
-                menu.addAction("Show in folder", lambda: hitem.open(True))
+            if hasattr(hitem, 'current_state'):
+                if hitem.current_state == hitem.DOWNLOADING:
+                    menu.addAction("Cancel", hitem.cancel)
+                if hitem.current_state == hitem.FINISHED:
+                    menu.addAction("Open", hitem.open)
+                    menu.addAction("Show in folder", lambda: hitem.open(True))
             menu = self._add_copy_action(menu=menu, clipboard=clipboard, hitem=hitem)
-            if not hitem.current_state == hitem.DOWNLOADING:
-                menu.addAction("Remove", lambda: self.removeRow(idx.row()))
+            if hasattr(hitem, 'current_state'):
+                if not hitem.current_state == hitem.DOWNLOADING:
+                    menu.addAction("Remove", lambda: self.removeRow(idx.row()))
             menu.exec_(event.globalPos())
             event.accept()
             del menu
@@ -201,8 +201,16 @@ class GalleryDownloaderListWidget(QTableWidget):
         """Init gallery.
 
         Args:
-            download_item(:class:`GalleryDownloaderItemObject`):Downloaded item.
+            download_item(:class:`.gallery_downloader_item_obj.GalleryDownloaderItemObject`):
+            Downloaded item.
         """
+        if not hasattr(download_item, 'download_type'):
+            log_w("Download item don't have dont have download type.")
+            return
+        if download_item.download_type == app_constants.DOWNLOAD_TYPE_TORRENT:
+            return
+        # NOTE: try to use ehen's apply_metadata first
+        # manager have to edit item.metadata to match this method
         assert isinstance(download_item, GalleryDownloaderItemObject)
         app_constants.TEMP_PATH_IGNORE.append(
             os.path.normcase(download_item.item.file))
@@ -224,7 +232,7 @@ class GalleryDownloaderListWidget(QTableWidget):
         if gallery_list:
             gallery = gallery_list[0]
             gallery.link = d_item.item.gallery_url
-            log_d('gallery:\n{}\ngallery link:\n{}'.format(pformat(gallery)), gallery.link)
+            log_d('gallery:\n{}\ngallery link:\n{}'.format(pformat(gallery), gallery.link))
             if d_item.item.metadata:
                 gallery = EHen.apply_metadata(gallery, d_item.item.metadata)
             if app_constants.DOWNLOAD_GALLERY_TO_LIB:

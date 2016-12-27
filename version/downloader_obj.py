@@ -259,6 +259,7 @@ class DownloaderObject(QObject):
 
         - Create new folder for download.
         - Method to calculate total size
+        - item.file is now folder name instead of filename
 
         Args:
             item: Item with single download url.
@@ -298,6 +299,7 @@ class DownloaderObject(QObject):
 
         if not interrupt_state:
             item.current_state = item.FINISHED
+            item.file = folder
             # emit
             item.file_rdy.emit(item)
             self.item_finished.emit(item)
@@ -368,6 +370,8 @@ class DownloaderObject(QObject):
 
             if isinstance(item.download_url, list):
                 # NOTE: file_name will be used as folder name when multiple url.
+                # DEBUG: set only first url to speed the download
+                # item.download_url = [item.download_url[0]]
                 item = self._download_item_with_multiple_dl_url(
                     item=item, folder=file_name, interrupt_state=interrupt)
             else:

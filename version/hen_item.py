@@ -67,6 +67,10 @@ class HenItem(DownloaderItemObject):
 
         Recommended way of inserting metadata. Keeps the original EH API response structure
         Remember to call commit_metadata when done!
+
+        Args:
+            key: Key of the metadata.
+            value: Value from the metadata with input key>
         """
         default_metadata = {
             "gid": 1,

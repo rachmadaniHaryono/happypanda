@@ -40,6 +40,7 @@ class GalleryDownloaderItemObject(QObject):
 
     Args:
         hitem(:class:`.pewnet.HenItem`):H-item
+
     Attributes:
         status_timer(:class:`PyQt5.QtCore.QTimer`):Status timer.
         d_item_ready(:class:`PyQt5.QtCore.pyqtSignal`):Signal when data item ready.
@@ -56,8 +57,6 @@ class GalleryDownloaderItemObject(QObject):
     def __init__(self, hitem):
         """init func.
 
-        Args:
-            hitem(:class:`.pewnet.HenItem`):H-item
         """
         super().__init__()
         self.d_item_ready.connect(self.d_item_ready_finished)
@@ -89,38 +88,69 @@ class GalleryDownloaderItemObject(QObject):
         self.type_item.setToolTip(url)
         # status_timer
         self.status_timer = QTimer()
-        self.status_timer.timeout.connect(
-            self.check_progress_when_status_timer_timeout)
+        self.status_timer.timeout.connect(self.check_progress)
         self.status_timer.start(500)
+        # set default download type to None
+        # download manager have to change it to valid type on app_constants
+        self.download_type = None
 
     def item_file_ready(self):
         """run when item file ready."""
         self.status_item.setText('Finished!')
         self.d_item_ready.emit(self)
 
-    def check_progress_when_status_timer_timeout(self):
-        """check progress when status_timer timeout."""
+    @staticmethod
+    def _get_readable_item_total_size(item):
+        """Get readable item's total size.
+        Args:
+            item: Download item.
+
+        Returns:
+            str: Readable item's total size.
+        """
         btomb = 1048576
-        if self.item.current_state == self.item.DOWNLOADING:
-            self.status_item.setText(
-                "{0:.2f}/{1:.2f} MB".format(
-                    self.item.current_size / btomb, self.item.total_size / btomb
-                )
+        return "{0:.2f} MB".format(item.total_size / btomb)
+
+    @staticmethod
+    def _get_progress_status_item_text(item):
+        """Get status item text on progress.
+
+        Args:
+            item: Download item.
+
+        Returns:
+            str: Status item text.
+        """
+        btomb = 1048576
+        if item.current_state == item.DOWNLOADING:
+            return "{0:.2f}/{1:.2f} MB".format(
+                item.current_size / btomb,
+                item.total_size / btomb
             )
-            self.size_item.setText("{0:.2f} MB".format(
-                self.item.total_size / btomb))
+        elif item.current_state == item.CANCELLED:
+            return "Cancelled!"
+        else:
+            log_w('Unknown state: {}'.format(item.current_state))
+            return
+
+    def check_progress(self):
+        """check progress when status_timer timeout."""
+        status_item_text = self._get_progress_status_item_text(item=self.item)
+        if status_item_text:
+            self.status_item.setText(status_item_text)
+
+        if self.item.current_state == self.item.DOWNLOADING:
+            self.size_item.setText(self._get_readable_item_total_size(item=self.item))
         elif self.item.current_state == self.item.CANCELLED:
-            self.status_item.setText("Cancelled!")
             self.status_timer.stop()
 
     def d_item_ready_finished(self):
-        """Run the function when d-item ready."""
+        """Run the function when downloaded item ready."""
         self.status_timer.stop()
-        if self.item.download_type == app_constants.DOWNLOAD_TYPE_ARCHIVE:
-            status_item_text = "Creating gallery..."
-        elif self.item.download_type == app_constants.DOWNLOAD_TYPE_TORRENT:
-            status_item_text = "Sent to torrent client!"
-        else:
-            status_item_text = 'Finished.'
-
+        default_text = 'Finished!'
+        status_item_text_dict = {
+            app_constants.DOWNLOAD_TYPE_ARCHIVE: "Creating gallery...",
+            app_constants.DOWNLOAD_TYPE_TORRENT: "Sent to torrent client!",
+        }
+        status_item_text = status_item_text_dict.get(self.item.download_type, default_text)
         self.status_item.setText(status_item_text)

@@ -19,6 +19,7 @@ import logging
 import random
 import queue
 import scandir
+from pprint import pformat
 
 from PyQt5.QtCore import QObject, pyqtSignal  # need this for interaction with main thread
 
@@ -275,6 +276,7 @@ class FetchObject(QObject):
                 self._refresh_filter_list()
             self.DATA_COUNT.emit(len(gallery_l))  # tell model how many items are going to be added
             log_i('Received {} paths'.format(len(gallery_l)))
+            log_d('Paths:\n{}'.format(pformat(gallery_l)))
             progress = 0
 
             for folder_name in gallery_l:  # folder_name = gallery folder title
