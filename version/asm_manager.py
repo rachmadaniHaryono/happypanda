@@ -143,8 +143,47 @@ class AsmManager(DLManagerObject):
         return imgs
 
     @staticmethod
+    def _set_ehen_metadata(h_item, dict_metadata):
+        """set ehen metadata.
+
+        unlike set_metadata method, This will update metadata based on required metadata in
+        Ehen.apply_method.
+
+        Args:
+            h_item (hen_item.HenItem): Item.
+            dict_metadata (dict): Metadata source.
+
+        Returns:
+            Updated h_item
+        """
+        new_data_tags = {}
+        for tag in dict_metadata['tags']:
+            namespace, tag_value = tag.split(':', 1)
+            new_data_tags.setdefault(namespace, []).append(tag_value)
+        new_data = {
+            'title': {
+                'jpn': dict_metadata['title_jpn'],
+                'def': dict_metadata['title'],
+
+            },
+            'tags': new_data_tags,
+            'type': dict_metadata['category'],
+            'pub_date': ''  # asm manager don't parse publication date. it is not exist.
+        }
+        h_item.metadata.update(new_data)
+        return h_item
+
+    @staticmethod
     def _set_metadata(h_item, dict_metadata):
-        """set metadata on item from dict_metadata."""
+        """set metadata on item from dict_metadata.
+
+        Args:
+            h_item (hen_item.HenItem): Item.
+            dict_metadata (dict): Metadata source.
+
+        Returns:
+            Updated h_item
+        """
         keys = ['title_jpn', 'title', 'filecount', "tags"]
         for key in keys:
             value = dict_metadata.get(key, None)
@@ -190,6 +229,13 @@ class AsmManager(DLManagerObject):
         h_item.download_url = self._get_dl_urls(g_url=g_url)
 
         h_item = self._set_metadata(h_item=h_item, dict_metadata=dict_metadata)
+
+        old_metadata = h_item.metadata
+        h_item = self._set_ehen_metadata(h_item=h_item, dict_metadata=dict_metadata)
+        log_d('Old metadata\n{}New metadata\n{}'.format(
+            pformat(old_metadata),
+            pformat(h_item.metadata)
+        ))
 
         DownloaderObject.add_to_queue(h_item, self._browser.session)
         return h_item

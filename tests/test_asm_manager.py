@@ -123,6 +123,7 @@ def test_from_gallery_url():
     thumb_url = '//www.example.com/thumb.jpg'
     browser.select.return_value = [{'src': thumb_url}]
     set_metadata_func = mock.Mock()
+    set_ehen_metadata_func = mock.Mock()
     with mock.patch('version.asm_manager.HenItem') as m_hi, \
             mock.patch('version.asm_manager.DownloaderObject') as m_do:
         from version.asm_manager import AsmManager
@@ -131,10 +132,11 @@ def test_from_gallery_url():
         obj._get_metadata = mock.Mock(return_value=m_metadata)
         obj._get_dl_urls = mock.Mock()
         obj._set_metadata = set_metadata_func
+        obj._set_ehen_metadata = set_ehen_metadata_func
         # run
         res = obj.from_gallery_url(g_url=url)
         # test
-        assert res == set_metadata_func.return_value
+        assert res == set_ehen_metadata_func.return_value
         assert m_hi.return_value.download_type == exp_download_type
         assert m_hi.return_value.gallery_url == url
         assert m_hi.return_value.thumb_url == 'http:' + thumb_url
@@ -142,7 +144,7 @@ def test_from_gallery_url():
         assert m_hi.return_value.gallery_name == title
         assert m_hi.return_value.download_url == obj._get_dl_urls.return_value
         m_do.add_to_queue.assert_called_once_with(
-            set_metadata_func.return_value, browser.session)
+            set_ehen_metadata_func.return_value, browser.session)
         #
         m_hi.assert_has_calls([
             mock.call(browser.session),
@@ -176,3 +178,38 @@ def test_set_metadata(key, catg_val):
     elif catg_val.lower() == 'doujinshi':
         h_item_calls.append(mock.call.update_metadata(key='category', value='Doujinshi'))
     h_item.assert_has_calls(h_item_calls)
+
+
+@pytest.mark.parametrize(
+    'old_data_tags, new_data_tags',
+    [
+        ({}, {}),
+        (['ns1:val1', 'ns1:val2'], {'ns1': ['val1', 'val2']}),
+        (['ns1:val1:val1_part2', 'ns1:val2'], {'ns1': ['val1:val1_part2', 'val2']}),
+        (['ns1:val1', 'ns2:val2'], {'ns1': ['val1'], 'ns2': ['val2']}),
+    ]
+)
+def test_set_ehen_metadata(old_data_tags, new_data_tags):
+    """test method."""
+    h_item = mock.Mock()
+    h_item.metadata = {}
+    dict_metadata = {
+        'category': mock.Mock(),
+        'title_jpn': mock.Mock(),
+        'title': mock.Mock(),
+        'tags': old_data_tags,
+    }
+    exp_res = {
+        'title': {
+            'jpn': dict_metadata['title_jpn'],
+            'def': dict_metadata['title'],
+
+        },
+        'tags': new_data_tags,
+        'type': dict_metadata['category'],
+        'pub_date': ''
+    }
+    from version.asm_manager import AsmManager
+    res = AsmManager._set_ehen_metadata(h_item=h_item, dict_metadata=dict_metadata)
+    assert res == h_item
+    res == exp_res
