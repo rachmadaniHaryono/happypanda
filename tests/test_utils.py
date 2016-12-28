@@ -323,3 +323,70 @@ def test_open_path(os_name, select, raise_error):
                 "I don't know how you've managed to do this.. "
                 "If you see this, you're in deep trouble..."
             )
+
+
+@pytest.mark.parametrize('isdir_retval', [True, False])
+def test_makedirs_if_not_exists(isdir_retval):
+    """test func."""
+    folder = mock.Mock()
+    with mock.patch('version.utils.os') as m_os:
+        from version.utils import makedirs_if_not_exists
+        m_os.path.isdir.return_value = isdir_retval
+        makedirs_if_not_exists(folder)
+        if not isdir_retval:
+            m_os.makedirs.assert_called_once_with(folder)
+        else:
+            assert not m_os.makedirs.called
+
+
+def test_backup_database():
+    """test func."""
+    today_datetime = '2016-12-28 19:28:24.199740'
+    date = today_datetime.split(' ')[0]
+    db_path = mock.Mock()
+    base_path = mock.Mock()
+    name = mock.Mock()
+    with mock.patch('version.utils.datetime') as m_dt, \
+            mock.patch('version.utils.os') as m_os, \
+            mock.patch('version.utils.shutil') as m_shutil, \
+            mock.patch('version.utils.makedirs_if_not_exists') as m_mine:
+        m_dt.datetime.today.return_value = today_datetime
+        m_os.path.split.return_value = (base_path, name)
+        m_os.path.exists.return_value = False
+        from version.utils import backup_database
+        res = backup_database(db_path)
+        # test
+        assert res
+        m_os.assert_has_calls([
+            mock.call.path.split(db_path),
+            mock.call.path.join(base_path, 'backup'),
+            mock.call.path.join(
+                m_os.path.join.return_value,
+                "{}-{}".format(date, name)
+            ),
+            mock.call.path.exists(m_os.path.join.return_value)
+        ])
+        m_shutil.copyfile(db_path, m_os.path.join.return_value)
+        m_mine.assert_called_once_with(m_os.path.join.return_value)
+
+
+@pytest.mark.parametrize(
+    'day_reduction, exp_res',
+    [
+        (1, '1 day'),
+        (27, '27 days'),
+        (26, '26 days'),
+        (28, None),
+    ]
+)
+def test_get_date_age(day_reduction, exp_res):
+    """test func."""
+    import datetime
+    current_datetime = datetime.datetime(2016, 12, 28)
+    input_date = datetime.datetime.fromordinal(
+        current_datetime.toordinal() - day_reduction)
+    with mock.patch('version.utils.datetime') as m_dt:
+        m_dt.datetime.now.return_value = current_datetime
+        from version.utils import get_date_age
+        res = get_date_age(input_date)
+        assert res == exp_res
