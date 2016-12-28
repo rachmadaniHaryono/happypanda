@@ -32,18 +32,20 @@ import webbrowser
 from PyQt5.QtGui import QImage, qRgba
 from PIL import Image, ImageChops
 
-try:
+try:  # pragma: no cover
     import app_constants
     from app_constants import IMG_FILES, ARCHIVE_FILES
     from archive_file import ArchiveFile
     from database import db_constants
     from gmetafile import GMetafile
+    from pretty_delta import PrettyDelta
 except ImportError:
     from . import app_constants
     from .app_constants import IMG_FILES, ARCHIVE_FILES
     from .archive_file import ArchiveFile
     from .database import db_constants
     from .gmetafile import GMetafile
+    from .pretty_delta import PrettyDelta
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -59,13 +61,13 @@ def backup_database(db_path=db_constants.DB_PATH):
     date = "{}".format(datetime.datetime.today()).split(' ')[0]
     base_path, name = os.path.split(db_path)
     backup_dir = os.path.join(base_path, 'backup')
-    if not os.path.isdir(backup_dir):
-        os.mkdir(backup_dir)
+    makedirs_if_not_exists(backup_dir)
     db_name = "{}-{}".format(date, name)
 
     current_try = 0
     orig_db_name = db_name
-    while current_try < 50:
+    max_loop = 50
+    while current_try < max_loop:
         if current_try:
             db_name = "{}({})-{}".format(date, current_try, orig_db_name)
         try:
@@ -76,7 +78,7 @@ def backup_database(db_path=db_constants.DB_PATH):
             break
         except ValueError:
             current_try += 1
-    log_i("Database backup perfomed: {}".format(db_name))
+    log_i("Database backup performed: {}".format(db_name))
     return True
 
 
@@ -89,39 +91,6 @@ def get_date_age(date):
     be returned.
     Make sure date is not in the future, or else it won't work.
     """
-    def formatn(n, s):
-        """Add "s" if it's plural."""
-        if n == 1:
-            return "1 %s" % s
-        elif n > 1:
-            return "%d %ss" % (n, s)
-
-    def q_n_r(a, b):
-        """Return quotient and remaining."""
-        return a / b, a % b
-
-    class PrettyDelta:
-
-        def __init__(self, dt):
-            now = datetime.datetime.now()
-
-            delta = now - dt
-            self.day = delta.days
-            self.second = delta.seconds
-
-            self.year, self.day = q_n_r(self.day, 365)
-            self.month, self.day = q_n_r(self.day, 30)
-            self.hour, self.second = q_n_r(self.second, 3600)
-            self.minute, self.second = q_n_r(self.second, 60)
-
-        def format(self):
-            """format."""
-            for period in ['year', 'month', 'day', 'hour', 'minute', 'second']:
-                n = getattr(self, period)
-                if n > 0.9:
-                    return formatn(n, period)
-            return "0 second"
-
     return PrettyDelta(date).format()
 
 
@@ -1101,5 +1070,5 @@ def get_chapter_title(path):
 
 def makedirs_if_not_exists(folder):
     """Create directory if not exists."""
-    if not os.path.exists(folder):
+    if not os.path.isdir(folder):
         os.makedirs(folder)
