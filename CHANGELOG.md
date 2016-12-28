@@ -1,4 +1,30 @@
-*Happypanda v0.30*
+# Happypanda v0.31
+- New
+    - First prototype for downloader with multi dl urls. [rachmadaniHaryono]
+    - Sphinx-doc for modules. [rachmadaniHaryono]
+    - Add coverage using codecov. [rachmadaniHaryono]
+    - Test module. [rachmadaniHaryono]
+- Changes
+    - Change warning text. [rachmadaniHaryono]
+    - Update test. [rachmadaniHaryono]
+    - Update readme. [rachmadaniHaryono]
+        - add shields io badge for license
+        - add codeclimate badge
+        - add forks goal
+    - Update README.md. [Pewpew]
+        - add 'looking for help' section
+        - change image.
+        - change requirement for helper
+        - 'start over' announcement
+        - add contact
+    - Remove complicated test. [rachmadaniHaryono]
+    - Added additional changes. [PewPews]
+- Fix
+    - Fix infinite loading. [rachmadaniHaryono]
+    - Fix test. [rachmadaniHaryono]
+    - Fix too small rounded rect. [rachmadaniHaryono]
+
+# Happypanda v0.30
 - Someone finally convinced me into adding star ratings
     - *Note:* Ratings won't be fetched from EH since I find them useless... Though I might make it an option later on. 
     - External viewer icon on galleries has been removed in favor of this
@@ -15,7 +41,7 @@
     - Attempting to add galleries on a fresh install was causing an exception
     - Moving files into a monitored folder, and then accepting the pop-up would cause an exception
 
-*Happypanda v0.29*
+# Happypanda v0.29
 - Increased and improved stability and perfomance
 - Shortened startup time
 - Galleries are now added dynamically
@@ -43,7 +69,7 @@
 	+ Thumbnail cache dir was not being cleared
 	+ Adding from directory was not possible with single gallery add method
 
-*Happypanda v0.28.1*
+# Happypanda v0.28.1
 - Fixed bugs:
 	+ Fixed typo in external viewer args
 	+ Fixed regex not working when in namespace
@@ -56,7 +82,7 @@
 	+ Closing the gallery dialog while fetching metadata would cause an exception
 
 
-*Happypanda v0.28*
+# Happypanda v0.28
 - Improved perfomance of grid view significantly
 - Galleries are now draggable
 	+ It is now possible to add galleries to a list by dragging them to the list
@@ -99,7 +125,7 @@
 	+ Gallery wasn't removed in view when removing from the duplicate-galleries popup
 	+ Other minor bugs
 
-*Happypanda v0.27*
+# Happypanda v0.27
 - Many visual changes
 	+ Including new ribbon indicating gallery type in gridview
 - New sidebar widget:
@@ -145,7 +171,7 @@
 	+ Potentially fixed a bug preventing archives from being imported, courtesy of KuroiKitsu
 	+ Many other minor bugs
 
-*Happypanda v0.26*
+# Happypanda v0.26
 - Startup is now slighty faster
 - New redesigned gallery metadata window!
 	+ New chapter view in the metadata window
@@ -195,7 +221,7 @@
 	+ Fixed bug where the notification widget would sometimes not show messages
 	+ Fixed bug where chapters added to gallery with directory source would not open correctly
 
-*Happypanda v0.25*
+# Happypanda v0.25
 - Added *Show in folder* entry in gallery contextmenu
 - Gallery popups
 	+ A contextmenu will now be shown when you rightclick a gallery
@@ -231,12 +257,12 @@
 	+ Fixed a bug in the user settings (*settings.ini*) parsing, hence the reset
 	+ Fixed other minor misc. bugs
 
-*Happypanda v0.24.1*
+# Happypanda v0.24.1
 - Fixed bugs:
 	+ Removing a gallery and its files should now work
 	+ Popups was staying on top of all windows
 
-*Happypanda v0.24*
+# Happypanda v0.24
 - Mostly gui fixes/improvements
 	+ Changed toolbar style and icons
 	+ Added new native spinners
@@ -261,7 +287,7 @@
 	+ Fixed a bug where clicking on a tag with no namespace in the Gallery Metdata Popup would search the tag with a blank namespace
 	+ Fixed a minor bug where when opening the settings dialog a small window would appear first in a split second
 
-*Happypanda v0.23*
+# Happypanda v0.23
 - Stability and perfomance increase for very large libraries
 	+ Instant startup: Galleries are now lazily loaded
 	+ Application now supports very large galleries (tested with 10k galleries)
@@ -277,7 +303,7 @@
 	+ Fixed a bug where the notificationbar would sometiems not hide itself
 	+ & other minor bugs
 
-*Happypanda v0.22*
+# Happypanda v0.22
 - Added support for .rar files.
 	+ To enable rar support, specify the path to unrar in Settings -> Application -> General. Follow the instructions for your OS.
 - Fixed most (if not all) gallery importing issues
@@ -286,7 +312,7 @@
 - Fixed a bug where users who tries Happypanda for the first time would see the 'rebuilding galleries' dialog.
 - & other misc. changes
 
-*Happypanda v0.21*
+# Happypanda v0.21
 - The application will now ask if you want to view skipped paths after searching for galleries
 - Added 'delete successful' in the notificationbar
 - Bugfixes:
@@ -295,7 +321,7 @@
 	+ Fixed bug: Covers for archives with no folder in-between were not being found
 	+ & other minor bugs
 
-*Happypanda v0.20*
+# Happypanda v0.20
 - Added support for recursively importing of galleries (applies to archives)
 	+ Directories in archives will now be noticed when importing
 	+ Directories with archives as chapters will now be properly imported
@@ -335,7 +361,7 @@
 	+ Fixed bug: fetched metadata title and artist would not be formatted correctly
 	+ & other minor bugs
 
-*Happypanda v0.19*
+# Happypanda v0.19
 - Improved stability
 - Updated and fixed auto metadata fetcher:
     + Now twice as fast
@@ -361,13 +387,13 @@
     + Fixed critical bug: Duplicates were being created in database
     + Fixed a bug causing the update checker to always fail.
 
-*Happypanda v0.18*
+# Happypanda v0.18
 - Greatly improved stability
 - Added numbers to show how many galleries are left when fetching for metadata
 - Possibly fixed a bug causing the *"big changes are about to occur"* popup to never disappear
 - Fixed auto metadata fetcher (did not work before)
 
-*Happypanda v0.17*
+# Happypanda v0.17
 - Improved UI
 - Improved stability
 - Improved the toolbar
@@ -393,7 +419,7 @@
 - Disabled gallery source type and external program viewer icons because of memory leak (will be reenabled in a later version)
 - Cleaned up some code
 
-*Happypanda v0.16*
+# Happypanda v0.16
 - A more proper way to search for namespace and tags is now available
 - Added support for external image viewers
 - Added support for CBZ
@@ -408,7 +434,7 @@
 	+ Namespace & tags not being shown correctly
 	+ & other small bugs
 
-*Happypanda v0.15*
+# Happypanda v0.15
 - More options are now available in contextmenu when rightclicking a gallery
 - It's now possible to add and remove chapters from a gallery
 - Added a way to select more galleries
@@ -424,7 +450,7 @@
 - Updated Database to version 0.16 (breaking previous versions)
 - Bugfixes
 
-*Happypanda v0.14*
+# Happypanda v0.14
 - New tableview. Switch easily between grid view and table view with the new button beside the searchbar
 - Now able to add and read ZIP archives (You don't need to extract anymore).
 	+ Added temp folder for when opening a chapter
@@ -443,5 +469,5 @@
 	+ Now with unique tag mappings
 	+ A new metadata: times_read
 
-*Happypanda v0.13*
+# Happypanda v0.13
 - First public release
