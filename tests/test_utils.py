@@ -370,23 +370,16 @@ def test_backup_database():
         m_mine.assert_called_once_with(m_os.path.join.return_value)
 
 
-@pytest.mark.parametrize(
-    'day_reduction, exp_res',
-    [
-        (1, '1 day'),
-        (27, '27 days'),
-        (26, '26 days'),
-        (28, None),
-    ]
-)
-def test_get_date_age(day_reduction, exp_res):
+def test_get_date_age():
     """test func."""
-    import datetime
-    current_datetime = datetime.datetime(2016, 12, 28)
-    input_date = datetime.datetime.fromordinal(
-        current_datetime.toordinal() - day_reduction)
-    with mock.patch('version.utils.datetime') as m_dt:
-        m_dt.datetime.now.return_value = current_datetime
+    input_date = mock.Mock()
+    with mock.patch('version.utils.PrettyDelta') as m_pd:
         from version.utils import get_date_age
+        # run
         res = get_date_age(input_date)
-        assert res == exp_res
+        # test
+        m_pd.assert_has_calls([
+            mock.call(input_date),
+            mock.call().format(),
+        ])
+        assert res == m_pd.return_value.format.return_value
