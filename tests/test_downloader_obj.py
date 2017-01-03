@@ -396,8 +396,8 @@ def test_download_item_with_multiple_dl_url(
     get_total_size_func = mock.Mock()
     get_total_size_prediction_func = mock.Mock()
     get_local_filesize_func = mock.Mock()
-    download_single_file_func = mock.Mock()
-    download_single_file_func.return_value = [item, last_interrupt_state]
+    download_single_file_with_temp_func = mock.Mock()
+    download_single_file_with_temp_func.return_value = [item, last_interrupt_state]
     item_finished_signal = mock.Mock()
     with mock.patch('version.downloader_obj.os') as m_os, \
             mock.patch('version.downloader_obj.DownloaderObject._set_base'), \
@@ -408,7 +408,7 @@ def test_download_item_with_multiple_dl_url(
         obj._get_total_size = get_total_size_func
         obj._get_total_size_prediction = get_total_size_prediction_func
         obj._get_local_filesize = get_local_filesize_func
-        obj._download_single_file = download_single_file_func
+        obj._download_single_file_with_temp = download_single_file_with_temp_func
         obj.item_finished = item_finished_signal
         # run
         res = obj._download_item_with_multiple_dl_url(
@@ -431,7 +431,39 @@ def test_download_item_with_multiple_dl_url(
         if size_is_equal and not target_filesize_is_0:
             res.current_size == default_item_size + current_response_filesize
         else:
-            download_single_file_func.assert_called_once_with(
+            download_single_file_with_temp_func.assert_called_once_with(
                 interrupt_state=interrupt_state, item=item,
                 response=get_response_func.return_value, target_file=m_os.path.join.return_value
             )
+
+
+def test_download_single_file_with_temp():
+    """test method."""
+    target_file = mock.Mock()
+    response = mock.Mock()
+    item = mock.Mock()
+    interrupt_state = mock.Mock()
+    # return value for _download_single_file
+    item_result = mock.Mock()
+    interrupt_state_result = mock.Mock()
+    #
+    m_ntf = mock.mock_open()
+    with mock.patch('version.downloader_obj.NamedTemporaryFile', m_ntf), \
+            mock.patch('version.downloader_obj.shutil') as m_shutil:
+        from version.downloader_obj import DownloaderObject
+        DownloaderObject._download_single_file = mock.Mock(
+            return_value=(item_result, interrupt_state_result))
+        # run
+        res = DownloaderObject._download_single_file_with_temp(
+            target_file=target_file, response=response, item=item, interrupt_state=interrupt_state)
+        # test
+        assert res == (item_result, interrupt_state_result)
+        m_ntf.assert_has_calls([
+            mock.call(), mock.call().__enter__(), mock.call().__exit__(None, None, None)])
+        m_shutil.copyfile.assert_called_once_with(m_ntf.return_value.name, target_file)
+        DownloaderObject._download_single_file.assert_called_once_with(
+            interrupt_state=interrupt_state,
+            item=item,
+            response=response,
+            target_file=m_ntf.return_value.name
+        )
