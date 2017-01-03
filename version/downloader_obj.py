@@ -3,10 +3,12 @@
 import logging
 import os
 import requests
+import shutil
 import threading
 import uuid
 from pprint import pformat
 from queue import Queue
+from tempfile import NamedTemporaryFile
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
@@ -186,6 +188,31 @@ class DownloaderObject(QObject):
         return item, interrupt_state
 
     @staticmethod
+    def _download_single_file_with_temp(target_file, response, item, interrupt_state):
+        """wrapper for _download_single_file method.
+
+        it use temporary file as target file and move/rename it to actual target.
+
+        Args:
+            target_file: Target filename where url will be downloaded.
+            response (requests.Response): Response from url.
+            item: Download item.
+            interrupt_state (bool): Interrupt state.
+
+        Returns:
+            tuple: Result from _download_single_file.
+        """
+        with NamedTemporaryFile() as temp:
+            item_result, interrupt_state = DownloaderObject._download_single_file(
+                target_file=temp.name,
+                response=response,
+                item=item,
+                interrupt_state=interrupt_state
+            )
+            shutil.copyfile(temp.name, target_file)
+        return (item_result, interrupt_state)
+
+    @staticmethod
     def _rename_file(filename, filename_part, max_loop=100):
         """Custom rename file method.
 
@@ -292,7 +319,7 @@ class DownloaderObject(QObject):
                 log_d('File is already downloaded.\n{}'.format(target_file))
             else:
                 # downloading to temp file (file_name_part)
-                item, interrupt_state = self._download_single_file(
+                item, interrupt_state = self._download_single_file_with_temp(
                     target_file=target_file, response=r, item=item,
                     interrupt_state=interrupt_state
                 )
