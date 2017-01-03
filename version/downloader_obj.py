@@ -163,8 +163,12 @@ class DownloaderObject(QObject):
         return file_name
 
     @staticmethod
-    def _download_single_file(target_file, response, item, interrupt_state):
+    def _download_single_file(target_file, response, item, interrupt_state, use_tempfile=False):
         """Download single file from url response and return changed item and interrupt state.
+
+        Note:
+            item's current size may not give exact size.
+            especially when there is multiple interupt and tempfile is used.
 
         Args:
             target_file: Target filename where url will be downloaded.
@@ -176,41 +180,31 @@ class DownloaderObject(QObject):
             tuple: (item, interrupt_state) where both variables
                 is the changed variables from input.
         """
-        with open(target_file, 'wb') as f:
-            for data in response.iter_content(chunk_size=1024):
+        chunk_size = 1024
+        if use_tempfile:
+            with NamedTemporaryFile() as tempfile:
+                with open(tempfile.name, 'wb') as f:
+                    for data in response.iter_content(chunk_size=chunk_size):
+                        if item.current_state == item.CANCELLED:
+                            interrupt_state = True
+                            break
+                        if data:
+                            item.current_size += len(data)
+                            f.write(data)
+                            f.flush()
                 if item.current_state == item.CANCELLED:
-                    interrupt_state = True
-                    break
-                if data:
-                    item.current_size += len(data)
-                    f.write(data)
-                    f.flush()
+                    shutil.copyfile(tempfile.name, target_file)
+        else:
+            with open(target_file, 'wb') as f:
+                for data in response.iter_content(chunk_size=chunk_size):
+                    if item.current_state == item.CANCELLED:
+                        interrupt_state = True
+                        break
+                    if data:
+                        item.current_size += len(data)
+                        f.write(data)
+                        f.flush()
         return item, interrupt_state
-
-    @staticmethod
-    def _download_single_file_with_temp(target_file, response, item, interrupt_state):
-        """wrapper for _download_single_file method.
-
-        it use temporary file as target file and move/rename it to actual target.
-
-        Args:
-            target_file: Target filename where url will be downloaded.
-            response (requests.Response): Response from url.
-            item: Download item.
-            interrupt_state (bool): Interrupt state.
-
-        Returns:
-            tuple: Result from _download_single_file.
-        """
-        with NamedTemporaryFile() as temp:
-            item_result, interrupt_state = DownloaderObject._download_single_file(
-                target_file=temp.name,
-                response=response,
-                item=item,
-                interrupt_state=interrupt_state
-            )
-            shutil.copyfile(temp.name, target_file)
-        return (item_result, interrupt_state)
 
     @staticmethod
     def _rename_file(filename, filename_part, max_loop=100):
@@ -319,9 +313,9 @@ class DownloaderObject(QObject):
                 log_d('File is already downloaded.\n{}'.format(target_file))
             else:
                 # downloading to temp file (file_name_part)
-                item, interrupt_state = self._download_single_file_with_temp(
+                item, interrupt_state = self._download_single_file_(
                     target_file=target_file, response=r, item=item,
-                    interrupt_state=interrupt_state
+                    interrupt_state=interrupt_state, use_tempfile=True
                 )
 
         if not interrupt_state:
