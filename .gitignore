@@ -20,6 +20,7 @@ setup.py
 .DS_Store
 downloads
 .happypanda
+docs/modules/*.rst
 
 # User-specific files
 *.suo
