@@ -339,9 +339,13 @@ def start(test=False):
     return program.run()
 
 
-if __name__ == '__main__':
+def main():
+    """main function."""
     app_constants.APP_RESTART_CODE = -1
     current_exit_code = app_constants.APP_RESTART_CODE
     while current_exit_code == app_constants.APP_RESTART_CODE:
         current_exit_code = start()
     sys.exit(current_exit_code)
+
+if __name__ == '__main__':
+    main()
