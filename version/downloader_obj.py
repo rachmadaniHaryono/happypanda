@@ -192,7 +192,7 @@ class DownloaderObject(QObject):
                             item.current_size += len(data)
                             f.write(data)
                             f.flush()
-                if item.current_state == item.CANCELLED:
+                if item.current_state != item.CANCELLED:
                     shutil.copyfile(tempfile.name, target_file)
         else:
             with open(target_file, 'wb') as f:
@@ -313,7 +313,7 @@ class DownloaderObject(QObject):
                 log_d('File is already downloaded.\n{}'.format(target_file))
             else:
                 # downloading to temp file (file_name_part)
-                item, interrupt_state = self._download_single_file_(
+                item, interrupt_state = self._download_single_file(
                     target_file=target_file, response=r, item=item,
                     interrupt_state=interrupt_state, use_tempfile=True
                 )

@@ -19,14 +19,15 @@ from PyQt5.QtWidgets import (
 
 try:  # pragma: no cover
     import app_constants
+    from ehen import EHen
     from fetch_obj import FetchObject
     from gallery_downloader_item_obj import GalleryDownloaderItemObject
-    from ehen import EHen
     from hen_item import HenItem
 except ImportError:
+    from .ehen import EHen
     from .fetch_obj import FetchObject
     from .gallery_downloader_item_obj import GalleryDownloaderItemObject
-    from .ehen import EHen
+    from .hen_item import HenItem
     from . import (
         app_constants,
     )
