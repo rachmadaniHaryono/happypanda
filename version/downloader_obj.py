@@ -183,15 +183,13 @@ class DownloaderObject(QObject):
         chunk_size = 1024
         if use_tempfile:
             with NamedTemporaryFile() as tempfile:
-                with open(tempfile.name, 'wb') as f:
-                    for data in response.iter_content(chunk_size=chunk_size):
-                        if item.current_state == item.CANCELLED:
-                            interrupt_state = True
-                            break
-                        if data:
-                            item.current_size += len(data)
-                            f.write(data)
-                            f.flush()
+                item, interrupt_state = DownloaderObject._download_single_file(
+                    target_file=tempfile.name,
+                    response=response,
+                    item=item,
+                    interrupt_state=interrupt_state,
+                    use_tempfile=False
+                )
                 if item.current_state != item.CANCELLED:
                     shutil.copyfile(tempfile.name, target_file)
         else:
