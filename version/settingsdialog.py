@@ -78,6 +78,14 @@ log_e = log.error
 log_c = log.critical
 
 
+class NoWheelSlider(QSlider):
+    def __init__(self, ori, p):
+        super().__init__(ori, p)
+
+    def wheelEvent(self, ev):  # NOQA
+        ev.ignore()
+
+
 def color_lineedit(maximum_width=200):
     l = QLineEdit()
     l.setPlaceholderText('Hex colors. Eg.: #323232')
@@ -1153,13 +1161,6 @@ class SettingsDialog(QWidget):
         gallery_font.addWidget(self.font_size_lbl, 0, Qt.AlignLeft)
         gallery_font.addWidget(choose_font, 0, Qt.AlignLeft)
         gallery_font.addWidget(SpacerWidget('h'), 1, Qt.AlignLeft)
-
-        class NoWheelSlider(QSlider):
-            def __init__(self, ori, p):
-                super().__init__(ori, p)
-
-            def wheelEvent(self, ev):  # NOQA
-                ev.ignore()
 
         gallery_size_lbl = QLabel(self)
         self.gallery_size = NoWheelSlider(Qt.Horizontal, self)
