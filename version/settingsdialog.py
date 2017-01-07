@@ -673,6 +673,55 @@ class SettingsDialog(QWidget):
             const = attr_text
             set_(value=const, section='Visual', key=key)
 
+    @staticmethod
+    def groupbox(name, layout, parent, add_groupbox_in_layout=None):
+        """groupbox.
+
+        Makes a groupbox and a layout for you
+
+        Args:
+            name: Groupbox name.
+            layout: Layout.
+            parent: Groupbox layout.
+            add_groupbox_in_layout: FormLayout or others.
+
+        Returns:
+            groupbox and layout
+        """
+        g = QGroupBox(name, parent)
+        l = layout(g)
+        if add_groupbox_in_layout:
+            if isinstance(add_groupbox_in_layout, QFormLayout):
+                add_groupbox_in_layout.addRow(g)
+            else:
+                add_groupbox_in_layout.addWidget(g)
+        return g, l
+
+    @staticmethod
+    def new_tab(name, parent, scroll=False):
+        """Create a new tab.
+
+        Args:
+            name (str): Tab name.
+            parent: Tab parent.
+            scroll (bool): set tab as scrollable or not.
+
+        Returns:
+            Tuple of new tab page widget and it's layout
+        """
+        new_t = QWidget(parent)
+        new_l = QFormLayout(new_t)
+        if scroll:
+            scr = QScrollArea(parent)
+            scr.setBackgroundRole(QPalette.Base)
+            scr.setWidget(new_t)
+            scr.setWidgetResizable(True)
+            parent.addTab(scr, name)
+            return new_t, new_l
+        else:
+            parent.addTab(new_t, name)
+        return new_t, new_l
+
     def init_right_panel(self):  # NOQA
         """init rigth panel."""
         # def title_def(title):
