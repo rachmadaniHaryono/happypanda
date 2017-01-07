@@ -885,21 +885,6 @@ class SettingsDialog(QWidget):
         #   title_lbl.setFont(f)
         #   return title_lbl
 
-        def groupbox(name, layout, parent, add_groupbox_in_layout=None):
-            """groupbox.
-
-            Makes a groupbox and a layout for you
-            Returns groupbox and layout
-            """
-            g = QGroupBox(name, parent)
-            l = layout(g)
-            if add_groupbox_in_layout:
-                if isinstance(add_groupbox_in_layout, QFormLayout):
-                    add_groupbox_in_layout.addRow(g)
-                else:
-                    add_groupbox_in_layout.addWidget(g)
-            return g, l
-
         def option_lbl_checkbox(text, optiontext, parent=None):
             l = QLabel(text)
             c = QCheckBox(text, parent)
@@ -941,7 +926,7 @@ class SettingsDialog(QWidget):
         app_general_m_l.addRow(self.keep_added_gallery)
 
         # App / General / Search
-        app_search, app_search_layout = groupbox('Search', QFormLayout, application_general)
+        app_search, app_search_layout = self.groupbox('Search', QFormLayout, application_general)
         app_general_m_l.addRow(app_search)
         # App / General / Search / autocomplete
         self.search_autocomplete = QCheckBox('*')
@@ -955,7 +940,7 @@ class SettingsDialog(QWidget):
         app_search_layout.addRow(self.search_on_enter)
 
         # App / General / External Viewer
-        app_external_viewer, app_external_viewer_l = groupbox(
+        app_external_viewer, app_external_viewer_l = self.groupbox(
             'External Viewer', QFormLayout, application_general, app_general_m_l)
         external_viewer_p_info = QLabel(
             "Tip: If your preffered image viewer doesn't work, "
@@ -971,7 +956,7 @@ class SettingsDialog(QWidget):
         app_external_viewer_l.addRow('Path:', self.external_viewer_path)
 
         # App / General / Rar Support
-        app_rar_group, app_rar_layout = groupbox('RAR Support *', QFormLayout, self)
+        app_rar_group, app_rar_layout = self.groupbox('RAR Support *', QFormLayout, self)
         app_general_m_l.addRow(app_rar_group)
         rar_info = QLabel(
             'Specify the path to the unrar tool to enable rar support.\n'
@@ -989,7 +974,8 @@ class SettingsDialog(QWidget):
         # App / Gallery
         app_gallery_page, app_gallery_l = new_tab('Gallery', application, True)
 
-        g_def_values, g_def_values_l = groupbox("Default values", QFormLayout, app_gallery_page)
+        g_def_values, g_def_values_l = self.groupbox(
+            "Default values", QFormLayout, app_gallery_page)
         app_gallery_l.addRow(g_def_values)
         self.g_languages = QComboBox(self)
         self.g_languages.setInsertPolicy(QComboBox.InsertAlphabetically)
@@ -1024,14 +1010,14 @@ class SettingsDialog(QWidget):
         app_gallery_l.addRow(self.extract_gallery_before_opening)
         app_gallery_l.addRow(self.open_galleries_sequentially)
 
-        self.move_imported_gs, move_imported_gs_l = groupbox(
+        self.move_imported_gs, move_imported_gs_l = self.groupbox(
             'Move imported galleries', QFormLayout, app_gallery_page)
         self.move_imported_gs.setCheckable(True)
         self.move_imported_gs.setToolTip("Move imported galleries to specified folder.")
         self.move_imported_def_path = PathLineEdit()
         move_imported_gs_l.addRow('Directory:', self.move_imported_def_path)
         app_gallery_l.addRow(self.move_imported_gs)
-        self.rename_g_source_group, rename_g_source_l = groupbox(
+        self.rename_g_source_group, rename_g_source_l = self.groupbox(
             'Rename gallery source (Coming soon)', QFormLayout, app_gallery_page)
         self.rename_g_source_group.setCheckable(True)
         self.rename_g_source_group.setDisabled(True)
@@ -1048,7 +1034,7 @@ class SettingsDialog(QWidget):
         rename_g_source_flow_l.addWidget(self.rename_artist)
         rename_g_source_flow_l.addWidget(self.rename_title)
         rename_g_source_flow_l.addWidget(self.rename_lang)
-        random_gallery_opener, random_g_opener_l = groupbox(
+        random_gallery_opener, random_g_opener_l = self.groupbox(
             'Random Gallery Opener', QFormLayout, app_gallery_page)
         app_gallery_l.addRow(random_gallery_opener)
         self.open_random_g_chapters = QCheckBox("Open random gallery chapters")
@@ -1093,7 +1079,7 @@ class SettingsDialog(QWidget):
 
         # App / Ignore
         app_ignore, app_ignore_m_l = new_tab('Ignore', application, True)
-        ignore_ext_group, ignore_ext_l = groupbox(
+        ignore_ext_group, ignore_ext_l = self.groupbox(
             'Folder && File extensions (Check to ignore)', QVBoxLayout, app_monitor_dummy)
         app_ignore_m_l.addRow(ignore_ext_group)
         ignore_ext_list_l = FlowLayout()
@@ -1109,7 +1095,7 @@ class SettingsDialog(QWidget):
         self.ignore_cbr = QCheckBox("CBR", ignore_ext_group)
         ignore_ext_list_l.addWidget(self.ignore_cbr)
 
-        app_ignore_group, app_ignore_list_l = groupbox('List', QVBoxLayout, app_monitor_dummy)
+        app_ignore_group, app_ignore_list_l = self.groupbox('List', QVBoxLayout, app_monitor_dummy)
         app_ignore_m_l.addRow(app_ignore_group)
         add_buttons_l = QHBoxLayout()
         app_ignore_add_a = QPushButton('Add archive')
@@ -1177,7 +1163,7 @@ class SettingsDialog(QWidget):
 
         # ehentai
         exprops = settings.ExProperties
-        ehentai_group, ehentai_l = groupbox("E-Hentai", QFormLayout, logins_page)
+        ehentai_group, ehentai_l = self.groupbox("E-Hentai", QFormLayout, logins_page)
         logins_layout.addRow(ehentai_group)
         ehentai_user, ehentai_pass, ehentai_status = make_login_forms(
             ehentai_l,
@@ -1190,14 +1176,14 @@ class SettingsDialog(QWidget):
         )
 
         # nhentai
-        # nhentai_group, nhentai_l = groupbox("NHentai", QFormLayout, logins_page)
+        # nhentai_group, nhentai_l = self.groupbox("NHentai", QFormLayout, logins_page)
         # logins_layout.addRow(nhentai_group)
         # nhentai_user, nhentai_pass, nhentai_status = make_login_forms(
         # nhentai_l, exprops(exprops.NHENTAI), pewnet.NHen)
 
         # Web / Downloader
         web_downloader, web_downloader_l = new_tab('Downloader', web)
-        hen_download_group, hen_download_group_l = groupbox(
+        hen_download_group, hen_download_group_l = self.groupbox(
             'E-Hentai', QFormLayout, web_downloader)
         web_downloader_l.addRow(hen_download_group)
         self.archive_download = QRadioButton('Archive', hen_download_group)
@@ -1308,7 +1294,7 @@ class SettingsDialog(QWidget):
         self.force_high_dpi_support = QCheckBox("Force High DPI support *", self)
         misc_controls_layout.addRow(self.force_high_dpi_support)
 
-        external_view_group, external_view_l = groupbox(
+        external_view_group, external_view_l = self.groupbox(
             "External Viewer Arguments", QFormLayout, advanced)
         misc_controls_layout.addRow(external_view_group)
         external_viewer_info = QLabel(app_constants.EXTERNAL_VIEWER_INFO)
@@ -1348,7 +1334,8 @@ class SettingsDialog(QWidget):
         cache_size_spin_box.valueChanged[int].connect(cache_size)
         misc_gridview_layout.addRow('Cache Size (MiB):', cache_size_spin_box)
 
-        exhentai_group, exhentai_group_l = groupbox("ExHentai Details", QFormLayout, advanced_misc)
+        exhentai_group, exhentai_group_l = self.groupbox(
+            "ExHentai Details", QFormLayout, advanced_misc)
         misc_controls_layout.addRow(exhentai_group)
         self.ipbid_edit = QLineEdit()
         self.ipbpass_edit = QLineEdit()
@@ -1403,7 +1390,7 @@ class SettingsDialog(QWidget):
         rebuild_thumbs_btn.clicked.connect(rebuild_thumbs)
         advanced_gallery_m_l.addRow(rebuild_thumbs_info)
         advanced_gallery_m_l.addRow(rebuild_thumbs_btn)
-        g_data_fixer_group, g_data_fixer_l = groupbox(
+        g_data_fixer_group, g_data_fixer_l = self.groupbox(
             'Gallery Renamer', QFormLayout, advanced_gallery)
         g_data_fixer_group.setEnabled(False)
         advanced_gallery_m_l.addRow(g_data_fixer_group)
@@ -1473,7 +1460,7 @@ class SettingsDialog(QWidget):
                 app_popup.show()
                 self.close()
 
-        advanced_impexp, advanced_impexp_l = groupbox(
+        advanced_impexp, advanced_impexp_l = self.groupbox(
             'Import/Export', QFormLayout, advanced_db_page)
         advanced_db_page_l.addRow(advanced_impexp)
         self.export_format = QComboBox(advanced_db_page)
