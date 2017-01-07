@@ -78,6 +78,13 @@ log_e = log.error
 log_c = log.critical
 
 
+def color_lineedit(maximum_width=200):
+    l = QLineEdit()
+    l.setPlaceholderText('Hex colors. Eg.: #323232')
+    l.setMaximumWidth(maximum_width)
+    return l
+
+
 class SettingsDialog(QWidget):
     """A settings dialog."""
 
@@ -1185,11 +1192,6 @@ class SettingsDialog(QWidget):
         grid_colors_l = QFormLayout()
         grid_colors_group.setLayout(grid_colors_l)
 
-        def color_lineedit():
-            l = QLineEdit()
-            l.setPlaceholderText('Hex colors. Eg.: #323232')
-            l.setMaximumWidth(200)
-            return l
         self.grid_label_color = color_lineedit()
         self.grid_title_color = color_lineedit()
         self.grid_artist_color = color_lineedit()
