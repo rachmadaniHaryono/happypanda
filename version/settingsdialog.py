@@ -890,28 +890,10 @@ class SettingsDialog(QWidget):
             c = QCheckBox(text, parent)
             return l, c
 
-        def new_tab(name, parent, scroll=False):
-            """Create a new tab.
-
-            Returns new tab page widget and it's layout
-            """
-            new_t = QWidget(parent)
-            new_l = QFormLayout(new_t)
-            if scroll:
-                scr = QScrollArea(parent)
-                scr.setBackgroundRole(QPalette.Base)
-                scr.setWidget(new_t)
-                scr.setWidgetResizable(True)
-                parent.addTab(scr, name)
-                return new_t, new_l
-            else:
-                parent.addTab(new_t, name)
-            return new_t, new_l
-
         # App
         application = QTabWidget(self)
         self.application_index = self.right_panel.addWidget(application)
-        application_general, app_general_m_l = new_tab('General', application, True)
+        application_general, app_general_m_l = self.new_tab('General', application, True)
 
         # App / General
         self.sidebar_widget_hidden = QCheckBox("Show sidebar widget on startup")
@@ -972,7 +954,7 @@ class SettingsDialog(QWidget):
         app_rar_layout.addRow('UnRAR tool path:', self.path_to_unrar)
 
         # App / Gallery
-        app_gallery_page, app_gallery_l = new_tab('Gallery', application, True)
+        app_gallery_page, app_gallery_l = self.new_tab('Gallery', application, True)
 
         g_def_values, g_def_values_l = self.groupbox(
             "Default values", QFormLayout, app_gallery_page)
@@ -1078,7 +1060,7 @@ class SettingsDialog(QWidget):
         app_monitor_folders_m_l.addLayout(self.folders_layout)
 
         # App / Ignore
-        app_ignore, app_ignore_m_l = new_tab('Ignore', application, True)
+        app_ignore, app_ignore_m_l = self.new_tab('Ignore', application, True)
         ignore_ext_group, ignore_ext_l = self.groupbox(
             'Folder && File extensions (Check to ignore)', QVBoxLayout, app_monitor_dummy)
         app_ignore_m_l.addRow(ignore_ext_group)
@@ -1113,7 +1095,7 @@ class SettingsDialog(QWidget):
         self.web_index = self.right_panel.addWidget(web)
 
         # Web / Logins
-        logins_page, logins_layout = new_tab("Logins", web, True)
+        logins_page, logins_layout = self.new_tab("Logins", web, True)
 
         def login(userlineedit, passlineedit, statuslbl, baseHen_class, partial_txt):  # NOQA
             statuslbl.setText("Logging in...")
@@ -1182,7 +1164,7 @@ class SettingsDialog(QWidget):
         # nhentai_l, exprops(exprops.NHENTAI), pewnet.NHen)
 
         # Web / Downloader
-        web_downloader, web_downloader_l = new_tab('Downloader', web)
+        web_downloader, web_downloader_l = self.new_tab('Downloader', web)
         hen_download_group, hen_download_group_l = self.groupbox(
             'E-Hentai', QFormLayout, web_downloader)
         web_downloader_l.addRow(hen_download_group)
@@ -1352,7 +1334,7 @@ class SettingsDialog(QWidget):
         exhentai_group_l.addRow(exh_tutorial)
 
         # Advanced / Gallery
-        advanced_gallery, advanced_gallery_m_l = new_tab('Gallery', advanced)
+        advanced_gallery, advanced_gallery_m_l = self.new_tab('Gallery', advanced)
 
         def rebuild_thumbs():
             confirm_msg = QMessageBox(
@@ -1413,7 +1395,7 @@ class SettingsDialog(QWidget):
         g_data_fixer_options.addWidget(self.g_data_fixer_artist)
 
         # Advanced / Database
-        advanced_db_page, advanced_db_page_l = new_tab('Database', advanced)
+        advanced_db_page, advanced_db_page_l = self.new_tab('Database', advanced)
         # Advanced / Database / Import/Export
 
         def init_export():
@@ -1483,7 +1465,7 @@ class SettingsDialog(QWidget):
         # About
         about = QTabWidget(self)
         self.about_index = self.right_panel.addWidget(about)
-        about_happypanda_page, about_layout = new_tab("About Happypanda", about, False)
+        about_happypanda_page, about_layout = self.new_tab("About Happypanda", about, False)
         info_lbl = QLabel(app_constants.ABOUT)
         info_lbl.setWordWrap(True)
         info_lbl.setOpenExternalLinks(True)
@@ -1496,7 +1478,7 @@ class SettingsDialog(QWidget):
         about_layout.addWidget(open_hp_folder)
 
         # # About / DB Overview
-        # about_db_overview, about_db_overview_m_l = new_tab('DB Overview', about)
+        # about_db_overview, about_db_overview_m_l = self.new_tab('DB Overview', about)
         # about_stats_tab_widget = misc_db.DBOverview(self.parent_widget)
         # about_db_overview_m_l.addRow(about_stats_tab_widget)
         # about_db_overview.setEnabled(False)
@@ -1514,19 +1496,19 @@ class SettingsDialog(QWidget):
         troubleshoot_layout.addWidget(SpacerWidget('v'))
 
         # About / Search tutorial
-        about_search_tut, about_search_tut_l = new_tab("Search Guide", about, True)
+        about_search_tut, about_search_tut_l = self.new_tab("Search Guide", about, True)
         g_search_lbl = QLabel(app_constants.SEARCH_TUTORIAL_TAGS)
         g_search_lbl.setWordWrap(True)
         about_search_tut_l.addRow(g_search_lbl)
 
         # About / Regex Cheatsheet
-        about_s_regex, about_s_regex_l = new_tab("Regex Cheatsheet", about, True)
+        about_s_regex, about_s_regex_l = self.new_tab("Regex Cheatsheet", about, True)
         reg_info = QLabel(app_constants.REGEXCHEAT)
         reg_info.setWordWrap(True)
         about_s_regex_l.addRow(reg_info)
 
         # About / Keyboard shortcuts
-        about_k_shortcuts, about_k_shortcuts_l = new_tab("Keyboard Shortcuts", about, True)
+        about_k_shortcuts, about_k_shortcuts_l = self.new_tab("Keyboard Shortcuts", about, True)
         k_short_info = QLabel(app_constants.KEYBOARD_SHORTCUTS_INFO)
         k_short_info.setWordWrap(True)
         about_k_shortcuts_l.addRow(k_short_info)
