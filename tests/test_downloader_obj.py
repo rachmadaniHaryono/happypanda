@@ -170,10 +170,10 @@ def test_get_filename(item_name_and_exp_basename, temp_base):
 
 
 @pytest.mark.parametrize(
-    'current_state_is_cancelled, use_tempfile',
-    product([True, False], repeat=2)
+    'current_state_is_cancelled, use_tempfile, catch_errors',
+    product([True, False], repeat=3)
 )
-def test_download_single_file(current_state_is_cancelled, use_tempfile):
+def test_download_single_file(current_state_is_cancelled, use_tempfile, catch_errors):
     item = mock.Mock()
     item.current_state = 0
     if current_state_is_cancelled:
@@ -190,18 +190,32 @@ def test_download_single_file(current_state_is_cancelled, use_tempfile):
     interrupt_state = False
     m_open = mock.mock_open()
     m_ntf = mock.mock_open()
+    # catch error arg given.
+    exp_item = mock.Mock()
+    exp_interrupt_state = mock.Mock()
+    dl_with_catch_error_func = mock.Mock(return_value=(exp_item, exp_interrupt_state))
+    catch_errors = OSError if catch_errors else None
+    #
     with mock.patch('version.downloader_obj.open', m_open, create=True), \
             mock.patch('version.downloader_obj.NamedTemporaryFile', m_ntf), \
             mock.patch('version.downloader_obj.shutil') as m_shutil:
         exp_target_file = m_ntf.return_value.name if use_tempfile else target_file
         from version.downloader_obj import DownloaderObject
+        DownloaderObject._download_with_catch_error = dl_with_catch_error_func
+        # run
         result_item, result_interrupt_state = DownloaderObject._download_single_file(
             target_file=target_file,
             response=response,
             item=item,
             interrupt_state=interrupt_state,
-            use_tempfile=use_tempfile
+            use_tempfile=use_tempfile,
+            catch_errors=catch_errors
         )
+        # test
+        if catch_errors:
+            assert result_item == exp_item
+            assert result_interrupt_state == exp_interrupt_state
+            return
         if current_state_is_cancelled:
             assert result_interrupt_state
             m_open.assert_has_calls([
