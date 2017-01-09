@@ -453,3 +453,18 @@ def test_download_item_with_multiple_dl_url(
                 use_tempfile=True,
                 catch_errors=[requests.exceptions.ConnectionError]
             )
+
+
+@pytest.mark.parametrize('raise_error', [False])
+def test_get_local_filesize(raise_error):
+    """test method."""
+    path = mock.Mock()
+    with mock.patch('version.downloader_obj.os') as m_os:
+        from version.downloader_obj import DownloaderObject
+        if raise_error:
+            m_os.path.getsize.side_effect = OSError
+        res = DownloaderObject._get_local_filesize(path=path)
+        if not raise_error:
+            assert res == m_os.path.getsize.return_value
+        else:
+            assert res == 0
