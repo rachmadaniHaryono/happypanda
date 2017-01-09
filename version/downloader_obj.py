@@ -11,6 +11,7 @@ from queue import Queue
 from tempfile import NamedTemporaryFile
 
 from PyQt5.QtCore import QObject, pyqtSignal
+from requests.exceptions import ConnectionError
 
 try:  # pragma: no cover
     import app_constants
@@ -190,7 +191,10 @@ class DownloaderObject(QObject):
         return item, interrupt_state
 
     @staticmethod
-    def _download_single_file(target_file, response, item, interrupt_state, use_tempfile=False):
+    def _download_single_file(
+            target_file, response, item, interrupt_state,
+            use_tempfile=False, catch_errors=None
+    ):
         """Download single file from url response and return changed item and interrupt state.
 
         Note:
@@ -203,12 +207,27 @@ class DownloaderObject(QObject):
             item: Download item.
             interrupt_state (bool): Interrupt state.
             use_tempfile (bool): Use tempfile when downloading or not.
+            catch_errors (list): List of error that will be catched when downloading.
 
         Returns:
             tuple: (item, interrupt_state) where both variables
                 is the changed variables from input.
         """
-        if use_tempfile:
+        if catch_errors:
+            download_finished = False
+            while not download_finished:
+                try:
+                    item, interrupt_state = DownloaderObject._download_single_file(
+                        target_file=target_file,
+                        response=response,
+                        item=item,
+                        interrupt_state=interrupt_state,
+                        use_tempfile=use_tempfile
+                    )
+                    download_finished = True
+                except catch_errors as err:
+                    log_d('Redownloading because following error.\n{}'.format(err))
+        elif use_tempfile:
             with NamedTemporaryFile() as tempfile:
                 item, interrupt_state = DownloaderObject._download_single_file(
                     target_file=tempfile.name,
@@ -338,7 +357,9 @@ class DownloaderObject(QObject):
                 # downloading to temp file (file_name_part)
                 item, interrupt_state = self._download_single_file(
                     target_file=target_file, response=r, item=item,
-                    interrupt_state=interrupt_state, use_tempfile=True
+                    interrupt_state=interrupt_state, use_tempfile=True,
+                    catch_errors=[ConnectionError]
+
                 )
 
         if not interrupt_state:
