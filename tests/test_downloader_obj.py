@@ -209,9 +209,9 @@ def test_download_single_file(current_state_is_cancelled, use_tempfile):
                 mock.call().__enter__(),
                 mock.call().__exit__(None, None, None)
             ])
+        else:
             if use_tempfile:
                 m_shutil.copyfile.assert_called_once_with(m_ntf.return_value.name, target_file)
-        else:
             assert result_interrupt_state == interrupt_state
             assert result_item.current_size == 1
             m_open.assert_has_calls([
@@ -417,12 +417,13 @@ def test_download_item_with_multiple_dl_url(
             mock.patch('version.downloader_obj.DownloaderObject._set_base'), \
             mock.patch('version.downloader_obj.makedirs_if_not_exists') as m_mine:
         from version.downloader_obj import DownloaderObject
+        import requests
         obj = DownloaderObject()
         obj._get_response = get_response_func
         obj._get_total_size = get_total_size_func
         obj._get_total_size_prediction = get_total_size_prediction_func
         obj._get_local_filesize = get_local_filesize_func
-        obj._download_single_file_ = download_single_file_func
+        obj._download_single_file = download_single_file_func
         obj.item_finished = item_finished_signal
         # run
         res = obj._download_item_with_multiple_dl_url(
@@ -449,5 +450,6 @@ def test_download_item_with_multiple_dl_url(
                 interrupt_state=interrupt_state, item=item,
                 response=get_response_func.return_value,
                 target_file=m_os.path.join.return_value,
-                use_tempfile=True
+                use_tempfile=True,
+                catch_errors=[requests.exceptions.ConnectionError]
             )
