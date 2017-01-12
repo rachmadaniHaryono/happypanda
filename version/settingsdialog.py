@@ -461,9 +461,7 @@ class SettingsDialog(QWidget):
         grid_view_layout.addRow(grid_colors_group)
         grid_colors_l = QFormLayout()
         grid_colors_group.setLayout(grid_colors_l)
-        # self.grid_label_color = color_lineedit()
-        from slickpicker import QColorLineEdit
-        self.grid_label_color = QColorLineEdit(color='#ffff')
+        self.grid_label_color = color_lineedit()
         self.grid_title_color = color_lineedit()
         self.grid_artist_color = color_lineedit()
         grid_colors_l.addRow('Label color:', self.grid_label_color)
