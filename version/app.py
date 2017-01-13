@@ -1004,7 +1004,7 @@ class AppWindow(QMainWindow):
             shortcut=QKeySequence(QKeySequence.Forward),
             text=u'\u25B6',
             fixed_width=15,
-            clicked_connect_func=lambda: self.search_history(None, False),
+            clicked_connect_func=lambda: self._search_history(None, False),
         )
         self.search_forward = self.toolbar.addWidget(search_forwardbutton)
         self.search_forward.setVisible(False)
