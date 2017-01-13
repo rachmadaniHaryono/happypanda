@@ -19,6 +19,7 @@ import sys
 from PyQt5.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QColorDialog,
     QFileDialog,
     QFontDialog,
     QFormLayout,
@@ -48,6 +49,7 @@ from PyQt5.QtGui import (
 
 try:  # pragma: no cover
     from app_dialog import AppDialog
+    from color_line_edit import ColorLineEdit
     from flow_layout import FlowLayout
     from import_export_obj import ImportExportObject
     from path_line_edit import PathLineEdit
@@ -60,6 +62,7 @@ try:  # pragma: no cover
     import utils
 except ImportError:
     from .app_dialog import AppDialog
+    from .color_line_edit import ColorLineEdit
     from .flow_layout import FlowLayout
     from .import_export_obj import ImportExportObject
     from .path_line_edit import PathLineEdit
@@ -343,6 +346,15 @@ class SettingsDialog(QWidget):
         self.g_data_fixer_title.setChecked(app_constants.GALLERY_DATA_FIX_TITLE)
         self.g_data_fixer_artist.setChecked(app_constants.GALLERY_DATA_FIX_ARTIST)
 
+    @staticmethod
+    def _get_color_line_edit_and_hbox_layout(hex_color=None):
+        """get ColorLineEdit and hbox layout."""
+        color_line_edit = ColorLineEdit(hex_color=hex_color)
+        hbox_layout = QHBoxLayout()
+        hbox_layout.addWidget(color_line_edit)
+        hbox_layout.addWidget(color_line_edit.button)
+        return color_line_edit, hbox_layout
+
     def _grid_view_tab_on_visual_tabwidget(self, tabwidget):
         # legacy compatibility
         visual = tabwidget
@@ -461,36 +473,49 @@ class SettingsDialog(QWidget):
         grid_view_layout.addRow(grid_colors_group)
         grid_colors_l = QFormLayout()
         grid_colors_group.setLayout(grid_colors_l)
-        self.grid_label_color = color_lineedit()
-        self.grid_title_color = color_lineedit()
-        self.grid_artist_color = color_lineedit()
-        grid_colors_l.addRow('Label color:', self.grid_label_color)
-        grid_colors_l.addRow('Title color:', self.grid_title_color)
-        grid_colors_l.addRow('Artist color:', self.grid_artist_color)
+        self.grid_label_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            hex_color=app_constants.GRID_VIEW_LABEL_COLOR)
+        grid_colors_l.addRow('Label color:', hbox_layout)
+        self.grid_title_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            hex_color=app_constants.GRID_VIEW_TITLE_COLOR)
+        grid_colors_l.addRow('Title color:', hbox_layout)
+        self.grid_artist_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            hex_color=app_constants.GRID_VIEW_ARTIST_COLOR)
+        grid_colors_l.addRow('Artist color:', hbox_layout)
 
         # grid view / colors / ribbon
         self.colors_ribbon_group, colors_ribbon_l = self.groupbox(
             'Ribbon', QFormLayout, grid_colors_group)
         self.colors_ribbon_group.setCheckable(True)
         grid_colors_l.addRow(self.colors_ribbon_group)
-        self.ribbon_manga_color = color_lineedit()
-        colors_ribbon_l.addRow('Manga', self.ribbon_manga_color)
-        self.ribbon_doujin_color = color_lineedit()
-        colors_ribbon_l.addRow('Doujinshi', self.ribbon_doujin_color)
-        self.ribbon_artist_cg_color = color_lineedit()
-        colors_ribbon_l.addRow('Artist CG', self.ribbon_artist_cg_color)
-        self.ribbon_game_cg_color = color_lineedit()
-        colors_ribbon_l.addRow('Game CG', self.ribbon_game_cg_color)
-        self.ribbon_western_color = color_lineedit()
-        colors_ribbon_l.addRow('Western', self.ribbon_western_color)
-        self.ribbon_image_color = color_lineedit()
-        colors_ribbon_l.addRow('Image', self.ribbon_image_color)
-        self.ribbon_non_h_color = color_lineedit()
-        colors_ribbon_l.addRow('Non-H', self.ribbon_non_h_color)
-        self.ribbon_cosplay_color = color_lineedit()
-        colors_ribbon_l.addRow('Cosplay', self.ribbon_cosplay_color)
-        self.ribbon_other_color = color_lineedit()
-        colors_ribbon_l.addRow('Other', self.ribbon_other_color)
+        #
+        self.ribbon_manga_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_MANGA_COLOR)
+        colors_ribbon_l.addRow('Manga', hbox_layout)
+        self.ribbon_doujin_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_DOUJIN_COLOR)
+        colors_ribbon_l.addRow('Doujinshi', hbox_layout)
+        self.ribbon_artist_cg_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_ARTIST_CG_COLOR)
+        colors_ribbon_l.addRow('Artist CG', hbox_layout)
+        self.ribbon_game_cg_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_GAME_CG_COLOR)
+        colors_ribbon_l.addRow('Game CG', hbox_layout)
+        self.ribbon_western_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_WESTERN_COLOR)
+        colors_ribbon_l.addRow('Western', hbox_layout)
+        self.ribbon_image_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_IMAGE_COLOR)
+        colors_ribbon_l.addRow('Image', hbox_layout)
+        self.ribbon_non_h_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_NON_H_COLOR)
+        colors_ribbon_l.addRow('Non-H', hbox_layout)
+        self.ribbon_cosplay_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_COSPLAY_COLOR)
+        colors_ribbon_l.addRow('Cosplay', hbox_layout)
+        self.ribbon_other_color, hbox_layout = self._get_color_line_edit_and_hbox_layout(
+            app_constants.GRID_VIEW_T_OTHER_COLOR)
+        colors_ribbon_l.addRow('Other', hbox_layout)
 
     def accept(self):  # NOQA
         """accept."""
