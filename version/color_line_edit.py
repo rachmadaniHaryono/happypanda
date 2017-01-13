@@ -26,6 +26,14 @@ class ColorLineEdit(QLineEdit):
 
     Hex color regex taken from:
         mkyong.com/regular-expressions/how-to-validate-hex-color-code-with-regular-expression/
+
+    Args:
+        hex_color (str): Default hex color.
+
+    Attributes:
+        default_color (str): Default color.
+        button (QPushButton): Button which reflect the input from user.
+        color_dialog (QColorDialog): Color dialog for this widget.
     """
 
     hexcolor_regex = r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
@@ -58,7 +66,11 @@ class ColorLineEdit(QLineEdit):
         self.editingFinished.connect(self.update_button_color)
 
     def button_click(self):
-        """Function to run when button clicked."""
+        """Function to run when button clicked.
+
+        Get the text from input, and use it as default arg for color selection dialog.
+        If dialog return valid result, update the button and text input.
+        """
         color_number = self.text()
         current_color = QColor(color_number)
         color_from_dialog = self.color_dialog.getColor(current_color)
