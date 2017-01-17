@@ -45,16 +45,14 @@ class NhenManager(DLManagerObject):
         return filecount_div_text.split(' pages')[0].strip()
 
     @staticmethod
-    def _find_tags(browser):
-        """find tags from browser.
+    def _get_tag_dict(html_soup):
+        """get tag dict from html soup.
 
         Args:
-            browser: Robobrowser instance.
-
+            html_soup: HTML as BeautifulSoup obj.
         Returns:
-            list: List of doujin/manga tags on the page.
+            dict: Tags in dict format.
         """
-        html_soup = browser
         tag_dict = {}
         tags_divs = html_soup.select('.tag-container')
         for tags_div in tags_divs:
@@ -66,6 +64,20 @@ class NhenManager(DLManagerObject):
                 value.append(val_div.text.rsplit('(', 1)[0].strip())
             if value:
                 tag_dict[key] = value
+        return tag_dict
+
+    @staticmethod
+    def _find_tags(browser):
+        """find tags from browser.
+
+        Args:
+            browser: Robobrowser instance.
+
+        Returns:
+            list: List of doujin/manga tags on the page.
+        """
+        html_soup = browser
+        tag_dict = NhenManager._get_tag_dict(html_soup=html_soup)
         res = []
         for key in tag_dict:
             for value in tag_dict[key]:
