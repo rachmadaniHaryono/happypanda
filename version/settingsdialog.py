@@ -19,7 +19,6 @@ import sys
 from PyQt5.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QColorDialog,
     QFileDialog,
     QFontDialog,
     QFormLayout,
