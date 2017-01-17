@@ -139,7 +139,7 @@ class NhenManager(DLManagerObject):
         links = self._browser.select('.thumb-container a.gallerythumb')
         links = [x.get('href') for x in links]
         # link = '/g/168260/22/'  # example
-        links_parts = [(x.split('/')[2], x.split('/')[-2]) for x in links]
+        links_parts = AsmManager._split_href_links_to_parts(links)
         image1_data = self._get_first_image_data(links_parts[0])
         image_ext = image1_data['ext']
         server_id = image1_data['server_id']

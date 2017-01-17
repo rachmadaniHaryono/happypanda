@@ -101,6 +101,18 @@ class AsmManager(DLManagerObject):
         link_tag_src = link_tags[0].get('src')
         return link_tag_src.split('//images.asmhentai.com/')[1].split('/')[0]
 
+    @staticmethod
+    def _split_href_links_to_parts(links):
+        """Split href links to parts.
+
+        Args:
+            links (list): List of hrefs.
+
+        Returns:
+            list of tuple contain url parts.
+        """
+        return [(x.split('/')[2], x.split('/')[-2]) for x in links]
+
     def _get_dl_urls(self, g_url):
         """get image urls from gallery url.
 
@@ -115,7 +127,7 @@ class AsmManager(DLManagerObject):
         links = self._browser.select('.preview_thumb a')
         links = [x.get('href') for x in links]
         # link = '/gallery/168260/22/'
-        links_parts = [(x.split('/')[2], x.split('/')[-2]) for x in links]
+        links_parts = self._split_href_links_to_parts(links)
         server_id = self._get_server_id(links_parts[0])
         log_d('Server id: {}'.format(server_id))
         imgs = list(map(
