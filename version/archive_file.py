@@ -55,24 +55,32 @@ class ArchiveFile():
             self.type = self.rar
         return b_f
 
+    def _check_archive_filepath(self, filepath):
+        """Check archive filepath.
+
+        Args:
+            filepath: Filepath to check.
+        """
+        # check for bad file.
+        is_bad_file = self._check_archive(filepath=filepath)
+        # test for corruption
+        if filepath.endswith(ARCHIVE_FILES) and not is_bad_file:
+            # check archive result pass
+            pass
+        elif filepath.endswith(ARCHIVE_FILES) and is_bad_file:
+            log_w('Bad file found in archive {}'.format(
+                filepath.encode(errors='ignore')
+            ))
+            raise app_constants.CreateArchiveFail
+        else:
+            log_e('Archive: Unsupported file format')
+            raise app_constants.CreateArchiveFail
+
     def __init__(self, filepath):
         """init."""
         self.type = 0
         try:
-            # check for bad file.
-            is_bad_file = self._check_archive(filepath=filepath)
-            # test for corruption
-            if filepath.endswith(ARCHIVE_FILES) and not is_bad_file:
-                # check archive result pass
-                pass
-            elif filepath.endswith(ARCHIVE_FILES) and is_bad_file:
-                log_w('Bad file found in archive {}'.format(
-                    filepath.encode(errors='ignore')
-                ))
-                raise app_constants.CreateArchiveFail
-            else:
-                log_e('Archive: Unsupported file format')
-                raise app_constants.CreateArchiveFail
+            self._check_archive_filepath(filepath=filepath)
         except:
             log.exception('Create archive: FAIL')
             raise app_constants.CreateArchiveFail
