@@ -38,7 +38,9 @@ def test_check_archive(ext):
         from version import archive_file
         archive_file.ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
         # run
-        res = archive_file.ArchiveFile._check_archive(filepath=filepath)
+        archive_file.ArchiveFile.__init__ = mock.Mock(return_value=None)
+        obj = archive_file.ArchiveFile()
+        res = obj._check_archive(filepath=filepath)
         # test
         if filepath.endswith(archive_file.ARCHIVE_FILES):
             m_os.path.normcase.assert_called_once_with(filepath)
