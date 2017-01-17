@@ -1,6 +1,8 @@
 """arrow window."""
 import logging
+import sys
 
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import (
     QPointF,
     QRectF,
@@ -32,14 +34,17 @@ log_c = log.critical
 
 
 class ArrowWindow(TransparentWidget):
-    """ArrowWindow."""
+    """ArrowWindow.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+    """
 
     LEFT, RIGHT, TOP, BOTTOM = range(4)
 
     def __init__(self, parent):
-        """__init__."""
-        super().__init__(parent, flags=Qt.Window |
-                         Qt.FramelessWindowHint, move_listener=False)
+        """init."""
+        super().__init__(parent, flags=Qt.Window | Qt.FramelessWindowHint, move_listener=False)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.resize(550, 300)
         self.direction = self.LEFT
@@ -48,13 +53,16 @@ class ArrowWindow(TransparentWidget):
 
     @property
     def arrow_size(self):
-        """arrow_size."""
+        """Arrow size."""
         return self._arrow_size
 
     @arrow_size.setter
     def arrow_size(self, w_h_tuple):
-        """arrow_size."""
-        "a tuple of width and height"
+        """Set arrow size.
+
+        Args:
+            w_h_tuple (tuple or list):A tuple or list of width and height.
+        """
         if not isinstance(w_h_tuple, (tuple, list)) or len(w_h_tuple) != 2:
             return
 
@@ -67,7 +75,11 @@ class ArrowWindow(TransparentWidget):
         self.update()
 
     def paintEvent(self, event):  # NOQA
-        """paintEvent."""
+        """paintEvent.
+
+        Args:
+            event (QtGui.QPaintEvent): Paint event.
+        """
         assert isinstance(event, QPaintEvent)
 
         opt = QStyleOption()
@@ -144,3 +156,13 @@ class ArrowWindow(TransparentWidget):
 
         # draw it!
         painter.drawPolygon(QPolygonF(arrow_points))
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+
+    parent_widget = QtWidgets.QWidget()
+    widget = ArrowWindow(parent=parent_widget)
+    parent_widget.show()
+
+    sys.exit(app.exec_())

@@ -27,46 +27,49 @@ rarfile.UNRAR_TOOL = app_constants.unrar_tool_path
 class ArchiveFile():
     """Work with archive files, raises exception if instance fails.
 
-    namelist -> returns a list with all files in archive
-    extract <- Extracts one specific file to given path
-    open -> open the given file in archive, returns bytes
-    close -> close archive
+    Args:
+        filepath: Filepath of archive file.
     """
 
     zip, rar = range(2)
 
-    @classmethod
-    def _check_archive(cls, filepath):
+    def _check_archive(self, filepath):
         """check_archive.
+
+        Args:
+            filepath: Filepath to check.
 
         Returns:
             return True file is bad.
         """
         archive_files_1part = ARCHIVE_FILES[:2]
         archive_files_2part = ARCHIVE_FILES[2:]
-        b_f = True
+        b_f = True  # assume it is bad file
         if filepath.endswith(ARCHIVE_FILES) and filepath.endswith(archive_files_1part):
-            cls.archive = zipfile.ZipFile(os.path.normcase(filepath))
-            b_f = cls.archive.testzip()
-            cls.type = cls.zip
+            self.archive = zipfile.ZipFile(os.path.normcase(filepath))
+            b_f = self.archive.testzip()
+            self.type = self.zip
         elif filepath.endswith(ARCHIVE_FILES) and filepath.endswith(archive_files_2part):
-            cls.archive = rarfile.RarFile(os.path.normcase(filepath))
-            b_f = cls.archive.testrar()
-            cls.type = cls.rar
+            self.archive = rarfile.RarFile(os.path.normcase(filepath))
+            b_f = self.archive.testrar()
+            self.type = self.rar
         return b_f
 
     def __init__(self, filepath):
-        """__init__."""
+        """init."""
         self.type = 0
         try:
             # check for bad file.
-            b_f = self._check_archive(filepath=filepath)
-            if filepath.endswith(ARCHIVE_FILES):
-                # test for corruption
-                if b_f:
-                    log_w('Bad file found in archive {}'.format(
-                        filepath.encode(errors='ignore')))
-                    raise app_constants.CreateArchiveFail
+            is_bad_file = self._check_archive(filepath=filepath)
+            # test for corruption
+            if filepath.endswith(ARCHIVE_FILES) and not is_bad_file:
+                # check archive result pass
+                pass
+            elif filepath.endswith(ARCHIVE_FILES) and is_bad_file:
+                log_w('Bad file found in archive {}'.format(
+                    filepath.encode(errors='ignore')
+                ))
+                raise app_constants.CreateArchiveFail
             else:
                 log_e('Archive: Unsupported file format')
                 raise app_constants.CreateArchiveFail
@@ -75,14 +78,22 @@ class ArchiveFile():
             raise app_constants.CreateArchiveFail
 
     def namelist(self):
-        """namelist."""
+        """Returns a list with all files in archive.
+
+        Returns:
+            list: List of all files in archive.
+        """
         filelist = self.archive.namelist()
         return filelist
 
     def is_dir(self, name):
-        """is_dir.
+        """Checks if the provided name in the archive is a directory or not
 
-        Checks if the provided name in the archive is a directory or not
+        Args:
+            name: Name to check.
+
+        Returns:
+            bool: Returns True if name is a directory in archive.
         """
         if not name:
             return False
@@ -102,13 +113,18 @@ class ArchiveFile():
 
         For directories not in toplevel
         a path in the archive to the diretory will be returned.
+
+        Args:
+            only_top_level (bool): Return only top level or not.
+
+        Returns:
+            list: all directories and recursively if asked.
         """
         if only_top_level:
             if self.type == self.zip:
                 return [x for x in self.namelist() if x.endswith('/') and x.count('/') == 1]
             elif self.type == self.rar:
-                potential_dirs = [
-                    x for x in self.namelist() if x.count('/') == 0]
+                potential_dirs = [x for x in self.namelist() if x.count('/') == 0]
                 return [
                     x.filename for x in [
                         self.archive.getinfo(y)
@@ -125,6 +141,12 @@ class ArchiveFile():
         """Return a list of contents in the directory.
 
         An empty string will return the contents of the top folder
+
+        Args:
+            dir_name: Directory name.
+
+        Returns:
+            list: Directory contents.
         """
         if dir_name and dir_name not in self.namelist():
             log_e('Directory {} not found in archive'.format(dir_name))
@@ -148,17 +170,30 @@ class ArchiveFile():
 
     @staticmethod
     def _make_temp_dir(path=None):
-        """create temp dir if specified."""
+        """create temp dir if specified.
+
+        Args:
+            path: Path for tempdir.
+
+        Returns:
+            Path of temporary directory.
+        """
         if not path:
             path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
             os.mkdir(path)
         return path
 
     def extract(self, file_to_ext, path=None):
-        """Extract one file from archive to given path.
+        """Extract one specific file from archive to given path.
 
         Creates a temp_dir if path is not specified
-        Returns path to the extracted file
+
+        Args:
+            file_to_ext: File to extract.
+            path: Path for file to be extracted.
+
+        Returns:
+            Path to the extracted file
         """
         path = self._make_temp_dir(path=path)
         #
@@ -182,6 +217,13 @@ class ArchiveFile():
         """Extract all files to given path, and returns path.
 
         If path is not specified, a temp dir will be created
+
+        Args:
+            path: Optional path for extracted files.
+            member: Member from archive.
+
+        Returns:
+            Path of extracted files.
         """
         path = self._make_temp_dir(path=path)
         #
@@ -191,12 +233,21 @@ class ArchiveFile():
         return path
 
     def open(self, file_to_open, fp=False):
-        """Return bytes. If fp set to true, returns file-like object."""
+        """Open the given file in archive, returns bytes.
+
+        Args:
+            file_to_open: File to open.
+            fp (bool): Determine return type.
+
+        Return:
+            Bytes if fp set to false, else returns file-like object
+        """
+        archive_fp = self.archive.open(file_to_open)
         if fp:
-            return self.archive.open(file_to_open)
+            return archive_fp
         else:
-            return self.archive.open(file_to_open).read()
+            return archive_fp.read()
 
     def close(self):
-        """close."""
+        """Close the archive."""
         self.archive.close()

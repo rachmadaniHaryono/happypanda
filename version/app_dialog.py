@@ -1,20 +1,24 @@
 """app dialog."""
+import sys
 import logging
 
+import click
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import (
     pyqtSignal,
     Qt,
 )
 from PyQt5.QtWidgets import (
     QLabel,
-    QProgressBar,
     QVBoxLayout,
 )
 
-try:
-    from base_popup import BasePopup
-except ImportError:
-    from .base_popup import BasePopup
+# try:
+from base_popup import BasePopup
+from progress_bar import ProgressBar
+# except ImportError:
+#     from .base_popup import BasePopup
+    # from .progress_bar import Progressbar
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -25,7 +29,12 @@ log_c = log.critical
 
 
 class AppDialog(BasePopup):
-    """AppDialog."""
+    """AppDialog.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+        mode: Mode of Popup, use class attribute, e.g. PROGRESS, MESSAGE.
+    """
 
     # modes
     PROGRESS, MESSAGE = range(2)
@@ -33,49 +42,37 @@ class AppDialog(BasePopup):
 
     def __init__(self, parent, mode=PROGRESS):
         """__init__."""
-        self.mode = mode
         if mode == self.MESSAGE:
             super().__init__(parent, flags=Qt.Dialog)
         else:
             super().__init__(parent)
+        self.mode = mode
         self.parent_widget = parent
-        main_layout = QVBoxLayout()
 
+        main_layout = QVBoxLayout()
         self.info_lbl = QLabel()
         self.info_lbl.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.info_lbl)
+
         if mode == self.PROGRESS:
             self.info_lbl.setText(
                 "Updating your galleries to newest version...")
             self.info_lbl.setWordWrap(True)
 
-            class progress(QProgressBar):
-                """progress."""
-
-                reached_maximum = pyqtSignal()
-
-                def __init__(self, parent=None):
-                    """__init__."""
-                    super().__init__(parent)
-
-                def setValue(self, v):
-                    """setValue."""
-                    if v == self.maximum():
-                        self.reached_maximum.emit()
-                    return super().setValue(v)
-
-            self.prog = progress(self)
-
+            self.prog = ProgressBar(parent=self)
             self.prog.reached_maximum.connect(self.close)
             main_layout.addWidget(self.prog)
+
             self.note_info = QLabel(
                 "Note: This popup will close itself when everything is ready")
             self.note_info.setAlignment(Qt.AlignCenter)
+            main_layout.addWidget(self.note_info)
+
             self.restart_info = QLabel(
                 "Please wait.. It is safe to restart if there is no sign of progress.")
             self.restart_info.setAlignment(Qt.AlignCenter)
-            main_layout.addWidget(self.note_info)
             main_layout.addWidget(self.restart_info)
+
         elif mode == self.MESSAGE:
             self.info_lbl.setText(
                 "<font color='red'>An exception has ben encountered.<br>"
@@ -88,24 +85,49 @@ class AppDialog(BasePopup):
         self.adjustSize()
 
     def closeEvent(self, event):
-        """closeEvent."""
+        """close event.
+
+        Args:
+            event (QtGui.QCloseEvent): Close event.
+        """
         self.parent_widget.setEnabled(True)
         if self.mode == self.MESSAGE:
             self.closing_down.emit()
-            return super().closeEvent(event)
-        else:
-            return super().closeEvent(event)
+        return super().closeEvent(event)
 
     def showEvent(self, event):
-        """showEvent."""
+        """show event.
+
+        Args:
+            event (QtGui.QShowEvent): Show event.
+        """
         self.parent_widget.setEnabled(False)
         return super().showEvent(event)
 
     def init_restart(self):
-        """init_restart."""
+        """init restart."""
         if self.mode == self.PROGRESS:
             self.prog.hide()
             self.note_info.hide()
             self.restart_info.hide()
-            log_i('Application requires restart')
             self.note_info.setText("Application requires restart!")
+            log_i('Application requires restart')
+
+
+@click.command()
+@click.option('--mode', type=click.Choice(['progress', 'message']))
+def main(mode):
+    """main func."""
+    app = QtWidgets.QApplication(sys.argv)
+
+    widget = QtWidgets.QWidget()
+    if mode == 'progress':
+        dialog = AppDialog(parent=widget, mode=AppDialog.PROGRESS)
+    elif mode == 'message':
+        dialog = AppDialog(parent=widget, mode=AppDialog.MESSAGE)
+    dialog.show()
+
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()

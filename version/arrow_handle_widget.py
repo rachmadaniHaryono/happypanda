@@ -1,6 +1,8 @@
 """arrow handle widget."""
 import logging
+import sys
 
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import (
     pyqtSignal,
     QPointF,
@@ -25,13 +27,17 @@ log_c = log.critical
 
 
 class ArrowHandleWidget(QWidget):
-    """Arrow Handle."""
+    """Arrow Handle.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+    """
 
     IN, OUT = range(2)
     CLICKED = pyqtSignal(int)
 
     def __init__(self, parent):
-        """__init__."""
+        """init."""
         super().__init__(parent)
         self.parent_widget = parent
         self.current_arrow = self.IN
@@ -40,7 +46,11 @@ class ArrowHandleWidget(QWidget):
         self.setCursor(Qt.PointingHandCursor)
 
     def paintEvent(self, event):  # NOQA
-        """paintEvent."""
+        """paint event.
+
+        Args:
+            event (QtGui.QPaintEvent): Paint event.
+        """
         rect = self.rect()
         x, y, w, h = rect.getRect()
         painter = QPainter(self)
@@ -66,7 +76,7 @@ class ArrowHandleWidget(QWidget):
         painter.drawPolygon(QPolygonF(arrow_points))
 
     def click(self):
-        """click."""
+        """click function.."""
         if self.current_arrow == self.IN:
             self.current_arrow = self.OUT
             self.CLICKED.emit(1)
@@ -76,7 +86,20 @@ class ArrowHandleWidget(QWidget):
         self.update()
 
     def mousePressEvent(self, event):  # NOQA
-        """mousePressEvent."""
+        """mouse press event.
+
+        Args:
+            event (QtGui.QMouseEvent): Mouse event.
+        """
         if event.button() == Qt.LeftButton:
             self.click()
         return super().mousePressEvent(event)
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+
+    parent_widget = QtWidgets.QWidget()
+    widget = ArrowHandleWidget(parent=parent_widget)
+    parent_widget.show()
+
+    sys.exit(app.exec_())
