@@ -2,7 +2,7 @@
 import logging
 from pprint import pformat
 
-try:
+try:  # pragma: no cover
     from app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
     from dl_manager_obj import DLManagerObject
     from downloader_obj import DownloaderObject
@@ -234,18 +234,3 @@ class AsmManager(DLManagerObject):
 
         DownloaderObject.add_to_queue(h_item, self._browser.session)
         return h_item
-
-    @classmethod
-    def apply_metadata(cls, gallery, data):
-        """Apply metadata to gallery.
-
-        This is this module's method for ehen module.
-
-        Args:
-            gallery: Gallery.
-            data: Metatadata of the gallery.
-
-        Returns:
-            Edited gallery.
-        """
-        pass
