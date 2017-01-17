@@ -66,3 +66,110 @@ def test_get_first_image_data():
     res = obj._get_first_image_data(link_parts)
     # test
     assert exp_res == res
+
+
+def test_get_filecount():
+    """test method."""
+    filecount = '5'
+    tag = mock.Mock()
+    tag.text = '{} pages'.format(filecount)
+    html_soup = mock.Mock()
+    html_soup.select.return_value = [tag]
+    from version.nhen_manager import NhenManager
+    res = NhenManager._get_filecount(html_soup)
+    assert res == filecount
+
+
+def test_get_tag_dict():
+    """test method."""
+    tag1 = mock.Mock()
+    tag1.text = 'tag1 (10)'
+    tag2 = mock.Mock()
+    tag2.text = 'tag2 (10)'
+
+    value_divs = mock.Mock()
+    value_divs.contents = [tag1, tag2]
+
+    tag_div = mock.Mock()
+    tag_div.contents = ('category', value_divs)
+
+    html_soup = mock.Mock()
+    html_soup.select.return_value = [tag_div]
+    from version.nhen_manager import NhenManager
+    # run
+    res = NhenManager._get_tag_dict(html_soup)
+    # test
+    assert res == {'category': ['tag1', 'tag2']}
+
+
+def test_find_tags():
+    """test method."""
+    tag_dict = {'category': ['tag1', 'tag2']}
+    exp_res = ['category:tag1', 'category:tag2']
+    html_soup = mock.Mock()
+    from version.nhen_manager import NhenManager
+    NhenManager._get_tag_dict = mock.Mock(return_value=tag_dict)
+    # run
+    res = NhenManager._find_tags(html_soup)
+    # test
+    assert res == exp_res
+
+
+def test_get_category():
+    """test method."""
+    tags = ['Categories:doujinshi']
+    exp_res = 'Doujinshi'
+    from version.nhen_manager import NhenManager
+    # run
+    res = NhenManager._get_category(tags)
+    # test
+    assert res == exp_res
+
+
+def test_get_dl_urls():
+    """test method."""
+    g_url = mock.Mock()
+    link = mock.Mock()
+    link_parts = [(mock.Mock(), mock.Mock())]
+    browser = mock.Mock()
+    browser.select.return_value = [{'href': link}]
+    image1_data = {'ext': mock.Mock(), 'server_id': mock.Mock()}
+    with mock.patch('version.nhen_manager.AsmManager') as m_asm_manager:
+        from version.nhen_manager import NhenManager
+        m_asm_manager._split_href_links_to_parts.return_value = link_parts
+        exp_res = [
+            "https://i.nhentai.net/galleries/{}/{}{}".format(
+                image1_data['server_id'], link_parts[0][1], image1_data['ext']
+            )
+        ]
+        obj = NhenManager()
+        obj._browser = browser
+        obj._get_first_image_data = mock.Mock(return_value=image1_data)
+        res = obj._get_dl_urls(g_url)
+        assert res == exp_res
+
+
+def test_from_gallery_url():
+    """test method."""
+    g_url = mock.Mock()
+    thumb_url = mock.Mock()
+    title = mock.Mock()
+    h_item = mock.Mock()
+
+    browser = mock.Mock()
+    browser.select.return_value = [{'src': thumb_url}]
+    dict_metadata = {'title': title}
+    with mock.patch('version.nhen_manager.HenItem') as m_hi, \
+            mock.patch('version.nhen_manager.AsmManager') as m_asm_manager, \
+            mock.patch('version.nhen_manager.DownloaderObject'):
+        m_hi.return_value = h_item
+        from version.nhen_manager import NhenManager
+        obj = NhenManager()
+        obj._browser = browser
+        obj._get_dl_urls = mock.Mock()
+        obj._get_metadata = mock.Mock()
+        obj._get_metadata.return_value = dict_metadata
+        # run
+        res = obj.from_gallery_url(g_url)
+        # test
+        assert res == m_asm_manager._set_ehen_metadata.return_value
