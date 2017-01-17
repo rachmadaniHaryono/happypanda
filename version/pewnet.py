@@ -25,6 +25,7 @@ try:  # pragma: no cover
     from ehen import EHen
     from exhen_manager import ExHenManager
     from hen_manager import HenManager
+    from nhen_manager import NhenManager
 except ImportError:
     from . import (
         app_constants,
@@ -37,6 +38,7 @@ except ImportError:
     from .exhen import ExHen
     from .exhen_manager import ExHenManager
     from .hen_manager import HenManager
+    from .nhen_manager import NhenManager
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -96,6 +98,8 @@ def website_validator(url):
         manager = ChaikaManager()
     elif regex_validate("(asmhentai\.com\/g\/[0-9]+)"):
         manager = AsmManager()
+    elif regex_validate("(nhentai.net\/g\/[0-9]+)"):
+        manager = NhenManager()
     else:
         raise app_constants.WrongURL
 
