@@ -17,7 +17,12 @@ log_c = log.critical
 
 
 class BaseMoveWidget(QWidget):
-    """BaseMoveWidget."""
+    """BaseMoveWidget.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+        move_listener (bool): connect parent widget method to this widget.
+    """
 
     def __init__(self, parent=None, **kwargs):
         """__init__."""
@@ -32,7 +37,11 @@ class BaseMoveWidget(QWidget):
                 pass
 
     def update_move(self, new_size=None):
-        """update_move."""
+        """update move.
+
+        Args:
+            new_size: Size in tuple of (x, y).
+        """
         if new_size:
             self.move(new_size)
             return
