@@ -65,6 +65,15 @@ def hen_list_init():
     return h_list
 
 
+def _get_exhen_manager():
+    """get exhen manager."""
+    exprops = settings.ExProperties()
+    if exprops.check():
+        return ExHenManager
+    else:
+        return
+
+
 def website_validator(url):
     """validate website.
 
@@ -86,20 +95,20 @@ def website_validator(url):
             return True
         return False
 
-    if regex_validate("((g\.e-hentai)\.org\/g\/[0-9]+\/[a-z0-9]+)"):
-        manager = HenManager()
-    elif regex_validate("((exhentai)\.org\/g\/[0-9]+\/[a-z0-9]+)"):
-        exprops = settings.ExProperties()
-        if exprops.check():
-            manager = ExHenManager()
-        else:
+    exhen_validation = regex_validate("((exhentai)\.org\/g\/[0-9]+\/[a-z0-9]+)")
+    manager_dict = {
+        HenManager: regex_validate("((g\.e-hentai)\.org\/g\/[0-9]+\/[a-z0-9]+)"),
+        ChaikaManager: regex_validate("(panda\.chaika\.moe\/(archive|gallery)\/[0-9]+)"),
+        AsmManager: regex_validate("(asmhentai\.com\/g\/[0-9]+)"),
+        NhenManager: regex_validate("(nhentai.net\/g\/[0-9]+)"),
+        _get_exhen_manager: exhen_validation,
+    }
+    if any(manager_dict.values()):
+        match_dict = [(k, v) for k, v in manager_dict.items() if v]
+        match_manager = match_dict[0][0]
+        if match_manager is None and exhen_validation:
             return
-    elif regex_validate("(panda\.chaika\.moe\/(archive|gallery)\/[0-9]+)"):
-        manager = ChaikaManager()
-    elif regex_validate("(asmhentai\.com\/g\/[0-9]+)"):
-        manager = AsmManager()
-    elif regex_validate("(nhentai.net\/g\/[0-9]+)"):
-        manager = NhenManager()
+        manager = match_manager()
     else:
         raise app_constants.WrongURL
 
