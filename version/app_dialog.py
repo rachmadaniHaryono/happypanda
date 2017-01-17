@@ -13,12 +13,12 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-# try:
-from base_popup import BasePopup
-from progress_bar import ProgressBar
-# except ImportError:
-#     from .base_popup import BasePopup
-    # from .progress_bar import Progressbar
+try:
+    from base_popup import BasePopup
+    from progress_bar import ProgressBar
+except ImportError:
+    from .base_popup import BasePopup
+    from .progress_bar import ProgressBar
 
 log = logging.getLogger(__name__)
 log_i = log.info
