@@ -21,6 +21,10 @@ setup.py
 downloads
 .happypanda
 docs/modules/*.rst
+.exrc
+log/
+version/log/
+
 
 # User-specific files
 *.suo
