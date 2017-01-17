@@ -2,8 +2,6 @@
 import logging
 from pprint import pformat
 
-from robobrowser.exceptions import RoboError
-
 try:
     from app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
     from dl_manager_obj import DLManagerObject
@@ -37,21 +35,6 @@ class AsmManager(DLManagerObject):
     """
 
     url = 'http://asmhentai.com/'
-
-    def ensure_browser_on_url(self, url):
-        """open browser on input url if not already.
-
-        url: Url where browser to open (or alreadery opened)
-        """
-        open_url = False  # assume not opening the url
-        try:
-            current_url = self._browser.url
-            if current_url != url:
-                open_url = True
-        except RoboError:
-            open_url = True
-        if open_url:
-            self._browser.open(url)
 
     @staticmethod
     def _find_tags(browser):

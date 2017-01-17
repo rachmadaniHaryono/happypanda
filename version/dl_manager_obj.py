@@ -2,6 +2,7 @@
 from robobrowser import RoboBrowser
 
 from PyQt5.QtCore import QObject
+from robobrowser.exceptions import RoboError
 
 try:
     import app_constants
@@ -53,5 +54,22 @@ class DLManagerObject(QObject):
         It is recommended to use update_metadata in HenItem when adding metadata
         see the ChaikaManager class for a complete example
         EH API: http://ehwiki.org/wiki/API
+        see hen_item.HenItem.update_metadata for key of metadata.
         """
         raise NotImplementedError
+
+    def ensure_browser_on_url(self, url):
+        """open browser on input url if not already.
+
+        Args:
+            url: Url where browser to open (or alreadery opened)
+        """
+        open_url = False  # assume not opening the url
+        try:
+            current_url = self._browser.url
+            if current_url != url:
+                open_url = True
+        except RoboError:
+            open_url = True
+        if open_url:
+            self._browser.open(url)
