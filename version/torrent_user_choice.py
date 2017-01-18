@@ -1,6 +1,4 @@
 """torrent user choice."""
-import logging
-
 from PyQt5.QtCore import (
     Qt,
 )

@@ -8,12 +8,12 @@ try:  # pragma: no cover
     from hook import Hook
     from hplugins import registered
     from other_hplugin import OtherHPlugin
-    from plugins_exception import PluginMethodError,
+    from plugins_exception import PluginMethodError
 except ImportError:
     from .hook import Hook
     from .hplugins import registered
     from .other_hplugin import OtherHPlugin
-    from .plugins_exception import PluginMethodError,
+    from .plugins_exception import PluginMethodError
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
