@@ -1,6 +1,4 @@
 """star rating."""
-
-import logging
 import math
 
 from PyQt5.QtCore import (
@@ -17,16 +15,20 @@ from PyQt5.QtGui import (
 )
 
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
-
-
 class StarRating():
-    """star rating."""
+    """star rating.
+
+    Args:
+        starCount (int): Star count.
+        maxStarCount (int): Maximum star count.
+
+    Attributes:
+        _starCount (int): Star count.
+        _maxStarCount (int): Maximum star count.
+        starPolygon (QPolygonF): Star polygon.
+        diamondPolygon (QPolygonF): Diamond polygon.
+
+    """
 
     # enum EditMode
     Editable, ReadOnly = range(2)
@@ -53,27 +55,53 @@ class StarRating():
                             << QPointF(0.4, 0.5)
 
     def starCount(self):
-        """start count."""
+        """Returns start count.
+
+        Returns:
+            int: Star count.
+        """
         return self._starCount
 
     def maxStarCount(self):
-        """max start count."""
+        """Returns maximum start count.
+
+        Returns:
+            int: Maximum star count.
+        """
         return self._maxStarCount
 
     def setStarCount(self, starCount):
-        """set start count."""
+        """set start count.
+
+        Args:
+            starCount (int): Star count.
+        """
         self._starCount = starCount
 
     def setMaxStarCount(self, maxStarCount):
-        """set max star count."""
+        """set maxmum star count.
+
+        Args:
+            maxStarCount (int): Maximum star count.
+        """
         self._maxStarCount = maxStarCount
 
     def sizeHint(self):
-        """size hint."""
+        """Return size hint.
+
+        Returns:
+            Size hint.
+        """
         return self.PaintingScaleFactor * QSize(self._maxStarCount, 1)
 
     def paint(self, painter, rect, editMode=ReadOnly):
-        """paint."""
+        """paint.
+
+        Args:
+            painter: Painter.
+            rect: Rectangle.
+            editMode: Edit mode.
+        """
         painter.save()
 
         painter.setRenderHint(QPainter.Antialiasing, True)

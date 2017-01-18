@@ -1,6 +1,4 @@
 """unique info model."""
-import logging
-
 from PyQt5.QtCore import (
     QSortFilterProxyModel,
     Qt,
@@ -11,19 +9,23 @@ try:
 except ImportError:
     from .no_tooltip_model import NoTooltipModel
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
-
 
 class UniqueInfoModel(QSortFilterProxyModel):
-    """unique info model."""
+    """unique info model.
+
+    Args:
+        gallerymodel: Gallery model.
+        role: Role.
+        parent (QtWidgets.QWidget): Parent widget.
+
+    Attributes:
+        _unique: Unique list.
+        _unique_role: Unique role.
+        custom_filter: Custom filter.
+    """
 
     def __init__(self, gallerymodel, role, parent=None):
-        """init func."""
+        """init."""
         super().__init__(parent)
         self.setSourceModel(NoTooltipModel(gallerymodel, parent))
         self._unique = set()
@@ -32,7 +34,12 @@ class UniqueInfoModel(QSortFilterProxyModel):
         self.setDynamicSortFilter(True)
 
     def filterAcceptsRow(self, source_row, parent_index):  # NOQA
-        """filter accepted row."""
+        """filter accepted row.
+
+        Args:
+            source_row (int): Source row.
+            parent_index (QModelIndex): Parent index.
+        """
         if self.sourceModel():
             idx = self.sourceModel().index(source_row, 0, parent_index)
             if idx.isValid():
@@ -47,6 +54,6 @@ class UniqueInfoModel(QSortFilterProxyModel):
         return False
 
     def invalidate(self):
-        """invalidate."""
+        """Invalidate."""
         self._unique.clear()
         super().invalidate()

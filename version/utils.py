@@ -56,7 +56,14 @@ log_c = log.critical
 
 
 def backup_database(db_path=db_constants.DB_PATH):
-    """backup_database."""
+    """backup_database.
+
+    Args:
+        db_path: Database path.
+
+    Returns:
+        bool: Return True if backup succesful
+    """
     log_i("Perfoming database backup")
     date = "{}".format(datetime.datetime.today()).split(' ')[0]
     base_path, name = os.path.split(db_path)
@@ -90,14 +97,21 @@ def get_date_age(date):
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
     Make sure date is not in the future, or else it won't work.
+
+    Args:
+        date (datetime.datetime): Date.
+
+    Returns:
+        str: Formatted date age.
     """
     return PrettyDelta(date).format()
 
 
 def all_opposite(*args):
-    """all_opposite.
+    """Check if items in list evaluate to false.
 
-    Returns true if all items in iterable evaluae to false
+    Returns:
+        bool: true if all items in iterable evaluae to false
     """
     for iterable in args:
         for x in iterable:
@@ -107,7 +121,15 @@ def all_opposite(*args):
 
 
 def update_gallery_path(new_path, gallery):
-    """Update a gallery's chapters path."""
+    """Update a gallery's chapters path.
+
+    Args:
+        new_path: New path.
+        gallery: Gallery.
+
+    Returns:
+        Modified gallery.
+    """
     for chap in gallery.chapters:
         head, tail = os.path.split(chap.path)
         if gallery.path == chap.path:
@@ -124,6 +146,10 @@ def move_files(path, dest=''):
 
     If dest is not set,
     imported_galleries_def_path will be used instead.
+
+    Args:
+        path: Path.
+        dest: Path destination.
     """
     if not dest:
         dest = app_constants.IMPORTED_GALLERY_DEF_PATH
@@ -144,7 +170,13 @@ def move_files(path, dest=''):
 
 
 def check_ignore_list(key):
-    """check_ignore_list."""
+    """Check ignore list.
+    Args:
+        key: Key.
+
+    Returns:
+        bool: Return True if key not in ignore list.
+    """
     k = os.path.normcase(key)
     if os.path.isdir(key) and 'Folder' in app_constants.IGNORE_EXTS:
         return False
@@ -159,7 +191,14 @@ def check_ignore_list(key):
 
 
 def gallery_text_fixer(gallery):
-    """gallery_text_fixer."""
+    """Gallery text fixer.
+
+    Args:
+        gallery: Gallery.
+
+    Returns:
+        Modified gallery.
+    """
     regex_str = app_constants.GALLERY_DATA_FIX_REGEX
     if regex_str:
         try:
@@ -184,7 +223,15 @@ def gallery_text_fixer(gallery):
 
 
 def b_search(data, key):
-    """b_search."""
+    """Byte search.
+
+    Args:
+        data: Data.
+        key: Key.
+
+    Returns:
+        Byte.
+    """
     lo = 0
     hi = len(data) - 1
     while hi >= lo:
@@ -199,10 +246,15 @@ def b_search(data, key):
 
 
 def generate_img_hash(src):
-    """generate_img_hash.
+    """Generate image hash.
 
     Generates sha1 hash based on the given bytes.
-    Returns hex-digits
+
+    Args:
+        src: Source.
+
+    Returns:
+        Hex-digits
     """
     chunk = 8129
     sha1 = hashlib.sha1()
@@ -217,8 +269,11 @@ def generate_img_hash(src):
 def check_archive(archive_path):  # NOQA
     """Check archive path for potential galleries.
 
-    Returns a list with a path in archive to galleries
-    if there is no directories
+    Args:
+        archive_path: Archive path.
+
+    Returns:
+        list: list with a path in archive to galleries if there is no directories.
     """
     try:
         zip = ArchiveFile(archive_path)
@@ -260,10 +315,13 @@ def check_archive(archive_path):  # NOQA
 def recursive_gallery_check(path):  # NOQA
     """Recursively checks a folder for any potential galleries.
 
-    Returns a list of paths for directories and a list of tuples where first
-    index is path to gallery in archive and second index is path to archive.
     Like this:
     ["C:path/to/g"] and [("path/to/g/in/a", "C:path/to/a")]
+
+    Returns:
+        list: list of paths for directories and a list of tuples
+        where first index is path to gallery in archive and second index is path to archive.
+
     """
     gallery_dirs = []
     gallery_arch = []
@@ -292,7 +350,11 @@ def recursive_gallery_check(path):  # NOQA
 
 
 def today():
-    """Return current date in a list: [dd, Mmm, yyyy]."""
+    """Return current date in a list: [dd, Mmm, yyyy].
+
+    Returns:
+        list: Current date in  a list.
+    """
     _date = datetime.date.today()
     day = _date.strftime("%d")
     month = _date.strftime("%b")
@@ -301,7 +363,14 @@ def today():
 
 
 def external_viewer_checker(path):
-    """external_viewer_checker."""
+    """External viewer checker.
+
+    Args:
+        path: Path.
+
+    Returns:
+        External viewer.
+    """
     check_dict = app_constants.EXTERNAL_VIEWER_SUPPORT
     viewer = os.path.split(path)[1]
     for x in check_dict:
@@ -318,6 +387,12 @@ def _find_filepath(path):
     """find filepath.
 
     this is helper function to open_chapter func.
+
+    Args:
+        path: Path
+
+    Returns:
+        First page.
     """
     sorted_scandir_result_names = sorted([y.name for y in scandir.scandir(path)])
     pages = [
@@ -327,7 +402,11 @@ def _find_filepath(path):
 
 
 def _get_temp_path():
-    """get temp path."""
+    """Get Temporary path.
+
+    Returns:
+        Temporary path.
+    """
     temp_dir = app_constants.temp_dir
     t_p = os.path.join(temp_dir, str(uuid.uuid4()))
     if not os.path.isdir(temp_dir):
@@ -337,7 +416,12 @@ def _get_temp_path():
 
 
 def open_chapter(chapterpath, archive=None):  # NOQA
-    """open_chapter."""
+    """Open chapter.
+
+    Args:
+        chapterpath: Chapter path.
+        archive: Archive.
+    """
     is_archive = True if archive else False
     if not is_archive:
         chapterpath = os.path.normpath(chapterpath)
@@ -471,7 +555,15 @@ def open_chapter(chapterpath, archive=None):  # NOQA
 
 
 def get_gallery_img(gallery_or_path, chap_number=0):  # NOQA
-    """Return a path to image in gallery chapter."""
+    """Get gallery image.
+
+    Args:
+        gallery_or_path: Gallery or path.
+        chap_number: Chapter number.
+
+    Returns:
+        A path to image in gallery chapter.
+    """
     archive = None
     if isinstance(gallery_or_path, str):
         path = gallery_or_path
@@ -521,6 +613,13 @@ def tag_to_string(gallery_tag, simple=False):  # NOQA
     """Take gallery tags and converts it to string, returns string.
 
     if simple is set to True, returns a CSV string, else a dict-like string
+
+    Args:
+        gallery_tag: Gallery tag.
+        simple (bool): Simple.
+
+    Returns:
+        str: Converted tag.
     """
     assert isinstance(
         gallery_tag, dict), "Please provide a dict like this: {'namespace':['tag1']}"
@@ -551,7 +650,15 @@ def tag_to_string(gallery_tag, simple=False):  # NOQA
 
 
 def tag_to_dict(string, ns_capitalize=True):  # NOQA
-    """Receive a string of tags and converts it to a dict of tags."""
+    """Receive a string of tags and converts it to a dict of tags.
+
+    Args:
+        string: String.
+        ns_capitalize (bool): Capitalize namespace or not.
+
+    Returns:
+        dict: Dict of tags.
+    """
     namespace_tags = {'default': []}
     level = 0  # so we know if we are in a list
     buffer = ""
@@ -630,7 +737,16 @@ def tag_to_dict(string, ns_capitalize=True):  # NOQA
 
 
 def append_or_create_list_on_dict(dict_, key, value, ):
-    """append item in dict if key is in dict, if not create a list with that key on the dict."""
+    """append item in dict if key is in dict, if not create a list with that key on the dict.
+
+    Args:
+        dict_: Dict obj.
+        key: Key on dict.
+        value: Value on dict:
+
+    Returns:
+        dict: Modified dict.
+    """
     if key in dict_:
         dict_[key].append(value)
     else:
@@ -639,7 +755,14 @@ def append_or_create_list_on_dict(dict_, key, value, ):
 
 
 def title_parser(title):  # NOQA
-    """Receive a title to parse. Returns dict with 'title', 'artist' and language."""
+    """Receive a title to parse. Returns dict with 'title', 'artist' and 'language'.
+
+    Args:
+        title:
+
+    Returns:
+        dict: Dict with 'title', 'artist' and 'language' as key
+    """
     title = " ".join(title.split())
     if '/' in title:
         try:
@@ -689,7 +812,11 @@ def title_parser(title):  # NOQA
 
 
 def open_web_link(url):
-    """open_web_link."""
+    """Open web link.
+
+    Args:
+        url: Url to open.
+    """
     if not url:
         return
     try:
@@ -730,7 +857,11 @@ def open_path(path, select=''):
 
 
 def open_torrent(path):
-    """open_torrent."""
+    """Open torrent.
+
+    Args:
+        path: Torrent path.
+    """
     if not app_constants.TORRENT_CLIENT:
         open_path(path)
     else:
@@ -738,7 +869,11 @@ def open_torrent(path):
 
 
 def delete_path(path):
-    """Delete the provided recursively."""
+    """Delete the provided recursively.
+
+    Args:
+        path: Target path
+    """
     s = True
     if os.path.exists(path):
         error = ''
@@ -769,7 +904,17 @@ def delete_path(path):
 
 
 def regex_search(a, b, override_case=False, args=[]):
-    """Look for a in b."""
+    """Look for a in b.
+
+    Args:
+        a: Keyword to search.
+        b: String to search.
+        override_case (bool): Override case.
+        args (list): Arguments.
+
+    Returns:
+        bool: Return True if keyword found.
+    """
     if a and b:
         try:
             if app_constants.Search.Case not in args or override_case:
@@ -784,7 +929,17 @@ def regex_search(a, b, override_case=False, args=[]):
 
 
 def search_term(a, b, override_case=False, args=[]):
-    """Search for a in b."""
+    """Search for a in b.
+
+    Args:
+        a: Keyword to search.
+        b: String to search.
+        override_case (bool): Override case.
+        args (list): Arguments.
+
+    Returns:
+        bool: Return True if keyword found.
+    """
     if a and b:
         if app_constants.Search.Case not in args or override_case:
             b = b.lower()
@@ -800,7 +955,14 @@ def search_term(a, b, override_case=False, args=[]):
 
 
 def get_terms(term):  # NOQA
-    """Divide term into pieces. Returns a list with the pieces."""
+    """Divide term into pieces.
+
+    Args:
+        term: Term.
+
+    Returns:
+        list:a list with the pieces.
+    """
     # some variables we will use
     pieces = []
     piece = ''
@@ -878,7 +1040,14 @@ def get_terms(term):  # NOQA
 
 
 def image_greyscale(filepath):
-    """Check if image is monochrome (1 channel or 3 identical channels)."""
+    """Check if image is monochrome (1 channel or 3 identical channels).
+
+    Args:
+        filepath: Image filepath
+
+    Returns:
+        bool: Return True if image is greyscale.
+    """
     im = Image.open(filepath).convert("RGB")
     if im.mode not in ("L", "RGB"):
         return False
@@ -897,6 +1066,9 @@ def PToQImageHelper(im):  # NOQA
 
     Copyright © 1997-2011 by Secret Labs AB
     Copyright © 1995-2011 by Fredrik Lundh
+
+    Args:
+        im: Image.
     """
     def rgb(r, g, b, a=255):
         """(Internal) Turns an RGB color into a Qt compatible color integer."""
@@ -981,12 +1153,23 @@ def PToQImageHelper(im):  # NOQA
 
 
 def get_chapter_pages_len(chapter_path):
-    """get chapter pages len."""
+    """Get chapter pages count.
+
+    Args:
+        chapter_path: Chapter path.
+
+    Returns:
+        int: Count of chapter pages.
+    """
     return len([x for x in scandir.scandir(chapter_path) if x.name.endswith(IMG_FILES)])
 
 
 def make_chapters(gallery_object):
-    """make_chapters."""
+    """Make Chapters.
+
+    Args:
+        gallery_object: Gallery object.
+    """
     chap_container = gallery_object.chapters
     path = gallery_object.path
     metafile = GMetafile()
@@ -1033,7 +1216,13 @@ def make_chapters(gallery_object):
 
 
 def timeit(func):
-    """timeit."""
+    """Time it.
+
+    It is used as decorator.
+
+    Args:
+        func: Function to measure.
+    """
     @functools.wraps(func)
     def newfunc(*args, **kwargs):
         """newfunc."""
@@ -1046,7 +1235,16 @@ def timeit(func):
 
 
 def get_gallery_tags(tags, g_tags, namespace):
-    """set gallery tags from namespace."""
+    """Set gallery tags from namespace.
+
+    Args:
+        tags: Tags.
+        g_tags: Gallery tags.
+        namespace: Tag's namespace.
+
+    Returns:
+        Modified gallery tags.
+    """
     ns = namespace
     for tag in tags:
         if tag not in g_tags[ns]:
@@ -1055,7 +1253,11 @@ def get_gallery_tags(tags, g_tags, namespace):
 
 
 def cleanup_dir(path):
-    """cleanup recursive in dir."""
+    """Cleanup recursive in dir.
+
+    Args:
+        path: Target path.
+    """
     for root, dirs, files in scandir.walk(path, topdown=False):
         for name in files:
             os.remove(os.path.join(root, name))
@@ -1064,11 +1266,19 @@ def cleanup_dir(path):
 
 
 def get_chapter_title(path):
-    """get chapter title."""
+    """Get chapter title.
+
+    Args:
+        path: Target path.
+    """
     return title_parser(os.path.split(path)[1])['title']
 
 
 def makedirs_if_not_exists(folder):
-    """Create directory if not exists."""
+    """Create directory if not exists.
+
+    Args:
+        folder: Target folder.
+    """
     if not os.path.isdir(folder):
         os.makedirs(folder)

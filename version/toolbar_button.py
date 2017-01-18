@@ -1,6 +1,4 @@
 """toolbar button."""
-import logging
-
 from PyQt5.QtCore import (
     pyqtSignal,
     QRectF,
@@ -18,16 +16,22 @@ from PyQt5.QtWidgets import (
     QStyleOption,
 )
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
-
 
 class ToolbarButton(QPushButton):
-    """ToolbarButton."""
+    """Toolbar button.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+        txt (str): Text.
+
+    Attributes:
+        select (pyqtSignal): Signal when selected.
+        close_tab (pyqtSignal): Signal when tab closed.
+        _txt (str): Text.
+        _font_metrics (QtGui.QFontMetrics):  Font metrics.
+        _selected (bool): State if button selected.
+        _enable_contextmenu (bool): Enable context menu.
+    """
 
     select = pyqtSignal(object)
     close_tab = pyqtSignal(object)
@@ -45,17 +49,23 @@ class ToolbarButton(QPushButton):
 
     @property
     def selected(self):
-        """selected."""
+        """Selected property.
+
+        When it is set with value, it will also update the button.
+        """
         return self._selected
 
     @selected.setter
     def selected(self, b):
-        """selected."""
         self._selected = b
         self.update()
 
     def contextMenuEvent(self, event):  # NOQA
-        """contextMenuEvent."""
+        """Context menu event.
+
+        Args:
+            event (QtGui.QContextMenuEvent): Context menu event.
+        """
         if self._enable_contextmenu:
             m = QMenu(self)
             m.addAction("Close Tab").triggered.connect(
@@ -66,7 +76,11 @@ class ToolbarButton(QPushButton):
             event.ignore()
 
     def paintEvent(self, event):  # NOQA
-        """paintEvent."""
+        """Paint event.
+
+        Args:
+            event (QtGui.QPaintEvent): Paint event.
+        """
         assert isinstance(event, QPaintEvent)
         painter = QPainter(self)
         opt = QStyleOption()
@@ -104,11 +118,15 @@ class ToolbarButton(QPushButton):
             painter.restore()
 
     def setText(self, txt):  # NOQA
-        """setText."""
+        """set Text.
+
+        Args:
+            txt: Text.
+        """
         self._text = txt
         self.update()
         super().setText(txt)
 
     def text(self):
-        """text."""
+        """Text."""
         return self._text

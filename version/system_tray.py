@@ -1,23 +1,10 @@
 """system tray."""
-import logging
-
-from PyQt5.QtWidgets import (
-    QSystemTrayIcon,
-)
+from PyQt5.QtWidgets import QSystemTrayIcon
 
 try:
     import app_constants
 except ImportError:
-    from . import (
-        app_constants,
-    )
-
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+    from . import app_constants
 
 
 class SystemTray(QSystemTrayIcon):
@@ -25,6 +12,13 @@ class SystemTray(QSystemTrayIcon):
 
     Pass True to minimized arg in showMessage method to only
     show message if application is minimized.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+        icon: Icon.
+
+    Attributes:
+        parent (QtWidgets.QWidget): Parent widget.
     """
 
     def __init__(self, icon, parent=None):
@@ -34,7 +28,15 @@ class SystemTray(QSystemTrayIcon):
 
     def showMessage(self, title, msg, icon=QSystemTrayIcon.Information,
                     msecs=10000, minimized=False):
-        """showMessage."""
+        """show message.
+
+        Args:
+            title: Title.
+            msg: Message.
+            icon: Icon.
+            msecs (int): Duration to show message in milliseconds
+            minimized (bool): Minimize.
+        """
         # NOTE: Crashes on linux
         # TODO: Fix this!!
         if not app_constants.OS_NAME == "linux":

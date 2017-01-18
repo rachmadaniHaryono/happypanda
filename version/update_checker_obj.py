@@ -13,7 +13,9 @@
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
 import logging
+import time
 
+import requests
 from PyQt5.QtCore import (
     QObject,
     pyqtSignal,
@@ -29,7 +31,11 @@ log_c = log.critical
 
 
 class UpdateCheckerObject(QObject):
-    """update checker class."""
+    """update checker class.
+
+    Args:
+        UPDATE_CHECK (pyqtSignal): Signal for update check.
+    """
 
     UPDATE_CHECK = pyqtSignal(str)
 
@@ -39,8 +45,6 @@ class UpdateCheckerObject(QObject):
 
     def fetch_vs(self):
         """fetch version."""
-        import requests
-        import time
         log_d('Checking Update')
         time.sleep(1.5)
         try:

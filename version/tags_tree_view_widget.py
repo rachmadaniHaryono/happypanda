@@ -1,6 +1,4 @@
 """tags tree view widget."""
-import logging
-
 from PyQt5.QtWidgets import (
     QApplication,
     QMenu,
@@ -21,16 +19,18 @@ except ImportError:
         utils,
     )
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
-
 
 class TagsTreeViewWidget(QTreeWidget):
-    """tags tree view."""
+    """tags tree view.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+
+    Attributes:
+        TAG_SEARCH (pyqtSignal): Signal for tag search.
+        NEW_LIST (pyqtSignal): Signal for new list.
+        clipboard (QApplication.clipboard): Clipboard.
+    """
 
     TAG_SEARCH = pyqtSignal(str)
     NEW_LIST = pyqtSignal(str, gallerydb.GalleryList)
@@ -45,7 +45,14 @@ class TagsTreeViewWidget(QTreeWidget):
             lambda i: self.search_tags([i]) if i.parent() else None)
 
     def _convert_to_str(self, items):
-        """convert to str."""
+        """convert to str.
+
+        Args:
+            items: Items.
+
+        Returns:
+            str: Converted items.
+        """
         tags = {}
         d_tags = []
         for item in items:
@@ -69,19 +76,29 @@ class TagsTreeViewWidget(QTreeWidget):
         return final_txt
 
     def search_tags(self, items):
-        """search tags."""
+        """Search tags.
+
+        Args:
+            items: Items.
+        """
         self.TAG_SEARCH.emit(self._convert_to_str(items))
 
     def create_list(self, items):
-        """create list."""
-        g_list = gallerydb.GalleryList(
-            "New List", filter=self._convert_to_str(items))
-        g_list.add_to_db()
+        """Create list.
 
+        Args:
+            items: Items.
+        """
+        g_list = gallerydb.GalleryList("New List", filter=self._convert_to_str(items))
+        g_list.add_to_db()
         self.NEW_LIST.emit(g_list.name, g_list)
 
     def contextMenuEvent(self, event):  # NOQA
-        """context menu event."""
+        """Context menu event.
+
+        Args:
+            event (QtGui.QContextMenuEvent): Context menu event.
+        """
         handled = False
         selected = False
         s_items = self.selectedItems()
@@ -132,7 +149,7 @@ class TagsTreeViewWidget(QTreeWidget):
             event.ignore()
 
     def setup_tags(self):
-        """setup tags."""
+        """Setup tags."""
         self.clear()
         tags = gallerydb.execute(gallerydb.TagDB.get_ns_tags, False)
         for ns in tags:

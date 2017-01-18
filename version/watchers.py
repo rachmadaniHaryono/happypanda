@@ -7,23 +7,11 @@ try:
     import app_constants
     from gallery_handler import GalleryHandler
 except ImportError:
-    from . import (
-        app_constants,
-    )
+    from . import app_constants
     from .gallery_handler import GalleryHandler
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
-log_i = log.info
-""":meth:`logging.Logger.info`: Info logger func"""
-log_d = log.debug
-""":meth:`logging.Logger.debug`: Debug logger func"""
-log_w = log.warning
-""":meth:`logging.Logger.warning`: Warning logger func"""
-log_e = log.error
-""":meth:`logging.Logger.error`: Error logger func"""
-log_c = log.critical
-""":meth:`logging.Logger.critical`: Critical logger func"""
 
 
 class Watchers:

@@ -1,5 +1,4 @@
 """spinner widget."""
-import logging
 import math
 import time
 
@@ -29,16 +28,38 @@ except ImportError:
         text_layout,
     )
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
-
 
 class SpinnerWidget(TransparentWidget):
-    """Spinner widget."""
+    """Spinner widget.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+        position (str): Position of the widget. it can be 'center', 'topright' or QPoint.
+
+    Attributes:
+        activated (pyqtSignal): Signal when widget activated.
+        deactivated (pyqtSignal): Signal when widget deactivated.
+        about_to_show (int): State wiget is 'about to show'
+        about_to_hide (int): State wiget is 'about to hide'
+        _OFFSET_X_TOPRIGHT (int): Default Offset on top right.
+        fps (int): Frame per second.
+        border (int): Border.
+        line_width (int): Line width.
+        arc_length (int): Arc Length.
+        seconds_per_spin (int): Seconds per spin.
+        text_layout: Text layout.
+        text: Text.
+        _text_margin (int): Text margin.
+        _timer (QTimer): Timer.
+        _start_angle (int): Start angle.
+        _offset_x_topright (int): Offset on top right.
+        margin (int): Margin.
+        _position: Position.
+        _min_size (int): Minimum size.
+        state_timer (QTimer): State's timer.
+        current_state: Current state.
+        fade_animation: Fade animation.
+    """
 
     activated = pyqtSignal()
     deactivated = pyqtSignal()
@@ -46,9 +67,8 @@ class SpinnerWidget(TransparentWidget):
     _OFFSET_X_TOPRIGHT = [0]
 
     def __init__(self, parent, position='topright'):
-        """Position can be: 'center', 'topright' or QPoint."""
-        super().__init__(parent, flags=Qt.Window |
-                         Qt.FramelessWindowHint, move_listener=False)
+        """init"""
+        super().__init__(parent, flags=Qt.Window | Qt.FramelessWindowHint, move_listener=False)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.fps = 21
         self.border = 2
@@ -82,35 +102,45 @@ class SpinnerWidget(TransparentWidget):
         self.fade_animation.setDuration(800)
         self.fade_animation.setStartValue(0.0)
         self.fade_animation.setEndValue(1.0)
+
         self.setWindowOpacity(0.0)
         self._update_layout()
         self.set_size(50)
         self._set_position(position)
 
     def _update_layout(self):
-        """_update_layout."""
+        """Update layout."""
         self.text_layout = text_layout(
             self.text, self.width() - self._text_margin, self.font(), self.fontMetrics())
         self.setFixedHeight(
             self._min_size + self.text_layout.boundingRect().height())
 
     def set_size(self, w):
-        """set_size."""
+        """Set size.
+
+        Args:
+            w (int): Width.
+        """
         self.setFixedWidth(w)
         self._min_size = w
         self._update_layout()
         self.update()
 
     def set_text(self, txt):
-        """set_text."""
+        """Set text.
+
+        Args:
+            txt: Text.
+        """
         self.text = txt
         self._update_layout()
         self.update()
 
     def _set_position(self, new_pos):
-        """_set_position.
+        """Set position.
 
-        'center', 'topright' or QPoint.
+        Args:
+            new_pos: New position. It can be'center', 'topright' or QPoint.
         """
         p = self.parent_widget
 
@@ -137,7 +167,11 @@ class SpinnerWidget(TransparentWidget):
             p.move_listener.connect(lambda: self.update_move(new_pos))
 
     def paintEvent(self, event):
-        """paintEvent."""
+        """Paint event.
+
+        Args:
+            event (QtGui.QPaintEvent): Paint event.
+        """
         # call the base paint event:
         super().paintEvent(event)
 
@@ -190,7 +224,11 @@ class SpinnerWidget(TransparentWidget):
             painter = None
 
     def showEvent(self, event):
-        """showEvent."""
+        """Show event.
+
+        Args:
+            event (QtGui.QShowEvent): Show event.
+        """
         if self._position == "topright":
             self._OFFSET_X_TOPRIGHT[0] += + self.width() + self.margin
         if not self._timer.isActive():
@@ -202,13 +240,17 @@ class SpinnerWidget(TransparentWidget):
         super().showEvent(event)
 
     def hideEvent(self, event):
-        """hideEvent."""
+        """Hide event.
+
+        Args:
+            event (QtGui.QHideEvent): Hide event.
+        """
         self._timer.stop()
         self.deactivated.emit()
         super().hideEvent(event)
 
     def before_hide(self):
-        """before_hide."""
+        """function to run before hide."""
         if self.current_state == self.about_to_hide:
             return
         self.current_state = self.about_to_hide
@@ -217,12 +259,16 @@ class SpinnerWidget(TransparentWidget):
         self.state_timer.start(5000)
 
     def closeEvent(self, event):
-        """closeEvent."""
+        """Close event.
+
+        Args:
+            event (QtGui.QCloseEvent): Close event.
+        """
         self._timer.stop()
         super().closeEvent(event)
 
     def _on_timer_timeout(self):
-        """_on_timer_timeout."""
+        """Function when timer is timeout."""
         if not self.isVisible():
             return
 

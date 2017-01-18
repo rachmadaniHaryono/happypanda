@@ -1,26 +1,23 @@
 """tag text button."""
-import logging
-
-from PyQt5.QtCore import (
-    Qt,
-)
-from PyQt5.QtWidgets import (
-    QPushButton,
-)
-
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QPushButton
 
 
 class TagTextButton(QPushButton):
-    """TagText."""
+    """Tags text button.
+
+    Args:
+        search_widget: Search widget.
+        namespace: Tag's namespace.
+
+    Attributes:
+        search_widget: Search widget.
+        namespace: Tag's namespace.
+
+    """
 
     def __init__(self, *args, **kwargs):
-        """__init__."""
+        """init method."""
         self.search_widget = kwargs.pop('search_widget', None)
         self.namespace = kwargs.pop('namespace', None)
         super().__init__(*args, **kwargs)
@@ -33,7 +30,11 @@ class TagTextButton(QPushButton):
                     lambda: self.search_widget.search('{}'.format(self.text())))
 
     def enterEvent(self, event):
-        """enterEvent."""
+        """Enter event.
+
+        Args:
+            event (QtGui.QEnterEvent): Enter event.
+        """
         if self.text():
             self.setCursor(Qt.PointingHandCursor)
         else:
