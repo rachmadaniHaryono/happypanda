@@ -1,24 +1,10 @@
 """elided label."""
-import logging
-
-from PyQt5.QtCore import (
-    Qt,
-)
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import (
     QFontMetrics,
     QPainter,
 )
-from PyQt5.QtWidgets import (
-    QLabel,
-)
-
-
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
 
 
 class ElidedLabel(QLabel):
@@ -29,7 +15,11 @@ class ElidedLabel(QLabel):
         super().__init__(*args, **kwargs)
 
     def paintEvent(self, event):  # NOQA
-        """paintEvent."""
+        """paint event.
+
+        Args:
+            event (QPaintEvent): Paint event.
+        """
         painter = QPainter(self)
         metrics = QFontMetrics(self.font())
         elided = metrics.elidedText(self.text(), Qt.ElideRight, self.width())

@@ -1,20 +1,18 @@
 """custom table item."""
-import logging
-
-from PyQt5.QtWidgets import (
-    QTableWidgetItem,
-)
-
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+from PyQt5.QtWidgets import QTableWidgetItem
 
 
 class CustomTableItem(QTableWidgetItem):
-    """CustomTableItem."""
+    """CustomTableItem.
+
+    Args:
+        item: Item for table.
+        txt: Text for item.
+        type: Type for parent class.
+
+    Attributes:
+        item: Item.
+    """
 
     def __init__(self, item=None, txt='', type=QTableWidgetItem.Type):
         """__init__."""

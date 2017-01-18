@@ -23,15 +23,21 @@ log_c = log.critical
 
 
 class BaseUserChoice(QDialog):
-    """BaseUserChoice."""
+    """BaseUserChoice.
+
+    Attributes:
+        USER_CHOICE (pyqtSignal): Signal for user choice.
+    """
 
     USER_CHOICE = pyqtSignal(object)
 
     def __init__(self, parent, **kwargs):
         """init."""
         super().__init__(parent, **kwargs)
+
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_TranslucentBackground)
+
         main_widget = QFrame(self)
         layout = QVBoxLayout(self)
         layout.addWidget(main_widget)

@@ -1,6 +1,4 @@
 """db Overview widget."""
-import logging
-
 from PyQt5.QtWidgets import (
     QListWidget,
     QTabWidget,
@@ -11,9 +9,7 @@ from PyQt5.QtCore import (
     Qt,
     pyqtSignal,
 )
-from PyQt5.QtGui import (
-    QIcon,
-)
+from PyQt5.QtGui import QIcon
 
 try:
     import app_constants
@@ -22,16 +18,20 @@ except ImportError:
         app_constants,
     )
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
-
 
 class DBOverview(QWidget):
-    """db overview."""
+    """db overview.
+
+    Args:
+        parent (QtWidgets.QWidget): Parent widget.
+        window (bool): Use window.
+
+    Attributes:
+        about_to_close (pyqtSignal): Signal when widget is about to close.
+        parent (QtWidgets.QWidget): Parent widget.
+        tags_stats (QListWidget): Tags status.
+        about_db (QWidget):  Widget about database.
+    """
 
     about_to_close = pyqtSignal()
 
@@ -41,8 +41,11 @@ class DBOverview(QWidget):
             super().__init__(None, Qt.Window)
         else:
             super().__init__(parent)
+
         self.setAttribute(Qt.WA_DeleteOnClose)
+
         self.parent_widget = parent
+
         main_layout = QVBoxLayout(self)
         tabbar = QTabWidget(self)
         main_layout.addWidget(tabbar)
