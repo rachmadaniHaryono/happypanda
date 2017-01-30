@@ -174,24 +174,32 @@ class Program:
 
         return application.exec_()
 
-    def _set_logger(self):
-        """set the logger setting."""
+    @staticmethod
+    def _init_logger(log_path, debug_log_path, dev, debug):
+        """init logging.
+
+        Args:
+            log_path: Path for log file for normal logging.
+            debug_log_path: Path for log file for debug logging.
+            dev (bool): Set logging for dev mode.
+            debug (bool: Set logging for debug mode.)
+        """
         log_handlers = []
         log_level = logging.INFO
-        if self.args.dev:
+        if dev:
             log_handlers.append(logging.StreamHandler())
-        if self.args.debug:
+        if debug:
             print("{} created at \n{}".format(
-                os.path.basename(self.debug_log_path),
-                os.path.dirname(self.debug_log_path)
+                os.path.basename(debug_log_path),
+                os.path.dirname(debug_log_path)
             ))
-            file_logger = logging.FileHandler(self.debug_log_path, encoding='utf-8')
+            file_logger = logging.FileHandler(debug_log_path, encoding='utf-8')
             log_handlers.append(file_logger)
             log_level = logging.DEBUG
             app_constants.DEBUG = True
         else:
             log_handlers.append(logging.handlers.RotatingFileHandler(
-                self.log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
+                log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
 
         # Fix for logging not working
         # clear the handlers first before adding these custom handler
@@ -202,6 +210,15 @@ class Program:
             format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
             datefmt='%d-%m %H:%M',
             handlers=log_handlers)
+
+    def _set_logger(self):
+        """set the logger setting."""
+        self._init_logging(
+            log_path=self.log_path,
+            debug_log_path=self.debug_log_path,
+            dev=self.args.dev,
+            debug=self.args.dev
+        )
         # set logger for this file
         self.log = logging.getLogger(__name__)
         self.log_i = self.log.info
