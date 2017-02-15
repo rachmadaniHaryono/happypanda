@@ -2,10 +2,7 @@
 import os
 import logging
 
-try:
-    import app_constants
-except ImportError:
-    from . import app_constants
+from . import app_constants
 
 
 def create_log_file(path):
@@ -46,8 +43,12 @@ def init_logging(log_path, debug_log_path, dev=None, debug=None):
         create_log_file(log_path)
 
         log_handlers.append(logging.handlers.RotatingFileHandler(
-            log_path, maxBytes=1000000*10, encoding='utf-8', backupCount=2))
+            log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
 
+    # Fix for logging not working
+    # clear the handlers first before adding these custom handler
+    # http://stackoverflow.com/a/15167862
+    logging.getLogger('').handlers = []
     logging.basicConfig(
         level=log_level,
         format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
