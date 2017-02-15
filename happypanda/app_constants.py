@@ -43,6 +43,7 @@ def _get_os_name():
 OS_NAME = _get_os_name()
 
 APP_RESTART_CODE = 0
+APP_NORMAL_EXIT_CODE = 1
 
 get = settings.get
 
