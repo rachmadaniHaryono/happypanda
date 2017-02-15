@@ -19,19 +19,22 @@ import traceback
 from PyQt5.QtCore import QFile, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox
+import appdirs
 
-try:
-    from app import AppWindow
-    from database import db, db_constants
-    import app_constants
-    import utils
-except ImportError:
-    from .app import AppWindow
-    from .database import db, db_constants
-    from . import (
-        app_constants,
-        utils,
-    )
+from .app import AppWindow
+from .database import db, db_constants
+from . import (
+    app_constants,
+    utils,
+)
+
+
+"""
+metadata for this file.
+this may be moved so it can be freely accessible to other module as well.
+this follow https://www.python.org/dev/peps/pep-0345
+"""
+__author__ = 'Pewpews'
 
 
 def _confirm_with_user(text, informative_text):
@@ -53,7 +56,7 @@ def _confirm_with_user(text, informative_text):
     return msg_box.exec_() == QMessageBox.Yes
 
 
-def parse_args():
+def parse_args(argv):
     """parse application arguments.
 
     Returns:
@@ -75,7 +78,7 @@ def parse_args():
     parser.add_argument(
         '-x', '--dev', action='store_true', help='Development Switch')
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 class Program:
@@ -101,22 +104,18 @@ class Program:
         self.args = args
         self.is_test = test
         # set log path
-        if os.name == 'posix':
-            main_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-            log_dir = os.path.join(main_path, 'log')
-            if not os.path.exists(log_dir):
-                os.mkdir(log_dir)
-            self.log_path = os.path.join(log_dir, 'happypanda.log')
-            self.debug_log_path = os.path.join(log_dir, 'happypanda_debug.log')
-        else:
-            self.log_path = 'happypanda.log'
-            self.debug_log_path = 'happypanda_debug.log'
-        # set environment variable
+        log_dir = appdirs.user_log_dir('happypanda', __author__)
+        self.log_path = os.path.join(log_dir, 'happypanda.log')
+        self.debug_log_path = os.path.join(log_dir, 'happypanda_debug.log')
+
+    @staticmethod
+    def _set_requests_certificate():
+        """Set requests certificate, if exist by set environment variable."""
         if os.path.exists('cacert.pem'):
             os.environ["REQUESTS_CA_BUNDLE"] = os.path.join(
                 os.getcwd(), "cacert.pem")
 
-    def _create_window_style(self):
+    def _get_window_stylesheet(self):
         """create window style.
 
         Returns:
@@ -151,9 +150,11 @@ class Program:
         db.DBBase._DB_CONN = conn
         # create window
         window = AppWindow(self.args.exceptions)
+
         # styling
-        style = self._create_window_style()
+        style = self._get_window_stylesheet()
         application.setStyleSheet(style)
+
         # create temp dir.
         try:
             os.mkdir(app_constants.temp_dir)
@@ -240,9 +241,9 @@ class Program:
         self.log_c('{}: {}'.format(ex_type, ex))
         traceback.print_exception(ex_type, ex, tb)
 
-    def _change_sys_excepthook(self):
+    def _disable_custom_excepthook(self, exceptions):
         """change system except hook."""
-        if not self.args.exceptions:
+        if not exceptions:
             sys.excepthook = self._uncaught_exceptions
 
     def _handle_database(self, application):
@@ -250,6 +251,7 @@ class Program:
 
         Args:
             application(PyQt5.QtWidgets.QApplication):Application.
+
         Returns:
             Database connection
         """
@@ -279,6 +281,7 @@ class Program:
 
         Args:
             application(PyQt5.QtWidgets.QApplication):Application.
+
         Returns:
             int:Returns code.
         """
@@ -291,10 +294,11 @@ class Program:
         )
         if _confirm_with_user(text=text, informative_text=info_text):
             utils.backup_database()
-            # import threading
+
             db_p = db_constants.DB_PATH
             db.add_db_revisions(db_p)
             conn = db.init_db()
+
             return self._start_main_window(conn, application=application)
         else:
             application.exit()
@@ -307,9 +311,9 @@ class Program:
         Returns:
             int: Return code.
         """
+        self._set_requests_certificate()
         self._set_logger()
-
-        self._change_sys_excepthook()
+        self._disable_custom_excepthook(exceptions=self.args.exceptions)
 
         if app_constants.FORCE_HIGH_DPI_SUPPORT:
             self.log_i("Enabling high DPI display support")
@@ -333,14 +337,15 @@ class Program:
         if self.args.debug:
             self.log_i('Running in debug mode'.format(app_constants.vs))
             sys.displayhook = pprint.pprint
+        app_constants.load_icons()
         self.log_i('Happypanda Version {}'.format(app_constants.vs))
         self.log_i('OS: {} {}\n'.format(platform.system(), platform.release()))
 
         conn = self._handle_database(application)
         if conn:
-            return self._start_main_window(conn, application=application)
+            return self._start_main_window(conn=conn, application=application)
         else:
-            return self._db_upgrade(application)
+            return self._db_upgrade(application=application)
 
 
 def start(test=False):
@@ -351,14 +356,67 @@ def start(test=False):
     Returns:
         int: Return code.
     """
-    args = parse_args()
+    """
+    NOTE: diff with origin/packaging
+
+    General:
+
+    - Import will be put on top.
+    - unused will be removed.
+
+    For this module.
+
+    - app_constants.APP_RESTART_CODE is not set to hardcoded random number `-123456789`
+    - body of start function is moved to Program Class
+    - setting log and debug log is put into __init__ from Program class.
+     - it is not using db_constants.CONTENT_DIR as used on origin/package, or using different place
+       based on OS which used on the release before 1.0. It will be handled by package appdirs.
+     - therefore there is module metadata (__author__), which will be temporary used
+       - __name__ is not used as application name metadata, so it will not conflict with ifmain
+         block. for hardcoded string will be used(`'happypanda'`).
+       and maybe in the future will be moved so other module can use it as well.
+    - setting request certificate is moved to _set_requests_certificate method of Program class,
+      which run on Program class's run method.
+    - __init__ method of Program class will be used to set variable without logic, other method
+      which have side effect will be run on run method.
+    - setting logging will be moved to _set_logger method of Program class and init_logging
+      function from custom_logging module.
+      - _set_logging is the entire logging initiation for this program.
+      - init_logging set the basic log config for entire program.
+      - the rest of the code on _set_logging is used only on this module.
+    - disable custom excepthook has it's own method (_disable_custom_excepthook) and it's inner
+      function is also moved to its own method (_uncaught_exceptions).
+    - initiating the database handler is started at _handle_database method, which will return the
+      connection if succes.
+      - the message box is moved to make it usable for other (see _confirm_with_user function)
+      method/function which will use it.
+    - start_main_window inner function on start function on origin/packaging is moved to
+      _start_main_window method of Program class.
+      - application which used on that inner function is used as input argument.
+      - WINDOW variable is changed to window for pep8
+      - get style sheet code is moved to _get_window_stylesheet method of Program class.
+      - create temp dir code is simplified.
+        - double try except is flattened
+        - when existing temp dir exists, the file and folder is not cleaned with double for-loop,
+          instead use for-loop and map.
+    - db_upgrade inner function on start function on origin/packaging is moved to
+      _db_upgrade method of Program class.
+      - becaues of _start_main_window which require application object as input, this method is
+        also require application as input argument.
+      - the modified message box which is used when starting window is also used here.
+    """
+    args = parse_args(sys.argv[1:])
     program = Program(args=args, test=test)
     return program.run()
 
 
 def main():
     """main function."""
-    app_constants.APP_RESTART_CODE = -1
+    """
+    NOTE: diff with origin/packaging
+
+    - current_exit_code is still `0` but it set as APP_RESTART_CODE.
+    """
     current_exit_code = app_constants.APP_RESTART_CODE
     while current_exit_code == app_constants.APP_RESTART_CODE:
         current_exit_code = start()
