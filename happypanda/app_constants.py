@@ -21,6 +21,7 @@ import os
 import sys
 
 import qtawesome as qta
+import pkg_resources
 
 from . import settings
 from .database import db_constants
@@ -110,7 +111,7 @@ VALID_GALLERY_CATEGORY = (
 )
 
 # default stylesheet path
-default_stylesheet_path = os.path.join(static_dir, "style.css")
+default_stylesheet_path = pkg_resources.resource_filename("happypanda.res", "style.css")
 user_stylesheet_path = ""
 
 INTERNAL_LEVEL = 8
@@ -232,9 +233,9 @@ def load_icons():
     SPINNER_ICON = qta.icon("fa.spinner", color="white")
 
 # image paths
-GALLERY_DEF_ICO_PATH = os.path.join(static_dir, "gallery_def_ico.ico")
-GALLERY_EXT_ICO_PATH = os.path.join(static_dir, "gallery_ext_ico.ico")
-APP_ICO_PATH = os.path.join(static_dir, "happypanda.ico")
+GALLERY_DEF_ICO_PATH = pkg_resources.resource_filename("happypanda.res", "gallery_def_ico.ico")
+GALLERY_EXT_ICO_PATH = pkg_resources.resource_filename("happypanda.res", "gallery_ext_ico.ico")
+APP_ICO_PATH = pkg_resources.resource_filename("happypanda.res", "happypanda.ico")
 SETTINGS_PATH = os.path.join(static_dir, "settings.png")
 NO_IMAGE_PATH = os.path.join(static_dir, "default.jpg")
 
@@ -522,12 +523,13 @@ LePearlo</p>
     """ .format(vs, db_constants.CURRENT_DB_VERSION)
 
 # use html file.
+html_packg = 'happypanda.res.html'
 _html_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'res', 'html')
-with open(os.path.join(_html_dir, 'regex_cheat.html')) as f:
+with open(pkg_resources.resource_filename(html_packg, 'regex_cheat.html')) as f:
     REGEXCHEAT = f.read()
-with open(os.path.join(_html_dir, 'trouble_guide.html')) as f:
+with open(pkg_resources.resource_filename(html_packg, 'trouble_guide.html')) as f:
     TROUBLE_GUIDE = f.read()
-with open(os.path.join(_html_dir, 'search_tutorial_tags.html')) as f:
+with open(pkg_resources.resource_filename(html_packg, 'search_tutorial_tags.html')) as f:
     SEARCH_TUTORIAL_TAGS = f.read()
-with open(os.path.join(_html_dir, 'keyboard_shotrcuts_info.html')) as f:
+with open(pkg_resources.resource_filename(html_packg, 'keyboard_shotrcuts_info.html')) as f:
     KEYBOARD_SHORTCUTS_INFO = f.read()

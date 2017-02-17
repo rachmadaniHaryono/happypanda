@@ -81,6 +81,7 @@ import sys
 import traceback
 
 import requests
+import qtawesome as qta
 from PyQt5.QtCore import (
     QSize,
     QThread,
@@ -1117,7 +1118,7 @@ class AppWindow(QMainWindow):
 
         settings_act = QToolButton(self.toolbar)
         settings_act.setShortcut(settings_k)
-        settings_act.setIcon(QIcon(app_constants.SETTINGS_PATH))
+        settings_act.setIcon(qta.icon('fa.gear', color='white'))
         settings_act.clicked.connect(self.settings)
         self.toolbar.addWidget(settings_act)
 
