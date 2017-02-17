@@ -1,4 +1,10 @@
-"""misc module."""
+"""misc module.
+
+NOTE: diff with origin/packaging
+
+- SortMenu class is moved to its own file (sort_menu)
+  - updated with branch.
+"""
 # """
 # This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify

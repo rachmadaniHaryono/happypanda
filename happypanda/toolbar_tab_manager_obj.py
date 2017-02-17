@@ -1,23 +1,22 @@
-"""toolbar tab manager."""
+"""toolbar tab manager.
+
+taken from misc_db.py.
+"""
 import logging
 
 from PyQt5.QtWidgets import (
     QWidget,
+    QButtonGroup,
 )
 from PyQt5.QtCore import (
     QObject,
 )
 
-try:
-    import app_constants
-    from toolbar_button import ToolbarButton
-    from manga_views import MangaViews
-except ImportError:
-    from .toolbar_button import ToolbarButton
-    from .manga_views import MangaViews
-    from . import (
-        app_constants,
-    )
+from .toolbar_button import ToolbarButton
+from .manga_views import MangaViews
+from . import (
+    app_constants,
+)
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -39,10 +38,15 @@ class ToolbarTabManagerObject(QObject):
         self._last_selected = None
         self.idx_widget = self.toolbar.addWidget(QWidget(self.toolbar))
         self.idx_widget.setVisible(False)
+
+        self.agroup = QButtonGroup(self)
+        self.agroup.setExclusive(True)
+
         self.library_btn = None
-        self.favorite_btn = self.addTab("Favorites", delegate_paint=False)
-        self.library_btn = self.addTab("Library", delegate_paint=False)
-        self.toolbar.addSeparator()
+        self.favorite_btn = self.addTab(
+            "Favorites", delegate_paint=False, icon=app_constants.STAR_ICON)
+        self.library_btn = self.addTab(
+            "Library", delegate_paint=False, icon=app_constants.GRIDL_ICON)
         self.idx_widget = self.toolbar.addWidget(QWidget(self.toolbar))
         self.idx_widget.setVisible(False)
         self.toolbar.addSeparator()
@@ -71,21 +75,26 @@ class ToolbarTabManagerObject(QObject):
             name,
             view_type=app_constants.ViewType.Default,
             delegate_paint=True,
-            allow_sidebarwidget=False
+            allow_sidebarwidget=False,
+            icon=None
     ):
         """add tab."""
         if self.toolbar:
             t = ToolbarButton(self.toolbar, name)
+            if icon:
+                t.setIcon(icon)
+            else:
+                t.setIcon(app_constants.CIRCLE_ICON)
+            t.setCheckable(True)
+            self.agroup.addButton(t)
             t.select.connect(self._manage_selected)
             t.close_tab.connect(self.removeTab)
             if self.library_btn:
-                t.view = MangaViews(
-                    view_type, self.parent_widget, allow_sidebarwidget)
+                t.view = MangaViews(view_type, self.parent_widget, allow_sidebarwidget)
                 t.view.hide()
                 t.close_tab.connect(lambda: self.library_btn.click())
                 if not allow_sidebarwidget:
-                    t.clicked.connect(
-                        self.parent_widget.sidebar_list.arrow_handle.click)
+                    t.clicked.connect(self.parent_widget.sidebar_list.arrow_handle.click)
             else:
                 t.view = self.parent_widget.default_manga_view
             if delegate_paint:

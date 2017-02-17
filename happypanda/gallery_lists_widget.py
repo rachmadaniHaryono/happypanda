@@ -1,4 +1,7 @@
-"""gallery lists widget."""
+"""gallery lists widget.
+
+taken from misc_db.py.
+"""
 import pickle
 import logging
 
@@ -14,22 +17,14 @@ from PyQt5.QtGui import (
     QIcon,
 )
 
-try:
-    import gallerydb
-    import app_constants
-    from custom_list_item import CustomListItem
-    from gallery_list_context_menu import GalleryListContextMenu
-    from gallery_list_edit import GalleryListEdit
-    from list_delegate import ListDelegate
-except ImportError:
-    from .custom_list_item import CustomListItem
-    from .gallery_list_context_menu import GalleryListContextMenu
-    from .gallery_list_edit import GalleryListEdit
-    from .list_delegate import ListDelegate
-    from . import (
-        app_constants,
-        gallerydb,
-    )
+from .custom_list_item import CustomListItem
+from .gallery_list_context_menu import GalleryListContextMenu
+from .gallery_list_edit import GalleryListEdit
+from .list_delegate import ListDelegate
+from . import (
+    app_constants,
+    gallerydb,
+)
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -49,9 +44,9 @@ class GalleryListsWidget(QListWidget):
     def __init__(self, parent):
         """init func."""
         super().__init__(parent)
-        self.gallery_list_edit = GalleryListEdit(parent)
+        self.gallery_list_edit = GalleryListEdit(parent.parent_widget)
         self.gallery_list_edit.hide()
-        self._g_list_icon = QIcon(app_constants.GLIST_PATH)
+        self._g_list_icon = app_constants.G_LISTS_ICON
         self._font_selected = QFont(self.font())
         self._font_selected.setBold(True)
         self._font_selected.setUnderline(True)

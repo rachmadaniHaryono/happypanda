@@ -176,6 +176,17 @@ class Program:
         return application.exec_()
 
     @staticmethod
+    def create_log_file(path):
+        """create log file.
+
+        taken and modified from http://stackoverflow.com/a/12517490/1766261
+
+        Args:
+            path: Path of the log file.
+        """
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    @staticmethod
     def _init_logger(log_path, debug_log_path, dev, debug):
         """init logging.
 
@@ -194,11 +205,14 @@ class Program:
                 os.path.basename(debug_log_path),
                 os.path.dirname(debug_log_path)
             ))
+            Program.create_log_file(debug_log_path)
+
             file_logger = logging.FileHandler(debug_log_path, encoding='utf-8')
             log_handlers.append(file_logger)
             log_level = logging.DEBUG
             app_constants.DEBUG = True
         else:
+            Program.create_log_file(log_path)
             log_handlers.append(logging.handlers.RotatingFileHandler(
                 log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
 
@@ -214,7 +228,7 @@ class Program:
 
     def _set_logger(self):
         """set the logger setting."""
-        self._init_logging(
+        self._init_logger(
             log_path=self.log_path,
             debug_log_path=self.debug_log_path,
             dev=self.args.dev,
@@ -417,6 +431,7 @@ def main():
 
     - current_exit_code is still `0` but it set as APP_RESTART_CODE.
     """
+    app_constants.APP_RESTART_CODE = -1
     current_exit_code = app_constants.APP_RESTART_CODE
     while current_exit_code == app_constants.APP_RESTART_CODE:
         current_exit_code = start()

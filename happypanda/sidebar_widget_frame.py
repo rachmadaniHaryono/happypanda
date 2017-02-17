@@ -1,4 +1,7 @@
-"""sidebar widget frame."""
+"""sidebar widget frame.
+
+taken from misc_db.py.
+"""
 import logging
 
 from PyQt5.QtWidgets import (
@@ -19,20 +22,12 @@ from PyQt5.QtGui import (
     QIcon,
 )
 
-try:
-    import app_constants
-    from arrow_handle_widget import ArrowHandleWidget
-    from gallery_artists_list_view import GalleryArtistsListView
-    from gallery_lists_widget import GalleryListsWidget
-    from misc import create_animation
-    from tags_tree_view_widget import TagsTreeViewWidget
-except ImportError:
-    from . import app_constants
-    from .arrow_handle_widget import ArrowHandleWidget
-    from .gallery_artists_list_view import GalleryArtistsListView
-    from .gallery_lists_widget import GalleryListsWidget
-    from .misc import create_animation
-    from .tags_tree_view_widget import TagsTreeViewWidget
+from . import app_constants
+from .arrow_handle_widget import ArrowHandleWidget
+from .gallery_artists_list_view import GalleryArtistsListView
+from .gallery_lists_widget import GalleryListsWidget
+from .misc import create_animation
+from .tags_tree_view_widget import TagsTreeViewWidget
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -50,7 +45,7 @@ class SideBarWidgetFrame(QFrame):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.parent_widget = parent
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
         self.parent_widget
         self._widget_layout = QHBoxLayout(self)
 
@@ -102,7 +97,7 @@ class SideBarWidgetFrame(QFrame):
         gallery_lists_dummy = QWidget(self)
         self.lists = GalleryListsWidget(self)
         create_new_list_btn = QPushButton()
-        create_new_list_btn.setIcon(QIcon(app_constants.PLUS_PATH))
+        create_new_list_btn.setIcon(QIcon(app_constants.PLUS_ICON))
         create_new_list_btn.setIconSize(QSize(15, 15))
         create_new_list_btn.clicked.connect(
             lambda: self.lists.create_new_list())

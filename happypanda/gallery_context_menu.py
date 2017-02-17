@@ -12,10 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
-try:
-    from common_view import CommonView
-except:
-    from .common_view import CommonView
+from .common_view import CommonView
 
 from PyQt5.QtWidgets import (
     QMenu,
