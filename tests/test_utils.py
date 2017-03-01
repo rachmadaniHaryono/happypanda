@@ -7,6 +7,9 @@ import pytest
 from version.utils import backup_database
 
 
+MODULE_PATH = 'version.utils'
+
+
 @pytest.mark.parametrize(
     'mock_exists_retval, mock_isdir_retval',
     product([True, False], repeat=2)
@@ -62,3 +65,28 @@ def test_run_backup_database(mock_exists_retval, mock_isdir_retval):
         else:
             mock_os.mkdir.assert_called_once_with(mock_os.path.join.return_value)
         mock_os.assert_has_calls(os_calls, any_order=True)
+
+
+@pytest.mark.parametrize(
+    'orig_name_list, exp_res',
+    [
+        (
+            ['folder/', 'folder/pic1'],
+            ['folder/', 'folder/pic1'],
+        ),
+        (
+            ['folder/pic1'],
+            ['folder/', 'folder/pic1'],
+        )
+    ]
+)
+def test_name_list(orig_name_list, exp_res):
+    """test method."""
+    path = mock.Mock()
+    with mock.patch(MODULE_PATH + '.ArchiveFile.__init__', return_value=None):
+        from version.utils import ArchiveFile
+        obj = ArchiveFile(path)
+        obj.archive = mock.Mock()
+        obj.archive.namelist.return_value = orig_name_list
+        res = obj.namelist()
+        assert res == exp_res
