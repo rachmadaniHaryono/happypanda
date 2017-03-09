@@ -1,6 +1,3 @@
-    Note: Work on this program has been halted in favor of its successor
-    HappypandaX (bugs and such won't be fixed)
-
 This is a cross platform manga/doujinshi manager with namespace & tag
 support.
 
@@ -8,15 +5,13 @@ Features
 ========
 
 -  Portable, self-contained in folder and cross-platform
+-  Advanced gallery search with regex support
 -  Low memory footprint
--  Advanced gallery search with regex support (`learn more about it
-   here <https://github.com/Pewpews/happypanda/wiki/Gallery-Searching>`__)
 -  Gallery tagging: userdefined namespaces and tags
 -  Gallery metadata fetching from the web (supports various sources)
 -  Gallery downloading from the web (supports various sources) \*
 -  Folder monitoring that'll notify you of filesystem changes
--  Multiple ways of adding galleries to make it as convienient as
-   possible!
+-  Multiple ways of adding galleries to make it as convienient as possible!
 -  Recursive directory/archive scanning
 -  Supports ZIP/CBZ, RAR/CBR and directories with loose files
 -  Very customizable
@@ -24,91 +19,87 @@ Features
 
 \* Gallery downloading from E-Hentai costs Credits/GP
 
+
 Screenshots
 ===========
-.. image:: https://github.com/Pewpews/happypanda/raw/master/misc/screenshot1.png
+.. image:: ../misc/screenshot1.png
     :width: 100%
     :align: center
-.. image:: https://github.com/Pewpews/happypanda/raw/master/misc/screenshot2.png
+.. image:: ../misc/screenshot2.png
     :width: 100%
     :align: center
-.. image:: https://github.com/Pewpews/happypanda/raw/master/misc/screenshot3.png
+.. image:: ../misc/screenshot3.png
     :width: 100%
     :align: center
 
-How to install and run
-======================
+Installation and Update
+=======================
 
-Windows
-^^^^^^^
+This program require Qt5 with minimum version 5.4.
+User from window/64bit linux/osx can use pip to install this.
+User with 32bit linux should install `python3-pyqt5`, 
+before install with pip.
 
-#. Download the archive from
-   `releases <https://github.com/Pewpews/happypanda/releases>`__
-#. Extract the archive to its own folder
-#. Find Happypanda.exe and double click on it!
+Use pip to install
 
-Mac and Linux
-^^^^^^^^^^^^^
+.. code-block:: bash
 
-Install from PYPI or see `INSTALL.md <https://github.com/Pewpews/happypanda/blob/master/INSTALL.md>`__
+        git clone https://github.com/rachmadaniHaryono/happypanda
+        cd happypanda
+        pip install .
 
-PYPI
-^^^^^^^^^^^^^
-``pip install happypanda`` (thanks `@Evolution0 <https://github.com/Evolution0>`__)
-and then run with ``happypanda --home``
+Use pip install from github link
 
-Note: use of the ``--home`` flag will make happypanda create required files and directories at:
+.. code-block:: bash
 
-On windows:
-``'C:\Users\YourName\AppData\Local\Pewpew\Happypanda'``
+        pip install https://github.com/rachmadaniHaryono/happypanda
 
-On mac:
-``'/Users/YourName/Library/Application Support/Happypanda'``
+if pip require sudo to install, use `--user` flag.
 
-On linux:
-``'/home/YourName/.local/share/Happypanda'``
+Contribute
+==========
 
+- Issue Tracker: https://github.com/rachmadaniHaryono/happypanda/issues
+- Source Code: https://github.com/rachmadaniHaryono/happypanda
 
-Updating
-========
+Support
+=======
 
-| Overwrite your previous installation.
-| More info in the `wiki <https://github.com/Pewpews/happypanda/wiki>`__
+If you need help you can contact developer at `Happypanda room at gitter`_
+or `file a bug in the issue tracker`_.
+
+.. _Happypanda room at gitter: https://gitter.im/Pewpews/happypanda
+.. _file a bug in the issue tracker: https://github.com/rachmadaniHaryono/happypanda/issues
 
 
-PYPI
-^^^^^^^^^^^^^
-``pip install --upgrade happypanda``
+Fork's goals
+============
 
+After reaching 1.1, Happypanda development is halted for Happypandax project.
+This fork is created to continue the happypanda project with better code base
+and more feature.
+
+Main goals
+----------
+
+- Testing coverage for non pyqt stuff over 50 %.
+- Using peewee for database module.
+- More supported gallery downloader.
+
+Optional goals
+--------------
+
+- Metadata from other website such as myanimelist, mangaupdates, etc
 
 Misc.
 =====
 
-For general documentation (how to add galleries and usage of the
-search), check the
-`wiki <https://github.com/Pewpews/happypanda/wiki>`__.
-
 People wanting to import galleries from the Pururin database torrent
-should find `this <https://github.com/Exedge/Convertor>`__ useful.
+should find `Exedge/Convertor`_ useful.
 
-Dependencies
-============
+.. _Exedge/Convertor: https://github.com/Exedge/Convertor
 
--  Qt5 (Install this first) >= 5.4
--  PyQt5 (pip)
--  requests (pip)
--  beautifulsoup4 (pip)
--  watchdog (pip)
--  scandir (pip)
--  rarfile (pip)
--  robobrowser (pip)
--  Send2Trash (pip)
--  Pillow (pip) or PIL
--  python-dateutil (pip)
--  QtAwesome (pip)
--  appdirs (pip)
+License
+=======
 
-Contributing
-============
-
-Please refer to ``HappypandaX`` instead.
+The project is licensed under the GNU GPL
