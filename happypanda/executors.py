@@ -169,7 +169,7 @@ class Executors:
     ):
         """load thumbnail.
 
-        **kwargs will be passed to on_method"""
+        kwargs will be passed to on_method"""
 
         f = cls._profile_exec.submit(_task_load_thumbnail, ppath, thumb_size, on_method, **kwargs)
         return f
