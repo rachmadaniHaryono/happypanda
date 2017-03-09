@@ -6,10 +6,18 @@
 Welcome to happypanda's documentation!
 ======================================
 
+.. include:: ../README.rst
+
+Documentation content
+=====================
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
+
+   merge origin
+   modules
 
 Indices and tables
 ==================
@@ -17,4 +25,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
