@@ -273,7 +273,7 @@ def check_archive(archive_path):  # NOQA
         archive_path: Archive path.
 
     Returns:
-        list: list with a path in archive to galleries if there is no directories.
+        list with a path in archive to galleries if there is no directories.
     """
     try:
         zip = ArchiveFile(archive_path)
@@ -319,7 +319,7 @@ def recursive_gallery_check(path):  # NOQA
     ["C:path/to/g"] and [("path/to/g/in/a", "C:path/to/a")]
 
     Returns:
-        list: list of paths for directories and a list of tuples
+        list of paths for directories and a list of tuples
         where first index is path to gallery in archive and second index is path to archive.
 
     """
@@ -353,7 +353,7 @@ def today():
     """Return current date in a list: [dd, Mmm, yyyy].
 
     Returns:
-        list: Current date in  a list.
+        Current date in  a list.
     """
     _date = datetime.date.today()
     day = _date.strftime("%d")
@@ -910,7 +910,7 @@ def regex_search(a, b, override_case=False, args=[]):
         a: Keyword to search.
         b: String to search.
         override_case (bool): Override case.
-        args (list): Arguments.
+        args : Arguments.
 
     Returns:
         bool: Return True if keyword found.
@@ -935,7 +935,7 @@ def search_term(a, b, override_case=False, args=[]):
         a: Keyword to search.
         b: String to search.
         override_case (bool): Override case.
-        args (list): Arguments.
+        args: Arguments.
 
     Returns:
         bool: Return True if keyword found.
@@ -961,7 +961,7 @@ def get_terms(term):  # NOQA
         term: Term.
 
     Returns:
-        list:a list with the pieces.
+        a list with the pieces.
     """
     # some variables we will use
     pieces = []

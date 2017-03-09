@@ -223,7 +223,7 @@ class GalleryDownloaderListWidget(QTableWidget):
         """Gallery to model.
 
         Args:
-            gallery_list (list):Gallery list.
+            gallery_list:Gallery list.
         """
         log_i("Adding downloaded gallery to library")
         log_d(pformat(gallery_list))

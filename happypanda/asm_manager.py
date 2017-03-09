@@ -44,7 +44,7 @@ class AsmManager(DLManagerObject):
             browser: Robobrowser instance.
 
         Returns:
-            list: List of doujin/manga tags on the page.
+            List of doujin/manga tags on the page.
         """
         sibling_tags = browser.select('.tags h3')
         tags = list(map(
@@ -106,7 +106,7 @@ class AsmManager(DLManagerObject):
         """Split href links to parts.
 
         Args:
-            links (list): List of hrefs.
+            links: List of hrefs.
 
         Returns:
             list of tuple contain url parts.
@@ -120,7 +120,7 @@ class AsmManager(DLManagerObject):
             g_url: Gallery url.
 
         Returns:
-            list: Image from gallery url.
+            Image from gallery url.
         """
         # ensure the url
         self.ensure_browser_on_url(url=g_url)

@@ -89,7 +89,7 @@ class ArchiveFile():
         """Returns a list with all files in archive.
 
         Returns:
-            list: List of all files in archive.
+            List of all files in archive.
         """
         filelist = self.archive.namelist()
         return filelist
@@ -126,7 +126,7 @@ class ArchiveFile():
             only_top_level (bool): Return only top level or not.
 
         Returns:
-            list: all directories and recursively if asked.
+            all directories and recursively if asked.
         """
         if only_top_level:
             if self.type == self.zip:
@@ -154,7 +154,7 @@ class ArchiveFile():
             dir_name: Directory name.
 
         Returns:
-            list: Directory contents.
+            Directory contents.
         """
         if dir_name and dir_name not in self.namelist():
             log_e('Directory {} not found in archive'.format(dir_name))

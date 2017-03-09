@@ -40,9 +40,9 @@ class DownloaderObject(QObject):
     Attributes:
         _inc_queue (Queue): Queue object contain item or dict of item and directory if defined.
         _browser_session: Robobrowser session if defined.
-        _threads (list): List contain thread.
+        _threads: List contain thread.
         item_finished (PyQt5.QtCore.pyqtSignal): signal when item finished.
-        active_items (list): List of currently processed item.
+        active_items: List of currently processed item.
     """
 
     _inc_queue = Queue()
@@ -203,7 +203,7 @@ class DownloaderObject(QObject):
             item: Download item.
             interrupt_state (bool): Interrupt state.
             use_tempfile (bool): Use tempfile when downloading or not.
-            catch_errors (list): List of error that will be catched when downloading.
+            catch_errors: List of error that will be catched when downloading.
 
         Returns:
             tuple: (item, interrupt_state) where both variables
@@ -242,7 +242,7 @@ class DownloaderObject(QObject):
             item: Download item.
             interrupt_state (bool): Interrupt state.
             use_tempfile (bool): Use tempfile when downloading or not.
-            catch_errors (list): List of error that will be catched when downloading.
+            catch_errors: List of error that will be catched when downloading.
 
         Returns:
             tuple: (item, interrupt_state) where both variables
@@ -318,7 +318,7 @@ class DownloaderObject(QObject):
         """get total size prediction.
 
         Args:
-            known_filesize (list): List of known filesize.
+            known_filesize: List of known filesize.
             urls_len (int): Number of urls_len
 
         Returns:

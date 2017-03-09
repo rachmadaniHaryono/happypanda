@@ -24,7 +24,7 @@ class TorrentUserChoice(BaseUserChoice):
 
     Args:
         parent (QWidget): Parent widget.
-        torrentitems (list): Torrent items.
+        torrentitems: Torrent items.
 
     Attributes:
         _list_w (QListWidget): List widget.

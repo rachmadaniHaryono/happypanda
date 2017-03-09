@@ -74,7 +74,7 @@ class NhenManager(DLManagerObject):
             browser: Robobrowser instance.
 
         Returns:
-            list: List of doujin/manga tags on the page.
+            List of doujin/manga tags on the page.
         """
         html_soup = browser
         tag_dict = NhenManager._get_tag_dict(html_soup=html_soup)
@@ -144,7 +144,7 @@ class NhenManager(DLManagerObject):
             g_url: Gallery url.
 
         Returns:
-            list: Image from gallery url.
+            Image from gallery url.
         """
         # ensure the url
         self.ensure_browser_on_url(url=g_url)
