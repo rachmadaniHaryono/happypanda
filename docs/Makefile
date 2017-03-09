@@ -4,6 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
+SPHINXAPIDOC  = sphinx-apidoc
 PAPER         =
 BUILDDIR      = _build
 
@@ -44,10 +45,40 @@ help:
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 	@echo "  dummy      to check syntax errors of document sources"
 	@echo "  livehtml   to run live html"
+	@echo "  rst        to run sphinx-apidoc"
 
 .PHONY: livehtml
 livehtml:
-	sphinx-autobuild -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html -s 5
+	# Clean out any cached content before starting.
+	make clean 2>/dev/null
+	# Background a trigger for initial build of all files.
+	#(sleep 1 && touch source/*.rst) &
+	# actual command
+	sphinx-autobuild -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html \
+		--port 0 \
+		-q \
+		--open-browser \
+		--delay 10 \
+		--ignore "*.swp" \
+		--ignore "*.swo" \
+		--ignore "*.pdf" \
+		--ignore "*.log" \
+		--ignore "*.out" \
+		--ignore "*.toc" \
+		--ignore "*.aux" \
+		--ignore "*.idx" \
+		--ignore "*.ind" \
+		--ignore "*.ilg" \
+		--ignore "*.tex" \
+		--ignore "*.*~" \
+		--ignore "Makefile~" \
+		--ignore "4913"
+
+.PHONY: apidoc
+apidoc:
+	$(SPHINXAPIDOC) --separate $(SPHINXOPTS) -o $(BUILDDIR)/apidocs .
+	@echo
+	@echo "Build finished. The apidoc files are in $(BUILDDIR)/apidocs."
 
 .PHONY: clean
 clean:
