@@ -426,11 +426,6 @@ def start(test=False):
 
 def main():
     """main function."""
-    """
-    NOTE: diff with origin/packaging
-
-    - current_exit_code is still `0` but it set as APP_RESTART_CODE.
-    """
     app_constants.APP_RESTART_CODE = -1
     current_exit_code = app_constants.APP_RESTART_CODE
     while current_exit_code == app_constants.APP_RESTART_CODE:
