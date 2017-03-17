@@ -27,8 +27,6 @@ from . import (
     app_constants,
     utils,
 )
-
-
 """
 metadata for this file.
 this may be moved so it can be freely accessible to other module as well.
