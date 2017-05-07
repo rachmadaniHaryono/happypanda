@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from version.utils import IMG_FILES
+from happypanda.utils import IMG_FILES
 
 
 @pytest.mark.parametrize(

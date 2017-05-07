@@ -1,13 +1,11 @@
 """test main module."""
 from unittest import mock
 
-from version.main import (
-    parse_args,
-)
 
 
 def assert_argparse(mock_argparse):
     """assertion for arg parsing."""
+    from version.main import parse_args
     mock_argparse.assert_has_calls([
         mock.call.ArgumentParser(
             description='A manga/doujinshi manager with tagging support', prog='Happypanda'),
@@ -29,6 +27,7 @@ def assert_argparse(mock_argparse):
 
 def test_parse_args():
     """test parse_args."""
+    from version.main import parse_args
     with mock.patch('version.main.argparse') as mock_argparse:
         res = parse_args()
         assert len(mock_argparse.mock_calls) == 7
