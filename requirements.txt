@@ -2,7 +2,6 @@
 
 appdirs==1.4.0
 beautifulsoup4==4.5.3
-Pillow==3.4.2
 pillow==4.0.0
 python-dateutil==2.6.0
 QtAwesome==0.3.3
