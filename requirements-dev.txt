@@ -1,11 +1,12 @@
 -r requirements.txt
 
+Sphinx==1.4.8
 click==6.6
 flake8==3.0.4
-mock==2.0.0
-pytest==3.0.3
-pytest-cov==2.4.0
-vext.pyqt5==0.5.20
-Sphinx==1.4.8
-sphinx-autobuild==0.6.0
 gitchangelog==2.4.1
+mock==2.0.0
+pytest-cov==2.4.0
+pytest-flake8==0.8.1
+pytest==3.0.3
+sphinx-autobuild==0.6.0
+vext.pyqt5==0.5.20
