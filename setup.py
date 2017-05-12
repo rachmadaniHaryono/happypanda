@@ -7,17 +7,17 @@ from setuptools import setup, find_packages
 here = path.abspath(path.dirname(__file__))
 
 install_requires = [
-    'requests',
+    'appdirs'
     'beautifulsoup4',
-    'scandir',
-    'rarfile',
-    'watchdog',
-    'robobrowser',
-    'Send2Trash',
     'pillow',
     'python-dateutil',
     'QtAwesome',
-    'appdirs'
+    'rarfile',
+    'requests',
+    'robobrowser',
+    'scandir',
+    'Send2Trash',
+    'watchdog',
 ]
 
 if name != "posix" and maxsize > 2**32 is False:
