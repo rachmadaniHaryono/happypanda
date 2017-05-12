@@ -2,21 +2,10 @@
 
 taken from misc.py
 """
-from PyQt5.QtCore import (
-    pyqtSignal,
-    QRectF,
-    Qt,
-)
-from PyQt5.QtGui import (
-    QBrush,
-    QColor,
-    QPainter,
-    QPaintEvent,
-)
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (
     QMenu,
     QPushButton,
-    QStyleOption,
 )
 
 

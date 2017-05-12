@@ -787,11 +787,13 @@ class TagDB(DBBase):
 
     Provides the following methods:
     del_tags <- Deletes the tags with corresponding tag_ids from DB
-    del_gallery_tags_mapping <- Deletes the tags and gallery mappings with corresponding series_ids from DB
+    del_gallery_tags_mapping <- Deletes the tags and gallery mappings
+        with corresponding series_ids from DB
     get_gallery_tags -> Returns all tags and namespaces found for the given series_id;
     get_tag_gallery -> Returns all galleries with the given tag
     get_ns_tags -> "Returns a dict with namespace as key and list of tags as value"
-    get_ns_tags_to_gallery -> Returns all galleries linked to the namespace tags.  Receives a dict like this: {"namespace":["tag1","tag2"]}
+    get_ns_tags_to_gallery -> Returns all galleries linked to the namespace tags. 
+        Receives a dict like this: {"namespace":["tag1","tag2"]}
     get_tags_from_namespace -> Returns all galleries linked to the namespace
     add_tags <- Adds the given dict_of_tags to the given series_id
     modify_tags <- Modifies the given tags

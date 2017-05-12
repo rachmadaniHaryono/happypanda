@@ -2,7 +2,6 @@
 from unittest import mock
 
 
-
 def assert_argparse(mock_argparse):
     """assertion for arg parsing."""
     from version.main import parse_args
