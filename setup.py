@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 here = path.abspath(path.dirname(__file__))
 
 install_requires = [
-    'appdirs'
+    'appdirs',
     'beautifulsoup4',
     'pillow',
     'python-dateutil',
