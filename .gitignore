@@ -13,67 +13,6 @@
 *Thumbs.db
 *__pycache__*
 *cache
-.DS_Store
-.exrc
-.happypanda
-/.vs/config/applicationhost.config
-/Attameaikko.01.zip
-/Happypanda.egg-info/
-/[Yamatogawa] Power Play!.zip
-/compilerconfig.json
-/compilerconfig.json.defaults
-/data/happypanda.db
-/db
-/deploy.bat
-/exHtmlRandomFileName123.html
-/failg.zip
-/happypanda-2015-11-09 21-08-42.hpdb
-/happypanda-2015-11-10 21-29-04.hpdb
-/happypanda-2015-11-10 23-51-59.hpdb
-/happypanda.VC.VC.opendb
-/happypanda.VC.db
-/happypanda/db
-/happypanda/gui/static/gallery_def_ico.ico
-/happypanda/gui/static/gallery_ext_ico.ico
-/happypanda/modeltest.py
-/happypanda/temp
-/horopic2.jpg
-/info.json
-/info.txt
-/main.build
-/main.dist
-/main.spec
-/models.py
-/nuitka.txt
-/plugins
-/res/gallery_ext_ico.ico
-/res/sample.png
-/res/typicons
-/roundcorner.png
-/setup.spec
-/temp
-/test.py
-/test.zip
-/test_g.zip
-/thumbnails
-/version/db
-/version/gui/static/gallery_def_ico.ico
-/version/gui/static/gallery_ext_ico.ico
-/version/modeltest.py
-/version/temp
-Happypanda
-build
-dist
-docs/modules/*.rst
-downloads
-happypanda/build
-happypanda/dist
-log/
-settings.json
-setup.py
-version/build
-version/dist
-version/log/
 
 # pycharm
 .idea/
