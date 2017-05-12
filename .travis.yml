@@ -9,6 +9,7 @@ install:
   - pip3 install PyQt5
   - pip3 install -r ./requirements-dev.txt
 script:
- - python -m pytest -vv --flake8 -m 'not non_travis' --cov=happypanda .
+  - python -m flake8
+  - python -m pytest -vv -m 'not non_travis' --cov=happypanda .
 after_success:
   - bash <(curl -s https://codecov.io/bash)
