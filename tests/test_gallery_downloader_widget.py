@@ -33,9 +33,9 @@ def test_get_url(url_and_exp_res, url_inserter_text):
         exp_res = url.lower.return_value
     #
     with mock.patch(
-            'version.gallery_downloader_widget.GalleryDownloaderWidget.__init__',
+            'happypanda.gallery_downloader_widget.GalleryDownloaderWidget.__init__',
             return_value=None):
-        from version.gallery_downloader_widget import GalleryDownloaderWidget
+        from happypanda.gallery_downloader_widget import GalleryDownloaderWidget
         obj = GalleryDownloaderWidget()
         obj.url_inserter = url_inserter
         res = obj._get_url(url=url)

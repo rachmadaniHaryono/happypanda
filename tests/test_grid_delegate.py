@@ -13,7 +13,7 @@ def test_get_adjusted_font_size_for_artist_size(artist_len, exp_size):
     font_size = 2
     obj = [mock.Mock()] * artist_len
     limit_list = [21, 30, 40]
-    from version.grid_delegate import _get_adjusted_font_size
+    from happypanda.grid_delegate import _get_adjusted_font_size
     res = _get_adjusted_font_size(obj=obj, font_size=font_size, limit_list=limit_list)
     assert res == exp_size
 
@@ -33,7 +33,7 @@ def test_get_adjusted_font_size_for_title_size(artist_len, exp_size):
     font_size = 4
     obj = [mock.Mock()] * artist_len
     limit_list = [16, 21, 30, 40, 50]
-    from version.grid_delegate import _get_adjusted_font_size
+    from happypanda.grid_delegate import _get_adjusted_font_size
     res = _get_adjusted_font_size(obj=obj, font_size=font_size, limit_list=limit_list)
     assert res == exp_size
 
@@ -42,9 +42,9 @@ def test_get_adjusted_font_size_for_title_size(artist_len, exp_size):
 def test_set_external_icon(use_external_viewer):
     """test method."""
     file_icons = mock.Mock()
-    with mock.patch('version.grid_delegate.app_constants') as m_ac:
+    with mock.patch('happypanda.grid_delegate.app_constants') as m_ac:
         m_ac.USE_EXTERNAL_VIEWER = use_external_viewer
-        from version.grid_delegate import GridDelegate
+        from happypanda.grid_delegate import GridDelegate
         GridDelegate._set_external_icon(file_icons=file_icons)
         if use_external_viewer:
             file_icons.get_external_file_icon.assert_called_once_with()
@@ -61,8 +61,8 @@ def test_get_type_rect():
     #
     type_w = 0
     type_h = 0
-    with mock.patch('version.grid_delegate.QRect') as m_qr:
-        from version.grid_delegate import GridDelegate
+    with mock.patch('happypanda.grid_delegate.QRect') as m_qr:
+        from happypanda.grid_delegate import GridDelegate
         res = GridDelegate._get_type_rect(type_p=type_p, type_w=type_w, type_h=type_h)
         assert res == m_qr.return_value
         m_qr.assert_called_once_with(-2, -1, 4, 1)

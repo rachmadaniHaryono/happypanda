@@ -17,7 +17,7 @@ def test_calculate_sides(margin_offset, desktop, exp_res):
     """test method."""
     hw = 2
     middle = 0
-    from version.gallery_meta_window import GalleryMetaWindow
+    from happypanda.gallery_meta_window import GalleryMetaWindow
     res = GalleryMetaWindow._calculate_sides(
         middle=middle, hw=hw, margin_offset=margin_offset, desktop=desktop)
     assert res == exp_res

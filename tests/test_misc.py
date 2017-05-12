@@ -9,8 +9,8 @@ def test_open_idx_data_first_chapter_when_double_clicked():
     idx = mock.Mock()
     chapter = mock.Mock()
     idx.data.return_value.chapters = [chapter]
-    with mock.patch('version.misc.Qt') as m_qt:
-        from version.misc import open_idx_data_first_chapter_when_double_clicked
+    with mock.patch('happypanda.misc.Qt') as m_qt:
+        from happypanda.misc import open_idx_data_first_chapter_when_double_clicked
         open_idx_data_first_chapter_when_double_clicked(idx)
         idx.data.assert_called_once_with(m_qt.UserRole + 1)
         chapter.open.assert_called_once_with()
@@ -20,9 +20,9 @@ def test_open_idx_data_first_chapter_when_double_clicked():
 def test_show_widget(use_parent):
     """test func."""
     widget_obj = mock.Mock()
-    with mock.patch('version.misc.QtWidgets') as m_qw, \
-            mock.patch('version.misc.sys') as m_sys:
-        from version.misc import show_widget
+    with mock.patch('happypanda.misc.QtWidgets') as m_qw, \
+            mock.patch('happypanda.misc.sys') as m_sys:
+        from happypanda.misc import show_widget
         if not use_parent:
             with pytest.raises(NotImplementedError):
                 show_widget(widget_obj=widget_obj, use_parent=use_parent)

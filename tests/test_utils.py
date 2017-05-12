@@ -18,10 +18,10 @@ def test_find_filepath(ext):
     scandir_res = mock.Mock()
     scandir_res.name = filename
     scandir_result = [scandir_res]
-    with mock.patch('version.utils.scandir') as m_scandir, \
-            mock.patch('version.utils.os') as m_os:
+    with mock.patch('happypanda.utils.scandir') as m_scandir, \
+            mock.patch('happypanda.utils.os') as m_os:
         m_scandir.scandir.return_value = scandir_result
-        from version.utils import _find_filepath
+        from happypanda.utils import _find_filepath
         # run
         res = _find_filepath(path)
         # test
@@ -88,7 +88,7 @@ def test_find_filepath(ext):
 )
 def test_tag_to_string(simple, gallery, exp_res):
     """test func."""
-    from version.utils import tag_to_string
+    from happypanda.utils import tag_to_string
     res = tag_to_string(gallery, simple=simple)
     assert res == exp_res
 
@@ -110,7 +110,7 @@ def test_get_gallery_tags(tag_in_gallery, add_second_tag):
         g_tags[namespace] = [tag]
     else:
         g_tags[namespace] = []
-    from version.utils import get_gallery_tags
+    from happypanda.utils import get_gallery_tags
     # run
     res = get_gallery_tags(tags, g_tags, namespace)
     # test
@@ -129,9 +129,9 @@ def test_cleanup_dir():
     files = [m_file]
     path = mock.Mock()
     join_result = mock.Mock()
-    with mock.patch('version.utils.os') as m_os, \
-            mock.patch('version.utils.scandir') as m_sd:
-        from version.utils import cleanup_dir
+    with mock.patch('happypanda.utils.os') as m_os, \
+            mock.patch('happypanda.utils.scandir') as m_sd:
+        from happypanda.utils import cleanup_dir
         m_sd.walk.return_value = [(root, dirs, files)]
         m_os.path.join.return_value = join_result
         # run
@@ -155,7 +155,7 @@ def test_append_or_create_list_on_dict(key_in_list):
         dict_ = {key: []}
     else:
         dict_ = {}
-    from version.utils import append_or_create_list_on_dict
+    from happypanda.utils import append_or_create_list_on_dict
     # run
     res = append_or_create_list_on_dict(dict_=dict_, key=key, value=value)
     # test
@@ -174,8 +174,8 @@ def test_get_chapter_pages_len():
     exp_res = len(valid_exts)
     #
     chapter_path = mock.Mock()
-    with mock.patch('version.utils.scandir') as m_sd:
-        from version.utils import get_chapter_pages_len
+    with mock.patch('happypanda.utils.scandir') as m_sd:
+        from happypanda.utils import get_chapter_pages_len
         m_sd.scandir.return_value = scandir_result
         # run
         res = get_chapter_pages_len(chapter_path)
@@ -201,12 +201,12 @@ def test_image_greyscale(mode, value):
     img.mode = mode
     img.split.return_value = split_result
     #
-    with mock.patch('version.utils.Image') as m_img, \
-            mock.patch('version.utils.ImageChops') as m_ic:
+    with mock.patch('happypanda.utils.Image') as m_img, \
+            mock.patch('happypanda.utils.ImageChops') as m_ic:
         m_img.open.return_value.convert.return_value = img
         m_ic.difference.return_value.getextrema.side_effect = [
             (mock.Mock(), value[0]), (mock.Mock(), value[1])]
-        from version.utils import image_greyscale
+        from happypanda.utils import image_greyscale
         # run
         res = image_greyscale(filepath=filepath)
         m_img.assert_has_calls([
@@ -242,11 +242,11 @@ def test_get_chapter_title():
     split_path_part = mock.Mock()
     title = mock.Mock()
     path = mock.Mock()
-    with mock.patch('version.utils.title_parser') as m_tp, \
-            mock.patch('version.utils.os') as m_os:
+    with mock.patch('happypanda.utils.title_parser') as m_tp, \
+            mock.patch('happypanda.utils.os') as m_os:
         m_os.path.split.return_value = [mock.Mock(), split_path_part]
         m_tp.return_value = {'title': title}
-        from version.utils import get_chapter_title
+        from happypanda.utils import get_chapter_title
         # run
         res = get_chapter_title(path)
         # test
@@ -258,10 +258,10 @@ def test_get_chapter_title():
 @pytest.mark.parametrize('is_dir_retval', [True, False])
 def test_get_temp_path(is_dir_retval):
     """test function."""
-    with mock.patch('version.utils.app_constants') as m_ac, \
-            mock.patch('version.utils.uuid') as m_uuid, \
-            mock.patch('version.utils.os') as m_os:
-        from version.utils import _get_temp_path
+    with mock.patch('happypanda.utils.app_constants') as m_ac, \
+            mock.patch('happypanda.utils.uuid') as m_uuid, \
+            mock.patch('happypanda.utils.os') as m_os:
+        from happypanda.utils import _get_temp_path
         m_os.path.isdir.return_value = is_dir_retval
         res = _get_temp_path()
         os_calls = [
@@ -286,14 +286,14 @@ def test_get_temp_path(is_dir_retval):
 def test_open_path(os_name, select, raise_error):
     """test function."""
     path = mock.Mock()
-    with mock.patch('version.utils.app_constants') as m_ac, \
-            mock.patch('version.utils.subprocess') as m_sp, \
-            mock.patch('version.utils.os') as m_os:
+    with mock.patch('happypanda.utils.app_constants') as m_ac, \
+            mock.patch('happypanda.utils.subprocess') as m_sp, \
+            mock.patch('happypanda.utils.os') as m_os:
         if raise_error:
             m_sp.Popen.side_effect = lambda _: OSError()
             m_os.startfile.side_effect = lambda _: OSError()
         m_ac.OS_NAME = os_name
-        from version.utils import open_path
+        from happypanda.utils import open_path
         # run
         try:
             if select is None:
@@ -329,8 +329,8 @@ def test_open_path(os_name, select, raise_error):
 def test_makedirs_if_not_exists(isdir_retval):
     """test func."""
     folder = mock.Mock()
-    with mock.patch('version.utils.os') as m_os:
-        from version.utils import makedirs_if_not_exists
+    with mock.patch('happypanda.utils.os') as m_os:
+        from happypanda.utils import makedirs_if_not_exists
         m_os.path.isdir.return_value = isdir_retval
         makedirs_if_not_exists(folder)
         if not isdir_retval:
@@ -346,14 +346,14 @@ def test_backup_database():
     db_path = mock.Mock()
     base_path = mock.Mock()
     name = mock.Mock()
-    with mock.patch('version.utils.datetime') as m_dt, \
-            mock.patch('version.utils.os') as m_os, \
-            mock.patch('version.utils.shutil') as m_shutil, \
-            mock.patch('version.utils.makedirs_if_not_exists') as m_mine:
+    with mock.patch('happypanda.utils.datetime') as m_dt, \
+            mock.patch('happypanda.utils.os') as m_os, \
+            mock.patch('happypanda.utils.shutil') as m_shutil, \
+            mock.patch('happypanda.utils.makedirs_if_not_exists') as m_mine:
         m_dt.datetime.today.return_value = today_datetime
         m_os.path.split.return_value = (base_path, name)
         m_os.path.exists.return_value = False
-        from version.utils import backup_database
+        from happypanda.utils import backup_database
         res = backup_database(db_path)
         # test
         assert res
@@ -373,8 +373,8 @@ def test_backup_database():
 def test_get_date_age():
     """test func."""
     input_date = mock.Mock()
-    with mock.patch('version.utils.PrettyDelta') as m_pd:
-        from version.utils import get_date_age
+    with mock.patch('happypanda.utils.PrettyDelta') as m_pd:
+        from happypanda.utils import get_date_age
         # run
         res = get_date_age(input_date)
         # test

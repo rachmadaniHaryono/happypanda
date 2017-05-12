@@ -21,14 +21,14 @@ import pytest
 )
 def test_website_validator(url, check_result):
     """test func."""
-    with mock.patch('version.pewnet.HenManager') as m_hm, \
-            mock.patch('version.pewnet.ExHenManager') as m_ehm, \
-            mock.patch('version.pewnet.ChaikaManager') as m_cm, \
-            mock.patch('version.pewnet.AsmManager') as m_am, \
-            mock.patch('version.pewnet.NhenManager') as m_nm, \
-            mock.patch('version.pewnet.settings') as m_settings:
-        from version.pewnet import website_validator
-        from version import app_constants
+    with mock.patch('happypanda.pewnet.HenManager') as m_hm, \
+            mock.patch('happypanda.pewnet.ExHenManager') as m_ehm, \
+            mock.patch('happypanda.pewnet.ChaikaManager') as m_cm, \
+            mock.patch('happypanda.pewnet.AsmManager') as m_am, \
+            mock.patch('happypanda.pewnet.NhenManager') as m_nm, \
+            mock.patch('happypanda.pewnet.settings') as m_settings:
+        from happypanda.pewnet import website_validator
+        from happypanda import app_constants
         m_settings.ExProperties.return_value.check.return_value = check_result
         exp_res_packs = [
             ('g.e-hentai', m_hm.return_value),

@@ -11,9 +11,9 @@ def test_add_single_gallery(db, gallery_profile):
     s_gallery = mock.Mock()
     s_gallery.profile = gallery_profile
     method = mock.Mock()
-    with mock.patch('version.manga_views.gallerydb') as m_gdb, \
-            mock.patch('version.manga_views.Executors') as m_exec:
-        from version.manga_views import MangaViews
+    with mock.patch('happypanda.manga_views.gallerydb') as m_gdb, \
+            mock.patch('happypanda.manga_views.Executors') as m_exec:
+        from happypanda.manga_views import MangaViews
         MangaViews._add_single_gallery(db=db, s_gallery=s_gallery, on_method=method)
         if db:
             m_gdb.execute.assert_called_once_with(

@@ -40,7 +40,7 @@ def test_get_metadata():
     browser.select.side_effect = select_side_effect
     find_tags_func = mock.Mock(return_value=exp_res['tags'])
     ensure_browser_on_url_func = mock.Mock()
-    from version.nhen_manager import NhenManager
+    from happypanda.nhen_manager import NhenManager
     obj = NhenManager()
     obj._browser = browser
     obj.ensure_browser_on_url = ensure_browser_on_url_func
@@ -59,7 +59,7 @@ def test_get_first_image_data():
     link_parts = ('184812', '1')
     browser = mock.Mock()
     browser.select.return_value = [{'src': '//i.nhentai.net/galleries/1018135/1.png'}]
-    from version.nhen_manager import NhenManager
+    from happypanda.nhen_manager import NhenManager
     obj = NhenManager()
     obj._browser = browser
     # run
@@ -75,7 +75,7 @@ def test_get_filecount():
     tag.text = '{} pages'.format(filecount)
     html_soup = mock.Mock()
     html_soup.select.return_value = [tag]
-    from version.nhen_manager import NhenManager
+    from happypanda.nhen_manager import NhenManager
     res = NhenManager._get_filecount(html_soup)
     assert res == filecount
 
@@ -95,7 +95,7 @@ def test_get_tag_dict():
 
     html_soup = mock.Mock()
     html_soup.select.return_value = [tag_div]
-    from version.nhen_manager import NhenManager
+    from happypanda.nhen_manager import NhenManager
     # run
     res = NhenManager._get_tag_dict(html_soup)
     # test
@@ -107,7 +107,7 @@ def test_find_tags():
     tag_dict = {'category': ['tag1', 'tag2']}
     exp_res = ['category:tag1', 'category:tag2']
     html_soup = mock.Mock()
-    from version.nhen_manager import NhenManager
+    from happypanda.nhen_manager import NhenManager
     NhenManager._get_tag_dict = mock.Mock(return_value=tag_dict)
     # run
     res = NhenManager._find_tags(html_soup)
@@ -119,7 +119,7 @@ def test_get_category():
     """test method."""
     tags = ['Categories:doujinshi']
     exp_res = 'Doujinshi'
-    from version.nhen_manager import NhenManager
+    from happypanda.nhen_manager import NhenManager
     # run
     res = NhenManager._get_category(tags)
     # test
@@ -134,8 +134,8 @@ def test_get_dl_urls():
     browser = mock.Mock()
     browser.select.return_value = [{'href': link}]
     image1_data = {'ext': mock.Mock(), 'server_id': mock.Mock()}
-    with mock.patch('version.nhen_manager.AsmManager') as m_asm_manager:
-        from version.nhen_manager import NhenManager
+    with mock.patch('happypanda.nhen_manager.AsmManager') as m_asm_manager:
+        from happypanda.nhen_manager import NhenManager
         m_asm_manager._split_href_links_to_parts.return_value = link_parts
         exp_res = [
             "https://i.nhentai.net/galleries/{}/{}{}".format(
@@ -159,11 +159,11 @@ def test_from_gallery_url():
     browser = mock.Mock()
     browser.select.return_value = [{'src': thumb_url}]
     dict_metadata = {'title': title}
-    with mock.patch('version.nhen_manager.HenItem') as m_hi, \
-            mock.patch('version.nhen_manager.AsmManager') as m_asm_manager, \
-            mock.patch('version.nhen_manager.DownloaderObject'):
+    with mock.patch('happypanda.nhen_manager.HenItem') as m_hi, \
+            mock.patch('happypanda.nhen_manager.AsmManager') as m_asm_manager, \
+            mock.patch('happypanda.nhen_manager.DownloaderObject'):
         m_hi.return_value = h_item
-        from version.nhen_manager import NhenManager
+        from happypanda.nhen_manager import NhenManager
         obj = NhenManager()
         obj._browser = browser
         obj._get_dl_urls = mock.Mock()

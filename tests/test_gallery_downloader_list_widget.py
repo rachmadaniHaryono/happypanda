@@ -14,6 +14,6 @@ import pytest
 )
 def test_set_clipboard_text(text, exp_arg):
     clipboard = mock.Mock()
-    from version.gallery_downloader_list_widget import GalleryDownloaderListWidget
+    from happypanda.gallery_downloader_list_widget import GalleryDownloaderListWidget
     GalleryDownloaderListWidget.set_clipboard_text(clipboard=clipboard, text=text)
     clipboard.setText.assert_called_once_with(exp_arg)

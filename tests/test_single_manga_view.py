@@ -23,7 +23,7 @@ def test_set_sor(name_is_as_expected):
     sort_model.setSortRole = set_sort_role_func
     sort_model.sort = sort_func
     #
-    from version.single_manga_view import SingleMangaView
+    from happypanda.single_manga_view import SingleMangaView
     SingleMangaView.current_sort = None
     # run
     res = SingleMangaView._set_sort(

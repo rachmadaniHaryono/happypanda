@@ -14,14 +14,14 @@ M_OBJ = mock.Mock()
 )
 def test_get_path(m_os_name):
     """test func."""
-    with mock.patch('version.settings.os') as m_os, \
-            mock.patch('version.settings.__file__') as m_file:
+    with mock.patch('happypanda.settings.os') as m_os, \
+            mock.patch('happypanda.settings.__file__') as m_file:
         m_os.name = m_os_name
         if m_os_name == 'posix':
             exp_res = (m_os.path.join.return_value, m_os.path.join.return_value)
         else:
             exp_res = ('settings.ini', '.happypanda')
-        from version import settings
+        from happypanda import settings
         res = settings._get_path()
         assert res == exp_res
         if m_os_name == 'posix':
@@ -45,9 +45,9 @@ def test_open_settings_path(isfile_retval):
     """test func."""
     m_open = mock.mock_open()
     m_path = mock.Mock()
-    with mock.patch('version.settings.os') as m_os, \
-            mock.patch('version.settings.open', m_open, create=True):
-        from version import settings
+    with mock.patch('happypanda.settings.os') as m_os, \
+            mock.patch('happypanda.settings.open', m_open, create=True):
+        from happypanda import settings
         m_os.path.isfile.return_value = isfile_retval
         settings._open_settings_path(m_path)
         # test
@@ -60,8 +60,8 @@ def test_open_settings_path(isfile_retval):
 
 def test_config_class_init():
     """test init func."""
-    with mock.patch('version.settings.super') as m_super:
-        from version import settings
+    with mock.patch('happypanda.settings.super') as m_super:
+        from happypanda import settings
         settings.Config()
         m_super.assert_called_once_with()
 
@@ -70,9 +70,9 @@ def test_config_class_init():
 def test_config_class_read(m_encoding):
     """test func."""
     m_filenames = mock.Mock()
-    with mock.patch('version.settings.super') as m_super:
+    with mock.patch('happypanda.settings.super') as m_super:
         # pre run
-        from version import settings
+        from happypanda import settings
         # run
         conf = settings.Config()
         conf.read(m_filenames, m_encoding)
@@ -137,13 +137,13 @@ def test_config_class_save(
             mock.call().__enter__(),
             mock.call().__exit__(None, None, None)
         ]
-    with mock.patch('version.settings.log') as m_log, \
-            mock.patch('version.settings.isinstance') as m_isinstance, \
-            mock.patch('version.settings.hasattr') as m_hasattr, \
-            mock.patch('version.settings.open', m_open, create=True), \
-            mock.patch('version.settings.Config.write') as m_write:
+    with mock.patch('happypanda.settings.log') as m_log, \
+            mock.patch('happypanda.settings.isinstance') as m_isinstance, \
+            mock.patch('happypanda.settings.hasattr') as m_hasattr, \
+            mock.patch('happypanda.settings.open', m_open, create=True), \
+            mock.patch('happypanda.settings.Config.write') as m_write:
         # pre run
-        from version import settings
+        from happypanda import settings
         m_isinstance.return_value = isinstance_retval
         m_hasattr.return_value = hasattr_retval
         conf = settings.Config()
@@ -174,11 +174,11 @@ def test_config_class_save_raise_permission_error():
     """test config class save method when raise PermissionError."""
     m_open = mock.mock_open()
     m_custom_cls_file = mock.Mock()
-    with mock.patch('version.settings.open', m_open, create=True), \
-            mock.patch('version.settings.log_e') as m_log_e:
+    with mock.patch('happypanda.settings.open', m_open, create=True), \
+            mock.patch('happypanda.settings.log_e') as m_log_e:
         # pre run
         m_open.side_effect = PermissionError  # NOQA
-        from version import settings
+        from happypanda import settings
         obj = settings.Config()
         obj.custom_cls_file = m_custom_cls_file
         # run
@@ -190,9 +190,9 @@ def test_config_class_save_raise_permission_error():
 def test_save():
     """test func."""
     m_config = mock.Mock()
-    with mock.patch('version.settings.ExProperties') as m_ex_properties:
+    with mock.patch('happypanda.settings.ExProperties') as m_ex_properties:
         # pre run
-        from version import settings
+        from happypanda import settings
         settings.config = m_config
         # run
         settings.save()
@@ -230,7 +230,7 @@ def test_get_value(m_key, m_config_var):
     m_section = 'section'
     m_section_value = 'section_value'
     m_section_dict_value = {'key': 'key_value'}
-    from version import settings
+    from happypanda import settings
     if m_key == 'key' and m_config_var == {'section': 'section_value'}:
         with pytest.raises(TypeError):
             settings._get_value(m_key, m_section, m_default, m_config_var)
@@ -287,7 +287,7 @@ def test_get_value(m_key, m_config_var):
 def test_normalize_value(m_value, exp_value):
     """test func."""
     # pre run
-    from version import settings
+    from happypanda import settings
     # test and run
     if not hasattr(m_value, "lower"):
         with pytest.raises(AttributeError):
@@ -346,7 +346,7 @@ def test_normalize_value_with_different_class(
     if m_subtype_class is not None:
         input_kwargs['subtype_class'] = m_subtype_class
     # pre run
-    from version import settings
+    from happypanda import settings
     # run and test
     # test which raise error.
     if isinstance(m_value, mock.Mock) and m_type_class in (list, tuple):
@@ -415,15 +415,15 @@ def test_get(
         input_kwargs['key'] = m_key
     if m_subtype_class is not None:
         input_kwargs['subtype_class'] = m_subtype_class
-    with mock.patch('version.settings._get_value') as m_get_value, \
-            mock.patch('version.settings._normalize_value') as m_normalize_value:
+    with mock.patch('happypanda.settings._get_value') as m_get_value, \
+            mock.patch('happypanda.settings._normalize_value') as m_normalize_value:
         # pre run
         m_normalize_value.return_value = normalize_retval
         if normalize_value_side_effect is not None:
             m_normalize_value.side_effect = normalize_value_side_effect
         if get_value_raise_error:
             m_get_value.side_effect = ValueError
-        from version import settings
+        from happypanda import settings
         settings.config = m_config
         # run
         res = settings.get(**input_kwargs)
@@ -459,7 +459,7 @@ def test_set(m_config, m_key, m_section, m_value):
     input_kwargs = {'value': m_value, 'section': m_section}
     if m_key is not None:
         input_kwargs['key'] = m_key
-    from version import settings
+    from happypanda import settings
     settings.config = m_config
     if isinstance(m_config, mock.Mock) or isinstance(m_key, mock.Mock):
         with pytest.raises(TypeError):
@@ -493,11 +493,11 @@ def test_ex_properties_class_init(m_site, os_path_exists_retval, m_info):
     """test class init func."""
     m_open = mock.mock_open()
     m_phappypanda_path = mock.Mock()
-    with mock.patch('version.settings.open', m_open, create=True), \
-            mock.patch('version.settings.os') as m_os, \
-            mock.patch('version.settings.pickle') as m_pickle:
+    with mock.patch('happypanda.settings.open', m_open, create=True), \
+            mock.patch('happypanda.settings.os') as m_os, \
+            mock.patch('happypanda.settings.pickle') as m_pickle:
         # pre run
-        from version import settings
+        from happypanda import settings
         m_os.path.exists.return_value = os_path_exists_retval
         settings.phappypanda_path = m_phappypanda_path
         settings.ExProperties._INFO = m_info
@@ -540,10 +540,10 @@ def test_ex_properties_class_save_method(m_info):
     m_open = mock.mock_open()
     m_phappypanda_path = mock.Mock()
     m_phappypanda_path = mock.Mock()
-    with mock.patch('version.settings.open', m_open, create=True), \
-            mock.patch('version.settings.pickle') as m_pickle:
+    with mock.patch('happypanda.settings.open', m_open, create=True), \
+            mock.patch('happypanda.settings.pickle') as m_pickle:
         # pre run
-        from version import settings
+        from happypanda import settings
         settings.ExProperties._INFO = m_info
         settings.phappypanda_path = m_phappypanda_path
         # run
@@ -576,9 +576,9 @@ def test_ex_properties_class_property_setter(prop, is_info_empty_dict):
     else:
         m_info = []
     m_value = mock.Mock()
-    with mock.patch('version.settings.ExProperties.__init__', return_value=None):
+    with mock.patch('happypanda.settings.ExProperties.__init__', return_value=None):
         # pre run
-        from version import settings
+        from happypanda import settings
         settings.ExProperties._INFO = m_info
         obj = settings.ExProperties()
         obj.site = m_site
@@ -614,9 +614,9 @@ def test_ex_properties_class_property(prop, value_exist, is_site_in_info):
         if is_site_in_info:
             m_info[m_site] = {}
         exp_res = None if prop != 'cookies' else {}
-    with mock.patch('version.settings.ExProperties.__init__', return_value=None):
+    with mock.patch('happypanda.settings.ExProperties.__init__', return_value=None):
         # pre run
-        from version import settings
+        from happypanda import settings
         obj = settings.ExProperties()
         obj._INFO = m_info
         obj.site = m_site
@@ -655,9 +655,9 @@ def test_ex_properties_class_check_method(m_site, m_cookies):
         exp_res = 1
     elif m_site == 'nhentai' and 'sessionid' not in m_cookies:
         exp_res = False
-    with mock.patch('version.settings.ExProperties.__init__', return_value=None):
+    with mock.patch('happypanda.settings.ExProperties.__init__', return_value=None):
         # pre run
-        from version import settings
+        from happypanda import settings
         if m_site == 'ehentai':
             m_site = settings.ExProperties.EHENTAI
         elif m_site == 'nhentai':
@@ -690,7 +690,7 @@ def test_win_properties_class(prop, m_value):
     elif prop == 'resize':
         exp_res = None
         property_raise_error = True
-    from version import settings
+    from happypanda import settings
     obj = settings.WinProperties()
     # run and test
     assert obj._resize is None
@@ -742,9 +742,9 @@ def test_win_read(m_name, m_config):
             type_error_raised = True
         except KeyError:
             pass
-    with mock.patch('version.settings.WinProperties') as m_winprop:
+    with mock.patch('happypanda.settings.WinProperties') as m_winprop:
         m_winprop.return_value = winprop_retval
-        from version import settings
+        from happypanda import settings
         settings.config = m_config
         if not isinstance(m_name, str):
             with pytest.raises(AssertionError):
@@ -780,7 +780,7 @@ def test_win_save(winprops_arg):
         'resize.w': str(m_cls.size.return_value.width.return_value),
     }
     # pre run
-    from version import settings
+    from happypanda import settings
     if winprops_arg == 'winprop':
         winprops_arg = settings.WinProperties()
     settings.config = m_config

@@ -17,9 +17,9 @@ def test_init(c_dt_arg, day_reduction, exp_res):
     current_datetime = datetime.datetime(*c_dt_arg)
     input_date = datetime.datetime.fromordinal(
         current_datetime.toordinal() - day_reduction)
-    with mock.patch('version.pretty_delta.datetime') as m_dt:
+    with mock.patch('happypanda.pretty_delta.datetime') as m_dt:
         m_dt.datetime.now.return_value = current_datetime
-        from version.pretty_delta import PrettyDelta
+        from happypanda.pretty_delta import PrettyDelta
         # run
         obj = PrettyDelta(input_date)
         # test
@@ -37,9 +37,9 @@ def test_format(c_dt_arg, day_reduction, exp_res):
     current_datetime = datetime.datetime(*c_dt_arg)
     input_date = datetime.datetime.fromordinal(
         current_datetime.toordinal() - day_reduction)
-    with mock.patch('version.pretty_delta.datetime') as m_dt:
+    with mock.patch('happypanda.pretty_delta.datetime') as m_dt:
         m_dt.datetime.now.return_value = current_datetime
-        from version.pretty_delta import PrettyDelta
+        from happypanda.pretty_delta import PrettyDelta
         # run
         obj = PrettyDelta(input_date)
         # test
@@ -49,7 +49,7 @@ def test_format(c_dt_arg, day_reduction, exp_res):
 @pytest.mark.parametrize('a, b, exp_res', [[27, 365, (0.07397260273972603, 27)]])
 def test_q_n_r(a, b, exp_res):
     """test method."""
-    from version.pretty_delta import PrettyDelta
+    from happypanda.pretty_delta import PrettyDelta
     res = PrettyDelta.q_n_r(a=a, b=b)
     assert pytest.approx(exp_res[0]) == res[0]
     assert exp_res[1] == res[1]
@@ -64,6 +64,6 @@ def test_q_n_r(a, b, exp_res):
 )
 def test_formatn(n, s, exp_res):
     """test method."""
-    from version.pretty_delta import PrettyDelta
+    from happypanda.pretty_delta import PrettyDelta
     res = PrettyDelta.formatn(n=n, s=s)
     assert res == exp_res

@@ -32,14 +32,14 @@ def test_file_filter(
         ignore_exts.append("Folder")
     if is_ext_in_ignore_exts:
         ignore_exts.append(src_path_ext.upper())
-    with mock.patch('version.gallery_handler.app_constants') as m_ac, \
-            mock.patch('version.gallery_handler.utils') as m_utils:
+    with mock.patch('happypanda.gallery_handler.app_constants') as m_ac, \
+            mock.patch('happypanda.gallery_handler.utils') as m_utils:
         # pre run
         m_ac.TEMP_PATH_IGNORE = temp_path_ignore
         m_ac.IGNORE_EXTS = ignore_exts
         m_utils.ARCHIVE_FILES = utils_archive_files
         # run
-        from version.gallery_handler import GalleryHandler
+        from happypanda.gallery_handler import GalleryHandler
         obj = GalleryHandler()
         if use_mock_as_input:
             with pytest.raises(TypeError):
@@ -85,10 +85,10 @@ def test_on_created(
     m_g_archs = [mock.Mock()] if g_archs_found else []
     recursive_gallery_check_result = m_g_dirs, m_g_archs
     # run
-    with mock.patch('version.gallery_handler.app_constants') as m_ac, \
-            mock.patch('version.gallery_handler.utils') as m_utils:
-        from version.gallery_handler import GalleryHandler
-        from version.utils import ARCHIVE_FILES
+    with mock.patch('happypanda.gallery_handler.app_constants') as m_ac, \
+            mock.patch('happypanda.gallery_handler.utils') as m_utils:
+        from happypanda.gallery_handler import GalleryHandler
+        from happypanda.utils import ARCHIVE_FILES
         m_ac.OVERRIDE_MONITOR = override_monitor
         #
         m_utils.ARCHIVE_FILES = ARCHIVE_FILES
@@ -141,12 +141,12 @@ def test_on_created_with_different_filetype(filetype):
     m_input = mock.Mock()
     m_input.src_path = 'src_path.{}'.format(filetype)
     m_input.is_directory = False
-    with mock.patch('version.gallery_handler.app_constants') as m_ac, \
-            mock.patch('version.gallery_handler.utils') as m_utils:
-        from version import app_constants
+    with mock.patch('happypanda.gallery_handler.app_constants') as m_ac, \
+            mock.patch('happypanda.gallery_handler.utils') as m_utils:
+        from happypanda import app_constants
         app_constants.unrar_tool_path = unrar_tool_path
-        from version.utils import ARCHIVE_FILES
-        from version.gallery_handler import GalleryHandler
+        from happypanda.utils import ARCHIVE_FILES
+        from happypanda.gallery_handler import GalleryHandler
         m_ac.OVERRIDE_MONITOR = False
         #
         m_utils.ARCHIVE_FILES = ARCHIVE_FILES
@@ -181,8 +181,8 @@ def test_on_deleted_and_on_moved(get_gallery_result, signal_pack):
         emit_first_arg = m_input.dest_path
     else:
         raise ValueError('Unknown signal func name.')
-    with mock.patch('version.gallery_handler.GalleryDB') as m_gallery_db:
-        from version.gallery_handler import GalleryHandler
+    with mock.patch('happypanda.gallery_handler.GalleryDB') as m_gallery_db:
+        from happypanda.gallery_handler import GalleryHandler
         obj = GalleryHandler()
         obj._is_condition_match = mock.Mock(return_value=True)
         setattr(obj, signal_name, mock.Mock())
@@ -205,10 +205,10 @@ def test_is_condition_match(override_monitor, file_filter_result):
     """test method."""
     exp_res = True if not override_monitor and file_filter_result else False
     m_input = mock.Mock()
-    with mock.patch('version.gallery_handler.app_constants') as m_ac:
+    with mock.patch('happypanda.gallery_handler.app_constants') as m_ac:
         m_ac.OVERRIDE_MONITOR = override_monitor
         #
-        from version.gallery_handler import GalleryHandler
+        from happypanda.gallery_handler import GalleryHandler
         obj = GalleryHandler()
         obj.file_filter = mock.Mock(return_value=file_filter_result)
         # run

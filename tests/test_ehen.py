@@ -8,7 +8,7 @@ import pytest
 @pytest.mark.parametrize('cookies', [None, mock.Mock()])
 def test_init(cookies):
     """test init."""
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     eh = EHen(cookies)
 
     assert eh.e_url == "http://g.e-hentai.org/api.php"
@@ -25,8 +25,8 @@ def test_login_with_exprops_cookies():
     key = mock.Mock()
     value = mock.Mock()
     m_exp_cookies = {key: value}
-    from version.ehen import EHen
-    with mock.patch('version.ehen.ExProperties') as m_ex_prop, \
+    from happypanda.ehen import EHen
+    with mock.patch('happypanda.ehen.ExProperties') as m_ex_prop, \
             mock.patch.object(EHen, 'check_login', return_value=check_login_result) \
             as m_check_login:
         m_ex_prop.return_value.cookies = m_exp_cookies
@@ -50,13 +50,13 @@ def test_login_with_invalid_exprops_cookies(check_login_result):
     m_exh_c = {mock.Mock(): mock.Mock()}
     username = mock.Mock()
     password = mock.Mock()
-    from version.ehen import EHen
-    from version.ehen import app_constants
-    with mock.patch('version.ehen.ExProperties') as m_ex_prop, \
+    from happypanda.ehen import EHen
+    from happypanda.ehen import app_constants
+    with mock.patch('happypanda.ehen.ExProperties') as m_ex_prop, \
             mock.patch.object(
                 EHen, 'check_login',
                 side_effect=lambda arg: check_login_result if arg == m_eh_c else False), \
-            mock.patch('version.ehen.requests') as m_req:
+            mock.patch('happypanda.ehen.requests') as m_req:
         m_ex_prop.return_value.cookies = m_exp_cookies
         m_req.post.return_value.cookies.get_dict.return_value = m_eh_c
         m_req.get.return_value.cookies.get_dict.return_value = m_exh_c
@@ -95,8 +95,8 @@ def test_login_with_existing_cookies():
     check_login_result = True
     m_check_login = mock.Mock(return_value=check_login_result)
     m_cookies = mock.Mock()
-    from version.ehen import EHen
-    with mock.patch('version.ehen.ExProperties') as m_ex_prop, \
+    from happypanda.ehen import EHen
+    with mock.patch('happypanda.ehen.ExProperties') as m_ex_prop, \
             mock.patch.object(EHen, 'check_login', return_value=check_login_result) \
             as m_check_login, \
             mock.patch.object(EHen, 'COOKIES', m_cookies):
@@ -118,7 +118,7 @@ def test_get_g_artist(artist_in_tags):
     else:
         data = {'tags': {'Artist': [artist]}}
     g_artist = mock.Mock()
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     # run
     res = EHen._get_g_artist(g_artist, data)
     # test
@@ -142,9 +142,9 @@ def test_get_g_link(temp_url_in_gallery, url_is_none, no_url_on_data):
         data = {'url': None}
     else:
         data = {'url': url}
-    with mock.patch('version.ehen.hasattr') as m_ha:
+    with mock.patch('happypanda.ehen.hasattr') as m_ha:
         m_ha.return_value = True if temp_url_in_gallery else False
-        from version.ehen import EHen
+        from happypanda.ehen import EHen
         # run
         res = EHen._get_g_link(gallery=gallery, data=data)
         # test
@@ -171,9 +171,9 @@ def test_title_get_title_from_data(use_jpn_title, only_def_title_in_data, jpn_ti
         data = {'title': {'def': def_title}}
     else:
         data = {'title': {'jpn': jpn, 'def': def_title}}
-    with mock.patch('version.ehen.app_constants') as m_ac:
+    with mock.patch('happypanda.ehen.app_constants') as m_ac:
         m_ac.USE_JPN_TITLE = use_jpn_title
-        from version.ehen import EHen
+        from happypanda.ehen import EHen
         res = EHen._get_title_from_data(data)
         if use_jpn_title and not only_def_title_in_data and not jpn_title_empty:
             assert res == jpn
@@ -192,7 +192,7 @@ def test_get_lang_from_data(key_in_data, correct_lang_in_tags):
         data = {'tags': {'Language': ['translated']}}
     else:
         data = {'tags': []}
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     res = EHen._get_lang_from_data(data)
     if key_in_data and correct_lang_in_tags:
         assert res == lang_capitalized
@@ -232,8 +232,8 @@ def test_apply_metadata_by_replacing_it(
     if artist_in_parsed_title_result:
         tp_result['artist'] = tp_artist
     #
-    with mock.patch('version.ehen.title_parser', return_value=tp_result) as m_tp:
-        from version.ehen import EHen
+    with mock.patch('happypanda.ehen.title_parser', return_value=tp_result) as m_tp:
+        from happypanda.ehen import EHen
         #
         EHen._get_title_from_data = mock.Mock(return_value=title)
         EHen._get_lang_from_data = mock.Mock(return_value=lang)
@@ -320,8 +320,8 @@ def test_apply_metadata(
     tp_artist = mock.Mock()
     tp_result = {'title': tp_title, 'language': tp_language, 'artist': tp_artist}
     #
-    with mock.patch('version.ehen.title_parser', return_value=tp_result) as m_tp:
-        from version.ehen import EHen
+    with mock.patch('happypanda.ehen.title_parser', return_value=tp_result) as m_tp:
+        from happypanda.ehen import EHen
         #
         EHen._get_title_from_data = mock.Mock(return_value=title)
         EHen._get_lang_from_data = mock.Mock(return_value=lang)
@@ -392,7 +392,7 @@ def test_apply_metadata(
 )
 def test_check_login(cookies, exp_res):
     """test method."""
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     assert exp_res == EHen.check_login(cookies)
 
 
@@ -409,9 +409,9 @@ def test_handle_error(content_type, text):
     response.headers = {'content-type': content_type}
     response.text = text
     notif_bar_func = mock.Mock()
-    with mock.patch('version.ehen.time') as m_time, \
-            mock.patch('version.ehen.random') as m_random:
-        from version.ehen import EHen
+    with mock.patch('happypanda.ehen.time') as m_time, \
+            mock.patch('happypanda.ehen.random') as m_random:
+        from happypanda.ehen import EHen
         obj = EHen()
         obj._add_text_to_notif_bar = notif_bar_func
         # run
@@ -442,14 +442,14 @@ def test_add_text_to_notif_bar(raise_side_effect, notif_bar_is_unrecognized, not
     """test method."""
     raise_side_effect = True
     text = mock.Mock()
-    with mock.patch('version.ehen.app_constants') as m_ac:
+    with mock.patch('happypanda.ehen.app_constants') as m_ac:
         if raise_side_effect:
             m_ac.NOTIF_BAR.add_text.side_effect = AttributeError
         elif notif_bar_is_unrecognized:
             m_ac.NOTIF_BAR = ''
         elif notif_bar_is_none:
             m_ac.NOTIF_BAR = None
-        from version.ehen import EHen
+        from happypanda.ehen import EHen
         # run
         if notif_bar_is_unrecognized or raise_side_effect:
             with pytest.raises(NotImplementedError):
@@ -472,7 +472,7 @@ def test_add_text_to_notif_bar(raise_side_effect, notif_bar_is_unrecognized, not
 )
 def test_parse_url(url, exp_res):
     """test method."""
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     assert exp_res == EHen.parse_url(url=url)
 
 
@@ -504,7 +504,7 @@ def test_get_metadata(
     begin_lock_func = mock.Mock()
     end_lock_func = mock.Mock()
     handle_error_func = mock.Mock(return_value=handle_error_result)
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     obj = EHen()
     obj._get_dict_metadata = get_dict_metadata_func
     obj._get_gallery_id_list_from_urls = get_gallery_id_list_from_urls_func
@@ -542,9 +542,9 @@ def test_get_gallery_id_list_from_urls():
     url2 = mock.Mock()
     list_of_urls = [url1, url2]
     parsed_url = mock.Mock()
-    with mock.patch('version.ehen.EHen.parse_url') as parse_url_func:
+    with mock.patch('happypanda.ehen.EHen.parse_url') as parse_url_func:
         parse_url_func.side_effect = [parsed_url, None]
-        from version.ehen import EHen
+        from happypanda.ehen import EHen
         res = EHen._get_gallery_id_list_from_urls(list_of_urls=list_of_urls)
         assert res == [parsed_url]
         parse_url_func.assert_has_calls([
@@ -555,7 +555,7 @@ def test_get_gallery_id_list_with_single_url():
     """test method."""
     url = 'http://g.e-hentai.org/g/1004208/ee717823cd/'
     exp_res = [[1004208, 'ee717823cd']]
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     obj = EHen()
     res = obj._get_gallery_id_list_from_urls([url])
     assert exp_res == res
@@ -568,9 +568,9 @@ def test_get_dict_metadata():
     list_of_urls = [url1, url2]
     parsed_url_part = mock.Mock()
     parsed_url = (parsed_url_part, None)
-    with mock.patch('version.ehen.EHen.parse_url') as parse_url_func:
+    with mock.patch('happypanda.ehen.EHen.parse_url') as parse_url_func:
         parse_url_func.side_effect = [parsed_url, None]
-        from version.ehen import EHen
+        from happypanda.ehen import EHen
         obj = EHen()
         res = obj._get_dict_metadata(list_of_urls=list_of_urls)
         assert res == {parsed_url_part: url1}
@@ -582,7 +582,7 @@ def test_get_dict_metadata_with_single_url():
     """test method."""
     url = "http://g.e-hentai.org/g/1004208/ee717823cd/"
     exp_res = {1004208: 'http://g.e-hentai.org/g/1004208/ee717823cd/'}
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     obj = EHen()
     res = obj._get_dict_metadata(list_of_urls=[url])
     assert res == exp_res
@@ -599,10 +599,10 @@ def test_get_response(cookies, raise_error_on_post):
     obj_headers = mock.Mock()
     obj_cookies = mock.Mock()
     end_lock_func = mock.Mock()
-    with mock.patch('version.ehen.EHen.check_cookie') as check_cookie_func, \
-            mock.patch('version.ehen.requests') as m_requests:
-        from version.ehen import EHen
-        from version.app_constants import MetadataFetchFail
+    with mock.patch('happypanda.ehen.EHen.check_cookie') as check_cookie_func, \
+            mock.patch('happypanda.ehen.requests') as m_requests:
+        from happypanda.ehen import EHen
+        from happypanda.app_constants import MetadataFetchFail
         from requests import ConnectionError
         obj = EHen()
         obj.e_url = e_url
@@ -644,7 +644,7 @@ def test_get_response(cookies, raise_error_on_post):
 )
 def test_invalid_token_check(g_dict, exp_res):
     """test method."""
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     assert exp_res == EHen._invalid_token_check(g_dict)
 
 
@@ -654,7 +654,7 @@ def test_invalid_token_check(g_dict, exp_res):
 )
 def test_fix_titles(text, exp_res):
     """test method."""
-    from version.ehen import EHen
+    from happypanda.ehen import EHen
     assert exp_res == EHen._fix_titles(text)
 
 
@@ -689,9 +689,9 @@ def test_get_metadata_single_url():
             }
         ]
     }
-    with mock.patch('version.ehen.EHen._get_response') as m_gr:
+    with mock.patch('happypanda.ehen.EHen._get_response') as m_gr:
         m_gr.return_value.json.return_value = json_response
-        from version.ehen import EHen
+        from happypanda.ehen import EHen
         obj = EHen()
         json_res, dict_metadata_res = obj.get_metadata(list_of_urls=[url])
         assert json_res == json_response

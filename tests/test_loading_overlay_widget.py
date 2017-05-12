@@ -15,6 +15,6 @@ import pytest
 )
 def test_get_offset(x, i, exp_res):
     """test method."""
-    from version.loading_overlay_widget import LoadingOverlayWidget
+    from happypanda.loading_overlay_widget import LoadingOverlayWidget
     res = LoadingOverlayWidget._get_offset(x, i)
     assert "{:.2f}".format(res) == "{:.2f}".format(exp_res)

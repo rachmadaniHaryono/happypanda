@@ -12,7 +12,7 @@ def test_init():
         'peers': mock.Mock(),
         'uploader': mock.Mock(),
     }
-    from version.torrent_item import TorrentItem
+    from happypanda.torrent_item import TorrentItem
     obj = TorrentItem(**kwargs)
     for key in kwargs:
         assert getattr(obj, key) == kwargs[key]

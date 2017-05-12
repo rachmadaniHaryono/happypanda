@@ -11,7 +11,7 @@ def test_get_json_response(raise_decode_error):
     from json import JSONDecodeError
     if raise_decode_error:
         response.json.side_effect = JSONDecodeError('', '', 0)
-    from version.chaika_hen import ChaikaHen
+    from happypanda.chaika_hen import ChaikaHen
     # run
     res = ChaikaHen._get_json_response(response=response)
     # test
@@ -65,9 +65,9 @@ def test_get_metadata_single_url():
     }]
     exp_g_id_data = {1: 'https://panda.chaika.moe/archive/19945/'}
     #
-    with mock.patch('version.chaika_hen.requests') as m_req:
+    with mock.patch('happypanda.chaika_hen.requests') as m_req:
         m_req.get.return_value.json.return_value = response_json_retval
-        from version.chaika_hen import ChaikaHen
+        from happypanda.chaika_hen import ChaikaHen
         obj = ChaikaHen()
         # ru
         data, g_id_data = obj.get_metadata([url])

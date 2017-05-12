@@ -21,9 +21,9 @@ def test_handle_keypress_event_on_manga_view(event_key, selected_idx):
     """test func."""
     view_obj = mock.Mock()
     key = mock.Mock()
-    with mock.patch('version.common_view.CommonView') as m_cw:
-        from version.common_view import handle_keypress_event_on_manga_view
-        from version.misc import Qt
+    with mock.patch('happypanda.common_view.CommonView') as m_cw:
+        from happypanda.common_view import handle_keypress_event_on_manga_view
+        from happypanda.misc import Qt
         event = mock.Mock()
         if event_key == 'return_key':
             event.key.return_value = Qt.Key_Return

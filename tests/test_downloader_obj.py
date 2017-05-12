@@ -15,7 +15,7 @@ import pytest
 )
 def test_add_to_queue(item, session, dir_):
     """test method."""
-    from version.downloader_obj import DownloaderObject, DownloaderItemObject
+    from happypanda.downloader_obj import DownloaderObject, DownloaderItemObject
     # ru
     res = DownloaderObject.add_to_queue(item=item, session=session, dir=dir_)
     # test
@@ -32,11 +32,11 @@ def test_add_to_queue(item, session, dir_):
 def test_init(path_exists_retval):
     """test init."""
     base_path = mock.Mock()
-    with mock.patch('version.downloader_obj.os') as m_os, \
-            mock.patch('version.downloader_obj.app_constants') as m_ac:
+    with mock.patch('happypanda.downloader_obj.os') as m_os, \
+            mock.patch('happypanda.downloader_obj.app_constants') as m_ac:
         m_os.path.exists.return_value = path_exists_retval
         m_os.path.abspath.return_value = base_path
-        from version.downloader_obj import DownloaderObject
+        from happypanda.downloader_obj import DownloaderObject
         # run
         res = DownloaderObject()
         # test
@@ -54,10 +54,10 @@ def test_init(path_exists_retval):
 def test_remove_file(raise_os_error):
     """test method."""
     filename = mock.Mock()
-    with mock.patch('version.downloader_obj.os') as m_os:
+    with mock.patch('happypanda.downloader_obj.os') as m_os:
         if raise_os_error:
             m_os.remove.side_effect = OSError
-        from version.downloader_obj import DownloaderObject
+        from happypanda.downloader_obj import DownloaderObject
         # run
         DownloaderObject.remove_file(filename=filename)
         # test
@@ -76,7 +76,7 @@ def test_get_total_size(headers, exp_res):
     """test method."""
     response = mock.Mock()
     response.headers = headers
-    from version.downloader_obj import DownloaderObject
+    from happypanda.downloader_obj import DownloaderObject
     res = DownloaderObject._get_total_size(response=response)
     assert res == exp_res
 
@@ -85,9 +85,9 @@ def test_get_total_size(headers, exp_res):
 def test_get_response(browser_session):
     bs = mock.Mock()
     url = mock.Mock()
-    with mock.patch('version.downloader_obj.DownloaderObject.__init__', return_value=None), \
-            mock.patch('version.downloader_obj.requests') as m_r:
-        from version.downloader_obj import DownloaderObject
+    with mock.patch('happypanda.downloader_obj.DownloaderObject.__init__', return_value=None), \
+            mock.patch('happypanda.downloader_obj.requests') as m_r:
+        from happypanda.downloader_obj import DownloaderObject
         obj = DownloaderObject()
         if browser_session:
             obj._browser_session = bs
@@ -121,8 +121,8 @@ def test_get_item_and_temp_base(queue_item, exp_item, exp_temp_base):
         queue_item = {'dir': exp_temp_base, 'item': exp_item}
     else:
         raise ValueError('Input Error')
-    with mock.patch('version.downloader_obj.DownloaderObject.__init__', return_value=None):
-        from version.downloader_obj import DownloaderObject
+    with mock.patch('happypanda.downloader_obj.DownloaderObject.__init__', return_value=None):
+        from happypanda.downloader_obj import DownloaderObject
         obj = DownloaderObject()
         obj._inc_queue.put(queue_item)
         # run
@@ -155,11 +155,11 @@ def test_get_filename(item_name_and_exp_basename, temp_base):
         exp_dirname = temp_base
     else:
         exp_dirname = obj_base
-    with mock.patch('version.downloader_obj.os') as m_os, \
-            mock.patch('version.downloader_obj.uuid') as m_uuid, \
-            mock.patch('version.downloader_obj.DownloaderObject.__init__', return_value=None):
+    with mock.patch('happypanda.downloader_obj.os') as m_os, \
+            mock.patch('happypanda.downloader_obj.uuid') as m_uuid, \
+            mock.patch('happypanda.downloader_obj.DownloaderObject.__init__', return_value=None):
         m_uuid.uuid4.return_value = uuid4_retval
-        from version.downloader_obj import DownloaderObject
+        from happypanda.downloader_obj import DownloaderObject
         obj = DownloaderObject()
         obj.base = obj_base
         # run
@@ -196,11 +196,11 @@ def test_download_single_file(current_state_is_cancelled, use_tempfile, catch_er
     dl_with_catch_error_func = mock.Mock(return_value=(exp_item, exp_interrupt_state))
     catch_errors = OSError if catch_errors else None
     #
-    with mock.patch('version.downloader_obj.open', m_open, create=True), \
-            mock.patch('version.downloader_obj.NamedTemporaryFile', m_ntf), \
-            mock.patch('version.downloader_obj.shutil') as m_shutil:
+    with mock.patch('happypanda.downloader_obj.open', m_open, create=True), \
+            mock.patch('happypanda.downloader_obj.NamedTemporaryFile', m_ntf), \
+            mock.patch('happypanda.downloader_obj.shutil') as m_shutil:
         exp_target_file = m_ntf.return_value.name if use_tempfile else target_file
-        from version.downloader_obj import DownloaderObject
+        from happypanda.downloader_obj import DownloaderObject
         DownloaderObject._download_with_catch_error = dl_with_catch_error_func
         # run
         result_item, result_interrupt_state = DownloaderObject._download_single_file(
@@ -258,8 +258,8 @@ def test_rename_file(max_loop_reached, filename_is_splittable, raise_error_once)
         # rename src and target filename
         target_filename = filename
         src_filename = filename_part
-    with mock.patch('version.downloader_obj.os') as m_os:
-        from version.downloader_obj import DownloaderObject
+    with mock.patch('happypanda.downloader_obj.os') as m_os:
+        from happypanda.downloader_obj import DownloaderObject
         if raise_error_once:
             m_os.rename.side_effect = [OSError, None]
         m_os.path.split.return_value = file_split
@@ -309,9 +309,9 @@ def test_download(interrupt_retval, rename_raise_error, download_url_is_a_list):
     # raise error to exit infinite loop on the func.
     queue_obj = mock.Mock()
     queue_obj.task_done.side_effect = ValueError
-    with mock.patch('version.downloader_obj.os') as m_os, \
-            mock.patch('version.downloader_obj.DownloaderObject._set_base'), \
-            mock.patch('version.downloader_obj.isinstance') as m_isinstance:
+    with mock.patch('happypanda.downloader_obj.os') as m_os, \
+            mock.patch('happypanda.downloader_obj.DownloaderObject._set_base'), \
+            mock.patch('happypanda.downloader_obj.isinstance') as m_isinstance:
         # side effect for isinstance
         if download_url_is_a_list:
             m_isinstance.return_value = True
@@ -320,7 +320,7 @@ def test_download(interrupt_retval, rename_raise_error, download_url_is_a_list):
         #
         if rename_raise_error:
             m_os.rename.side_effect = OSError
-        from version.downloader_obj import DownloaderObject
+        from happypanda.downloader_obj import DownloaderObject
         obj = DownloaderObject()
         obj._get_item_and_temp_base = mock.Mock(return_value=(item, temp_base))
         obj._get_filename = get_filename_func
@@ -368,9 +368,9 @@ def test_download(interrupt_retval, rename_raise_error, download_url_is_a_list):
 
 def test_start_manager():
     """test method."""
-    with mock.patch('version.downloader_obj.threading') as m_threading, \
-            mock.patch('version.downloader_obj.DownloaderObject._set_base'):
-        from version.downloader_obj import DownloaderObject
+    with mock.patch('happypanda.downloader_obj.threading') as m_threading, \
+            mock.patch('happypanda.downloader_obj.DownloaderObject._set_base'):
+        from happypanda.downloader_obj import DownloaderObject
         obj = DownloaderObject()
         # run
         obj.start_manager(max_tasks=1)
@@ -394,7 +394,7 @@ def test_start_manager():
     ]
 )
 def test_get_total_size_prediction(known_filesize, urls_len, exp_res):
-    from version.downloader_obj import DownloaderObject
+    from happypanda.downloader_obj import DownloaderObject
     res = DownloaderObject._get_total_size_prediction(known_filesize, urls_len)
     assert res == exp_res
 
@@ -427,10 +427,10 @@ def test_download_item_with_multiple_dl_url(
     download_single_file_func = mock.Mock()
     download_single_file_func.return_value = [item, last_interrupt_state]
     item_finished_signal = mock.Mock()
-    with mock.patch('version.downloader_obj.os') as m_os, \
-            mock.patch('version.downloader_obj.DownloaderObject._set_base'), \
-            mock.patch('version.downloader_obj.makedirs_if_not_exists') as m_mine:
-        from version.downloader_obj import DownloaderObject
+    with mock.patch('happypanda.downloader_obj.os') as m_os, \
+            mock.patch('happypanda.downloader_obj.DownloaderObject._set_base'), \
+            mock.patch('happypanda.downloader_obj.makedirs_if_not_exists') as m_mine:
+        from happypanda.downloader_obj import DownloaderObject
         import requests
         obj = DownloaderObject()
         obj._get_response = get_response_func
@@ -473,8 +473,8 @@ def test_download_item_with_multiple_dl_url(
 def test_get_local_filesize(raise_error):
     """test method."""
     path = mock.Mock()
-    with mock.patch('version.downloader_obj.os') as m_os:
-        from version.downloader_obj import DownloaderObject
+    with mock.patch('happypanda.downloader_obj.os') as m_os:
+        from happypanda.downloader_obj import DownloaderObject
         if raise_error:
             m_os.path.getsize.side_effect = OSError
         res = DownloaderObject._get_local_filesize(path=path)

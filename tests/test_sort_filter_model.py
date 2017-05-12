@@ -10,7 +10,7 @@ def test_change_view():
     refresh_func = mock.Mock()
     change_fav_func = mock.Mock()
     #
-    from version.sort_filter_model import SortFilterModel
+    from happypanda.sort_filter_model import SortFilterModel
     SortFilterModel.refresh = refresh_func
     SortFilterModel._CHANGE_FAV = change_fav_func
     # run

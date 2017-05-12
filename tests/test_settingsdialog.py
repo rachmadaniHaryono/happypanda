@@ -13,8 +13,8 @@ def test_set_setting_with_color_check(color_checker_result):
     const = mock.Mock()
     key = mock.Mock()
     #
-    with mock.patch('version.settingsdialog.settings') as m_settings:
-        from version.settingsdialog import SettingsDialog
+    with mock.patch('happypanda.settingsdialog.settings') as m_settings:
+        from happypanda.settingsdialog import SettingsDialog
         SettingsDialog.color_checker = color_check_func
         # run
         SettingsDialog._set_setting_with_color_check(

@@ -12,7 +12,7 @@ def test_get_server_id():
     exp_res = '001'
     browser = mock.Mock()
     browser.select.return_value = [{'src': '//images.asmhentai.com/001/12623/1.jpg'}]
-    from version.asm_manager import AsmManager
+    from happypanda.asm_manager import AsmManager
     obj = AsmManager()
     obj._browser = browser
     res = obj._get_server_id(link_parts=link_parts)
@@ -34,7 +34,7 @@ def test_get_dl_urls():
     ]
     browser = mock.Mock()
     browser.select.return_value = select_retval
-    from version.asm_manager import AsmManager
+    from happypanda.asm_manager import AsmManager
     obj = AsmManager()
     browser.select.return_value = select_retval
     obj._browser = browser
@@ -82,7 +82,7 @@ def test_get_metadata():
     browser.select.side_effect = select_side_effect
     find_tags_func = mock.Mock(return_value=exp_res['tags'])
     ensure_browser_on_url_func = mock.Mock()
-    from version.asm_manager import AsmManager
+    from happypanda.asm_manager import AsmManager
     obj = AsmManager()
     obj._browser = browser
     obj.ensure_browser_on_url = ensure_browser_on_url_func
@@ -108,7 +108,7 @@ def test_find_tags():
     html_soup = BeautifulSoup(html_txt)
     browser = mock.Mock()
     browser.select.return_value = html_soup.select('.tags h3')
-    from version.asm_manager import AsmManager
+    from happypanda.asm_manager import AsmManager
     res = AsmManager._find_tags(browser)
     assert res == exp_res
 
@@ -124,9 +124,9 @@ def test_from_gallery_url():
     browser.select.return_value = [{'src': thumb_url}]
     set_metadata_func = mock.Mock()
     set_ehen_metadata_func = mock.Mock()
-    with mock.patch('version.asm_manager.HenItem') as m_hi, \
-            mock.patch('version.asm_manager.DownloaderObject') as m_do:
-        from version.asm_manager import AsmManager
+    with mock.patch('happypanda.asm_manager.HenItem') as m_hi, \
+            mock.patch('happypanda.asm_manager.DownloaderObject') as m_do:
+        from happypanda.asm_manager import AsmManager
         obj = AsmManager()
         obj._browser = browser
         obj._get_metadata = mock.Mock(return_value=m_metadata)
@@ -166,7 +166,7 @@ def test_set_metadata(key, catg_val):
     dict_metadata = {}
     dict_metadata[key] = value
     dict_metadata['category'] = catg_val
-    from version.asm_manager import AsmManager
+    from happypanda.asm_manager import AsmManager
     res = AsmManager._set_metadata(h_item=h_item, dict_metadata=dict_metadata)
     assert res == h_item
     h_item_calls = []
@@ -209,7 +209,7 @@ def test_set_ehen_metadata(old_data_tags, new_data_tags):
         'type': dict_metadata['category'],
         'pub_date': ''
     }
-    from version.asm_manager import AsmManager
+    from happypanda.asm_manager import AsmManager
     res = AsmManager._set_ehen_metadata(h_item=h_item, dict_metadata=dict_metadata)
     assert res == h_item
     res == exp_res

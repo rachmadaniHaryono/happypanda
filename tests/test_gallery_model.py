@@ -8,8 +8,8 @@ import pytest
 def test_get_qdatetime_from_string():
     """test func."""
     value = mock.Mock()
-    with mock.patch('version.gallery_model.QDateTime') as m_qdt:
-        from version.gallery_model import GalleryModel
+    with mock.patch('happypanda.gallery_model.QDateTime') as m_qdt:
+        from happypanda.gallery_model import GalleryModel
         # run
         res = GalleryModel._get_qdatetime_from_string(value=value)
         # test
@@ -28,12 +28,12 @@ def test_add_tips_and_bold_for_date_attr(pub_date_const, date_added_const):
     current_gallery = mock.Mock()
     current_gallery.pub_date = "word1 word2"
     current_gallery.date_added = "word3 word4"
-    with mock.patch('version.gallery_model.app_constants') as m_ac:
+    with mock.patch('happypanda.gallery_model.app_constants') as m_ac:
         #
         m_ac.TOOLTIP_PUB_DATE = pub_date_const
         m_ac.TOOLTIP_DATE_ADDED = date_added_const
         #
-        from version.gallery_model import GalleryModel
+        from happypanda.gallery_model import GalleryModel
         res = GalleryModel._add_tips_and_bold_for_date_attr(
             add_bold=add_bold, add_tips=add_tips, current_gallery=current_gallery)
         exp_res0 = []

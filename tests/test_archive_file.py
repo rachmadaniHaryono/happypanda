@@ -7,10 +7,10 @@ import pytest
 @pytest.mark.parametrize('path', [None, mock.Mock()])
 def test_make_temp_dir(path):
     """test method."""
-    with mock.patch('version.archive_file.os') as m_os, \
-            mock.patch('version.archive_file.app_constants') as m_ac, \
-            mock.patch('version.archive_file.uuid') as m_uuid:
-        from version.archive_file import ArchiveFile
+    with mock.patch('happypanda.archive_file.os') as m_os, \
+            mock.patch('happypanda.archive_file.app_constants') as m_ac, \
+            mock.patch('happypanda.archive_file.uuid') as m_uuid:
+        from happypanda.archive_file import ArchiveFile
         res = ArchiveFile._make_temp_dir(path=path)
         if not path:
             m_os.assert_has_calls([
@@ -32,10 +32,10 @@ def test_make_temp_dir(path):
 def test_check_archive(ext):
     """test method."""
     filepath = 'filename{}'.format(ext)
-    with mock.patch('version.archive_file.os') as m_os, \
-            mock.patch('version.archive_file.rarfile') as m_rf, \
-            mock.patch('version.archive_file.zipfile') as m_zf:
-        from version import archive_file
+    with mock.patch('happypanda.archive_file.os') as m_os, \
+            mock.patch('happypanda.archive_file.rarfile') as m_rf, \
+            mock.patch('happypanda.archive_file.zipfile') as m_zf:
+        from happypanda import archive_file
         archive_file.ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
         # run
         archive_file.ArchiveFile.__init__ = mock.Mock(return_value=None)
