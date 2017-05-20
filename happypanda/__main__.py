@@ -368,55 +368,6 @@ def start(test=False):
     Returns:
         int: Return code.
     """
-    """
-    NOTE: diff with origin/packaging
-
-    General:
-
-    - Import will be put on top.
-    - unused will be removed.
-
-    For this module.
-
-    - app_constants.APP_RESTART_CODE is not set to hardcoded random number `-123456789`
-    - body of start function is moved to Program Class
-    - setting log and debug log is put into __init__ from Program class.
-     - it is not using db_constants.CONTENT_DIR as used on origin/package, or using different place
-       based on OS which used on the release before 1.0. It will be handled by package appdirs.
-     - therefore there is module metadata (__author__), which will be temporary used
-       - __name__ is not used as application name metadata, so it will not conflict with ifmain
-         block. for hardcoded string will be used(`'happypanda'`).
-       and maybe in the future will be moved so other module can use it as well.
-    - setting request certificate is moved to _set_requests_certificate method of Program class,
-      which run on Program class's run method.
-    - __init__ method of Program class will be used to set variable without logic, other method
-      which have side effect will be run on run method.
-    - setting logging will be moved to _set_logger method of Program class and init_logging
-      function from custom_logging module.
-      - _set_logging is the entire logging initiation for this program.
-      - init_logging set the basic log config for entire program.
-      - the rest of the code on _set_logging is used only on this module.
-    - disable custom excepthook has it's own method (_disable_custom_excepthook) and it's inner
-      function is also moved to its own method (_uncaught_exceptions).
-    - initiating the database handler is started at _handle_database method, which will return the
-      connection if succes.
-      - the message box is moved to make it usable for other (see _confirm_with_user function)
-      method/function which will use it.
-    - start_main_window inner function on start function on origin/packaging is moved to
-      _start_main_window method of Program class.
-      - application which used on that inner function is used as input argument.
-      - WINDOW variable is changed to window for pep8
-      - get style sheet code is moved to _get_window_stylesheet method of Program class.
-      - create temp dir code is simplified.
-        - double try except is flattened
-        - when existing temp dir exists, the file and folder is not cleaned with double for-loop,
-          instead use for-loop and map.
-    - db_upgrade inner function on start function on origin/packaging is moved to
-      _db_upgrade method of Program class.
-      - becaues of _start_main_window which require application object as input, this method is
-        also require application as input argument.
-      - the modified message box which is used when starting window is also used here.
-    """
     args = parse_args(sys.argv[1:])
     program = Program(args=args, test=test)
     return program.run()
