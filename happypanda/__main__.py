@@ -27,6 +27,7 @@ from . import (
     app_constants,
     utils,
 )
+from .__init__ import version as app_version
 """
 metadata for this file.
 this may be moved so it can be freely accessible to other module as well.
@@ -70,7 +71,7 @@ def parse_args(argv):
         help='Run happypanda in test mode. 5000 gallery will be preadded in DB.')
     parser.add_argument(
         '-v', '--version', action='version',
-        version='Happypanda v{}'.format(app_constants.vs))
+        version='%(prog)s {}'.format(app_version))
     parser.add_argument(
         '-e', '--exceptions', action='store_true', help='Disable custom excepthook')
     parser.add_argument(
@@ -360,25 +361,14 @@ class Program:
             return self._db_upgrade(application=application)
 
 
-def start(test=False):
-    """start the program.
-
-    Args:
-        test(bool): Start program in test mode.
-    Returns:
-        int: Return code.
-    """
-    args = parse_args(sys.argv[1:])
-    program = Program(args=args, test=test)
-    return program.run()
-
-
 def main():
     """main function."""
     app_constants.APP_RESTART_CODE = -1
     current_exit_code = app_constants.APP_RESTART_CODE
     while current_exit_code == app_constants.APP_RESTART_CODE:
-        current_exit_code = start()
+        args = parse_args(sys.argv[1:])
+        program = Program(args=args)
+        current_exit_code = program.run()
     sys.exit(current_exit_code)
 
 if __name__ == '__main__':
