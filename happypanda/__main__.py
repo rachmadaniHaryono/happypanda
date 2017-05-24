@@ -27,7 +27,7 @@ from . import (
     app_constants,
     utils,
 )
-from .__init__ import version as app_version
+from .__init__ import __version__ as app_version
 """
 metadata for this file.
 this may be moved so it can be freely accessible to other module as well.
@@ -363,13 +363,11 @@ class Program:
 
 def main():
     """main function."""
-    app_constants.APP_RESTART_CODE = -1
-    current_exit_code = app_constants.APP_RESTART_CODE
-    while current_exit_code == app_constants.APP_RESTART_CODE:
+    exit_code = app_constants.ExitCode.normal_code
+    while exit_code != app_constants.restart_code:
         args = parse_args(sys.argv[1:])
         program = Program(args=args)
-        current_exit_code = program.run()
-    sys.exit(current_exit_code)
+        exit_code = program.run()
 
 if __name__ == '__main__':
     main()
