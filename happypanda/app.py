@@ -1460,11 +1460,11 @@ class AppWindow(QMainWindow):
             msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msg_box.setDefaultButton(QMessageBox.No)
             if msg_box.exec_() == QMessageBox.Yes:
-                return 1
+                return app_constants.ExitCode.ignore_code
             else:
-                return 2
+                return app_constants.ExitCode.force_exit_code
         else:
-            return 0
+            return app_constants.ExitCode.normal_code
 
     def duplicate_check(self, simple=True):
         """check duplicate.
@@ -1512,7 +1512,7 @@ class AppWindow(QMainWindow):
         log_c('{}: {}'.format(ex_type, ex))
         traceback.print_exception(ex_type, ex, tb)
 
-    def closeEvent(self, event):  # NOQA
+    def closeEvent(self, event):
         """close event.
 
         Args:
@@ -1520,15 +1520,14 @@ class AppWindow(QMainWindow):
         """
 
         r_code = self.cleanup_exit()
-        if r_code == 1:
+        if r_code == app_constants.ExitCode.force_exit_code:
             log_d('Force Exit App: OK')
             super().closeEvent(event)
-        elif r_code == 2:
+        elif r_code == app_constants.ExitCode.ignore_code:
             log_d('Ignore Exit App')
             event.ignore()
-        else:
+        elif r_code == app_constants.ExitCode.normal_code:
             log_d('Normal Exit App: OK')
             super().closeEvent(event)
-
-if __name__ == '__main__':
-    raise NotImplementedError("Unit testing not implemented yet!")
+        else:
+            raise ValueError('Unrecognized return code: {}'.format(r_code))
