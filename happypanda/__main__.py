@@ -12,7 +12,6 @@ import logging.handlers
 import os
 import platform
 import pprint
-import scandir
 import sys
 import traceback
 from structlog import getLogger
@@ -105,12 +104,12 @@ class Program:
         self.log_path = os.path.join(log_dir, 'happypanda.log')
         self.debug_log_path = os.path.join(log_dir, 'happypanda_debug.log')
 
-    @staticmethod
-    def set_requests_certificate():
+    def set_requests_certificate(self):
         """Set requests certificate, if exist by set environment variable."""
         if os.path.exists('cacert.pem'):
-            os.environ["REQUESTS_CA_BUNDLE"] = os.path.join(
-                os.getcwd(), "cacert.pem")
+            req_cert_file = os.path.join(os.getcwd(), "cacert.pem")
+            os.environ["REQUESTS_CA_BUNDLE"] = req_cert_file
+            self.log.debug('change REQUESTS_CA_BUNDLE environ', file=req_cert_file)
 
     def _get_window_stylesheet(self):
         """create window style.
@@ -309,7 +308,6 @@ class Program:
         Returns:
             int: Return code.
         """
-        self.set_requests_certificate()
 
         self.init_logger(
             log_path=self.log_path,
@@ -318,7 +316,9 @@ class Program:
             debug=self.args.dev)
         self.log = getLogger(__name__)
 
-        if self.args.exception:
+        self.set_requests_certificate()
+
+        if self.args.exceptions:
             sys.excepthook = self.uncaught_exceptions
 
         if app_constants.FORCE_HIGH_DPI_SUPPORT:
