@@ -15,25 +15,26 @@ import pprint
 import scandir
 import sys
 import traceback
+from structlog import getLogger
 
 from PyQt5.QtCore import QFile, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox
 import appdirs
+from send2trash import send2trash
 
 from .app import AppWindow
 from .database import db, db_constants
+from .__init__ import (
+    __app_name__ as app_name,
+    __version__ as app_version,
+    __author__ as app_author,
+    __author_name__ as app_author_name,
+)
 from . import (
     app_constants,
     utils,
 )
-from .__init__ import __version__ as app_version
-"""
-metadata for this file.
-this may be moved so it can be freely accessible to other module as well.
-this follow https://www.python.org/dev/peps/pep-0345
-"""
-__author__ = 'Pewpews'
 
 
 def _confirm_with_user(text, informative_text):
@@ -62,7 +63,7 @@ def parse_args(argv):
         argparse.Namespace: Parsed arguments.
     """
     parser = argparse.ArgumentParser(
-        prog='Happypanda', description='A manga/doujinshi manager with tagging support')
+        prog=app_name, description='A manga/doujinshi manager with tagging support')
     parser.add_argument(
         '-d', '--debug', action='store_true',
         help='happypanda_debug_log.log will be created in main directory')
@@ -92,9 +93,6 @@ class Program:
         is_test(bool): State of the program, if it is on test mode.
         log_path(str): Path of log file.
         log_debug_path(str): Path of log file in debug mode..
-        log_i(logging.Logger.info): Info log function.
-        log_d(logging.Logger.debug): Debug log function.
-        log_c(logging.Logger.critical): Critical log function.
         log(logging.Logger): Logger Class.
     """
 
@@ -103,12 +101,12 @@ class Program:
         self.args = args
         self.is_test = test
         # set log path
-        log_dir = appdirs.user_log_dir('happypanda', __author__)
+        log_dir = appdirs.user_log_dir(app_name, app_author_name)
         self.log_path = os.path.join(log_dir, 'happypanda.log')
         self.debug_log_path = os.path.join(log_dir, 'happypanda_debug.log')
 
     @staticmethod
-    def _set_requests_certificate():
+    def set_requests_certificate():
         """Set requests certificate, if exist by set environment variable."""
         if os.path.exists('cacert.pem'):
             os.environ["REQUESTS_CA_BUNDLE"] = os.path.join(
@@ -125,19 +123,19 @@ class Program:
         if len(u_style) is not 0:
             try:
                 style_file = QFile(u_style)
-                self.log_i('Select userstyle: OK')
+                self.log.info('Select userstyle: OK')
             except:
                 style_file = QFile(d_style)
-                self.log_i('Select defaultstyle: OK')
+                self.log.info('Select defaultstyle: OK')
         else:
             style_file = QFile(d_style)
-            self.log_i('Select defaultstyle: OK')
+            self.log.info('Select defaultstyle: OK')
 
         style_file.open(QFile.ReadOnly)
         style = str(style_file.readAll(), 'utf-8')
         return style
 
-    def _start_main_window(self, conn, application):
+    def start_main_window(self, conn, application):
         """start main window.
 
         Args:
@@ -156,18 +154,21 @@ class Program:
 
         # create temp dir.
         try:
+            temp_dir_parent_dir = os.path.dirname(app_constants.temp_dir)
+            temp_dir_parent_exists = os.path.isdir(temp_dir_parent_dir)
+            if not temp_dir_parent_exists:
+                os.mkdir(temp_dir_parent_dir)
             os.mkdir(app_constants.temp_dir)
-            create_tempdir_succed = True
-        except FileExistsError:  # NOQA
-            create_tempdir_succed = False
-        try:
-            if not create_tempdir_succed:
-                for root, dirs, files in scandir.walk('temp', topdown=False):
-                    map(lambda x: os.remove(os.path.join(root, x)), files)
-                    map(lambda x: os.rmdir(os.path.join(root, x)), dirs)
-        except:
-            self.log.exception("Empty temp: FAIL")
-        self.log_d('Create temp: OK')
+        except FileExistsError as e:
+            self.log.exception('Create temp: Fail', exceptions=e)
+            try:
+                send2trash(app_constants.temp_dir)
+                self.log.debug('Temp dir moved to trash.')
+                os.mkdir(app_constants.temp_dir)
+                self.log.debug('Temp dir created.')
+            except Exception as e:
+                self.log.exception("Empty temp: FAIL", exception=e)
+        self.log.debug('Create temp: OK')
 
         if self.is_test:
             return application, window
@@ -186,7 +187,7 @@ class Program:
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
     @staticmethod
-    def _init_logger(log_path, debug_log_path, dev, debug):
+    def init_logger(log_path, debug_log_path, dev, debug):
         """init logging.
 
         Args:
@@ -225,23 +226,7 @@ class Program:
             datefmt='%d-%m %H:%M',
             handlers=log_handlers)
 
-    def _set_logger(self):
-        """set the logger setting."""
-        self._init_logger(
-            log_path=self.log_path,
-            debug_log_path=self.debug_log_path,
-            dev=self.args.dev,
-            debug=self.args.dev
-        )
-        # set logger for this file
-        self.log = logging.getLogger(__name__)
-        self.log_i = self.log.info
-        self.log_d = self.log.debug
-        # log_w = log.warning
-        # log_e = log.error
-        self.log_c = self.log.critical
-
-    def _uncaught_exceptions(self, ex_type, ex, tb):
+    def uncaught_exceptions(self, ex_type, ex, tb):
         """Uncaught exceptions.
 
         Args:
@@ -250,16 +235,16 @@ class Program:
             tb:traceback
 
         """
-        self.log_c(''.join(traceback.format_tb(tb)))
-        self.log_c('{}: {}'.format(ex_type, ex))
+        self.log.critical(
+            'Uncaught exception',
+            formatted_tb=traceback.format_tb(tb),
+            exception_type=ex_type,
+            exception=ex,
+            traceback=tb
+        )
         traceback.print_exception(ex_type, ex, tb)
 
-    def _disable_custom_excepthook(self, exceptions):
-        """change system except hook."""
-        if not exceptions:
-            sys.excepthook = self._uncaught_exceptions
-
-    def _handle_database(self, application):
+    def handle_database(self, application):
         """handle database.
 
         Args:
@@ -274,10 +259,10 @@ class Program:
                 conn = db.init_db(True)
             else:
                 conn = db.init_db()
-            self.log_d('Init DB Conn: OK')
-            self.log_i("DB Version: {}".format(db_constants.REAL_DB_VERSION))
+            self.log.debug('Init DB Conn: OK')
+            self.log.info("DB Version: {}".format(db_constants.REAL_DB_VERSION))
         except:
-            self.log_c('Invalid database')
+            self.log.critical('Invalid database')
             self.log.exception('Database connection failed!')
             text = 'Invalid database'
             info_text = "Do you want to create new database?"
@@ -285,11 +270,11 @@ class Program:
                 pass
             else:
                 application.exit()
-                self.log_d('Normal Exit App: OK')
+                self.log.debug('Normal Exit App: OK')
                 sys.exit()
         return conn
 
-    def _db_upgrade(self, application):
+    def db_upgrade(self, application):
         """upgrade database.
 
         Args:
@@ -298,7 +283,7 @@ class Program:
         Returns:
             int:Returns code.
         """
-        self.log_d('Database connection failed')
+        self.log.debug('Database connection failed')
         text = 'Incompatible database!'
         info_text = (
             "Do you want to upgrade to newest version? "
@@ -312,11 +297,11 @@ class Program:
             db.add_db_revisions(db_p)
             conn = db.init_db()
 
-            return self._start_main_window(conn, application=application)
+            return self.start_main_window(conn, application=application)
         else:
             application.exit()
-            self.log_d('Normal Exit App: OK')
-            return 0
+            self.log.debug('Normal Exit App: OK')
+            return app_constants.ExitCode.normal_code
 
     def run(self):
         """run the program.
@@ -324,47 +309,62 @@ class Program:
         Returns:
             int: Return code.
         """
-        self._set_requests_certificate()
-        self._set_logger()
-        self._disable_custom_excepthook(exceptions=self.args.exceptions)
+        self.set_requests_certificate()
+
+        self.init_logger(
+            log_path=self.log_path,
+            debug_log_path=self.debug_log_path,
+            dev=self.args.dev,
+            debug=self.args.dev)
+        self.log = getLogger(__name__)
+
+        if self.args.exception:
+            sys.excepthook = self.uncaught_exceptions
 
         if app_constants.FORCE_HIGH_DPI_SUPPORT:
-            self.log_i("Enabling high DPI display support")
+            self.log.info("Enabling high DPI display support")
             os.environ.putenv("QT_DEVICE_PIXEL_RATIO", "auto")
 
+        # effects
         effects = [
             Qt.UI_AnimateCombo, Qt.UI_FadeMenu, Qt.UI_AnimateMenu,
             Qt.UI_AnimateTooltip, Qt.UI_FadeTooltip]
-        for effect in effects:
-            QApplication.setEffectEnabled(effect)
+        list(map(QApplication.setEffectEnabled, effects))
 
         application = QApplication(sys.argv)
-        application.setOrganizationName('Pewpews')
+        # set application metadata
+        application.setOrganizationName(app_author)
         application.setOrganizationDomain('https://github.com/Pewpews/happypanda')
-        application.setApplicationName('Happypanda')
-        application.setApplicationDisplayName('Happypanda')
-        application.setApplicationVersion('v{}'.format(app_constants.vs))
+        application.setApplicationName(app_name)
+        application.setApplicationDisplayName(app_name)
+        application.setApplicationVersion(app_version)
         application.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
-        self.log_i('Starting Happypanda...'.format(app_constants.vs))
+        self.log.info(
+            'Starting', app_name=app_name, app_version=app_version, debug=self.args.debug)
         if self.args.debug:
-            self.log_i('Running in debug mode'.format(app_constants.vs))
             sys.displayhook = pprint.pprint
-        app_constants.load_icons()
-        self.log_i('Happypanda Version {}'.format(app_constants.vs))
-        self.log_i('OS: {} {}\n'.format(platform.system(), platform.release()))
 
-        conn = self._handle_database(application)
+        app_constants.load_icons()
+
+        self.log.info(
+            'Status', app_name=app_name, app_version=app_version,
+            platform_system=platform.system(), platform_release=platform.release())
+
+        # start database and main window
+        conn = self.handle_database(application)
         if conn:
-            return self._start_main_window(conn=conn, application=application)
+            exit_code = self.start_main_window(conn=conn, application=application)
         else:
-            return self._db_upgrade(application=application)
+            exit_code = self.db_upgrade(application=application)
+        self.log.info('Exit', exit_code=exit_code)
+        return exit_code
 
 
 def main():
     """main function."""
-    exit_code = app_constants.ExitCode.normal_code
-    while exit_code != app_constants.restart_code:
+    exit_code = app_constants.ExitCode.restart_code
+    while exit_code == app_constants.ExitCode.restart_code:
         args = parse_args(sys.argv[1:])
         program = Program(args=args)
         exit_code = program.run()
