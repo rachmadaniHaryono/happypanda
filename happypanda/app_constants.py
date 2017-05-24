@@ -19,28 +19,42 @@ import ctypes
 import enum
 import os
 import sys
+from functools import partial
 
 import qtawesome as qta
 import pkg_resources
+import appdirs
 
 from . import settings
 from .database import db_constants
+from .__init__ import (
+    __version__ as vs,
+    __author_name__ as app_author_name,
+    __app_name__ as app_name
+)
 
-# Version number
-vs = '1.0'
+# DEBUG variable.
 DEBUG = False
+
+
+class OSName(enum.Enum):
+    """Os name."""
+
+    osx = 'darwin'
+    windows = 'windows'
+    linux = 'linux'
 
 
 def _get_os_name():
     """get os name"""
     if sys.platform.startswith('darwin'):
-        return "darwin"
+        return OSName.osx
     elif os.name == 'nt':
         myappid = 'Pewpews.Happypanda.{}'.format(vs)
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-        return "windows"
+        return OSName.windows
     elif os.name == 'posix':
-        return "linux"
+        return OSName.linux
 
 OS_NAME = _get_os_name()
 
@@ -51,25 +65,24 @@ class ExitCode(enum.Enum):
     normal_code = 0
     restart_code = 1
     error_code = 2
+    ignore_code = 3
+    force_exit_code = 4
 
 get = settings.get
 
 
-def _get_dirs():
+def _get_dirs(app_name, app_author):
     """get tuple of dirs."""
-    posix_program_dir = os.path.dirname(os.path.realpath(__file__))
-    if os.name == 'posix':
-        bin_dir = os.path.join(posix_program_dir, 'bin')
-        static_dir = os.path.join(posix_program_dir, '../res')
-        temp_dir = os.path.join(posix_program_dir, 'temp')
-    else:
-        cwd = os.getcwd()
-        bin_dir = os.path.join(cwd, 'bin')
-        static_dir = os.path.join(cwd, "res")
-        temp_dir = os.path.join('temp')
+    user_data_dir = appdirs.user_data_dir(appname=app_name, appauthor=app_author)
+    posix_program_dir = user_data_dir
+    join_user_data_dir = partial(os.path.join, user_data_dir)
+    bin_dir = join_user_data_dir('bin')
+    static_dir = join_user_data_dir('res')
+    temp_dir = join_user_data_dir('temp')
     return posix_program_dir, bin_dir, static_dir, temp_dir
 
-posix_program_dir, bin_dir, static_dir, temp_dir = _get_dirs()
+posix_program_dir, bin_dir, static_dir, temp_dir = _get_dirs(
+    app_name=app_name, app_author=app_author_name)
 # path to unrar tool binary
 unrar_tool_path = get('', 'Application', 'unrar tool path')
 
