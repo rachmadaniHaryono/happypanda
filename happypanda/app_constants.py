@@ -44,8 +44,13 @@ def _get_os_name():
 
 OS_NAME = _get_os_name()
 
-APP_RESTART_CODE = 0
-APP_NORMAL_EXIT_CODE = 1
+
+class ExitCode(enum.Enum):
+    """Exit code."""
+
+    normal_code = 0
+    restart_code = 1
+    error_code = 2
 
 get = settings.get
 
