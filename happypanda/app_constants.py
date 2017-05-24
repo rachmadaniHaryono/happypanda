@@ -21,9 +21,10 @@ import os
 import sys
 from functools import partial
 
-import qtawesome as qta
-import pkg_resources
 import appdirs
+import pkg_resources
+import PyQt5
+import qtawesome as qta
 
 from . import settings
 from .database import db_constants
@@ -46,7 +47,7 @@ class OSName(enum.Enum):
 
 
 def _get_os_name():
-    """get os name"""
+    """get os name."""
     if sys.platform.startswith('darwin'):
         return OSName.osx
     elif os.name == 'nt':
@@ -103,15 +104,23 @@ def _get_archive_files_and_file_filter(unrar_tool):
 
 ARCHIVE_FILES, FILE_FILTER = _get_archive_files_and_file_filter(unrar_tool=unrar_tool_path)
 
+
 # type of download needed by download manager for each site parser
 # NOTE define here if any new type will be supported in the future.
+class DownloadType(enum.Enum):
+    """download type."""
+
+    archive = 0
+    torrent = 1  # Note: With this type, file will be sent to torrent program
+    other = 2
+
 DOWNLOAD_TYPE_ARCHIVE = 0
 DOWNLOAD_TYPE_TORRENT = 1  # Note: With this type, file will be sent to torrent program
 DOWNLOAD_TYPE_OTHER = 2
 DOWNLOAD_TYPE_DICT_CONSTANT = {
-    DOWNLOAD_TYPE_ARCHIVE: 'Archive',
-    DOWNLOAD_TYPE_TORRENT: 'Torrent',
-    DOWNLOAD_TYPE_OTHER: 'Other'
+    DownloadType.archive: 'Archive',
+    DownloadType.torrent: 'Torrent',
+    DownloadType.other: 'Other'
 }
 
 # VALID gallery category
@@ -134,7 +143,7 @@ user_stylesheet_path = ""
 
 INTERNAL_LEVEL = 8
 FIRST_TIME_LEVEL = get(INTERNAL_LEVEL, 'Application', 'first time level', int)
-UPDATE_VERSION = get('0.30', 'Application', 'version', str)
+UPDATE_VERSION = get(vs, 'Application', 'version', str)
 FORCE_HIGH_DPI_SUPPORT = get(False, 'Advanced', 'force high dpi support', bool)
 
 # sizes
@@ -342,8 +351,9 @@ DISPLAY_GALLERY_TYPE = get(
     False, 'Visual', 'display gallery type', bool
 ) if not sys.platform.startswith('darwin') else False
 DISPLAY_GALLERY_RIBBON = get(True, 'Visual', 'display gallery ribbon', bool)
-GALLERY_FONT = (get('Segoe UI', 'Visual', 'gallery font family', str),
-                get(11, 'Visual', 'gallery font size', int))
+GALLERY_FONT = (
+    get('Segoe UI', 'Visual', 'gallery font family', str),
+    get(11, 'Visual', 'gallery font size', int))
 GALLERY_FONT_ELIDE = get(True, 'Visual', 'gallery font elide', bool)
 
 G_DEF_LANGUAGE = get('English', 'General', 'gallery default language', str)
@@ -504,45 +514,17 @@ SUPPORTED_METADATA_URLS =\
     http://panda.chaika.moe/[0]/[1]/ where [0] is 'gallery' or 'archive' and [1] is numbers
     """
 
-EXHEN_COOKIE_TUTORIAL =\
-    """
-How do you find these two values? <br \>
-<b>Firefox/Chrome/Others</b> <br \>
-1. Navigate to exhentai.org <br \>
-2. Right click --> Inspect element <br \>
-3. Go on 'Console' tab <br \>
-4. Write : 'document.cookie' <br \>
-5. A line of values should appear that correspond to active cookies <br \>
-6. Look for the 'ipb_member_id' and 'ipb_pass_hash' values <br \>
-"""
-
-ABOUT = \
-    """
-<!DOCTYPE html><html><head></head><body>
-<p><strong>Creator</strong>: <a href="https://github.com/Pewpews">Pewpews</a></p>
-<p>Chat: <a href="https://gitter.im/Pewpews/happypanda">Gitter chat</a></p>
-<p>Email: <code>happypandabugs@gmail.com</code></p>
-<p><strong>Current version</strong>: {}</p>
-<p><strong>Current database version</strong>: {}</p>
-<p>License:
-<a href="https://www.gnu.org/licenses/gpl-2.0.txt"> GENERAL PUBLIC LICENSE, Version 2</a>
-</p>
-<p>Happypanda was created using:</p>
-<ul>
-<li>Python 3.5</li>
-<li>The Qt5 Framework</li>
-<li>Various python libraries (see github repo)</li>
-</ul>
-<p>Contributors (github):
-rachmadaniHaryono (big thanks!), nonamethanks, ImoutoChan, Moshidesu, peaceanpizza, utterbull,
-LePearlo</p>
-
-</body></html>
-    """ .format(vs, db_constants.CURRENT_DB_VERSION)
-
 # use html file.
 html_packg = 'happypanda.res.html'
-_html_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'res', 'html')
+with open(pkg_resources.resource_filename(html_packg, 'exhen_cookie_tutorial.html')) as f:
+    EXHEN_COOKIE_TUTORIAL = f.read()
+with open(pkg_resources.resource_filename(html_packg, 'about.html')) as f:
+    ABOUT = f.read().format(
+        app_version=vs,
+        db_version=db_constants.CURRENT_DB_VERSION,
+        python_version=sys.version,
+        qt_version=PyQt5.QtCore.QT_VERSION_STR
+    )
 with open(pkg_resources.resource_filename(html_packg, 'regex_cheat.html')) as f:
     REGEXCHEAT = f.read()
 with open(pkg_resources.resource_filename(html_packg, 'trouble_guide.html')) as f:
