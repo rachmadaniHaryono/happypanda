@@ -12,22 +12,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
-import logging
 import time
 
 import requests
+import structlog
 from PyQt5.QtCore import (
     QObject,
     pyqtSignal,
 )
-
-
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
 
 
 class UpdateCheckerObject(QObject):
@@ -41,17 +33,20 @@ class UpdateCheckerObject(QObject):
 
     def __init__(self, **kwargs):
         """init func."""
+        self.default_url = \
+            'https://github.com/rachmadaniHaryono/happypanda/raw/dev/happypanda/__init__.py'
+        self.update_url = self.default_url  # TODO change it based on config
         super().__init__(**kwargs)
 
     def fetch_vs(self):
         """fetch version."""
-        log_d('Checking Update')
+        log = structlog.getLogger(__name__)
+        log.debug('Checking Update')
         time.sleep(1.5)
         try:
-            r = requests.get("https://raw.githubusercontent.com/Pewpews/happypanda/master/VS.txt")
+            r = requests.get(self.url)
             a = r.text
             vs = a.strip()
             self.UPDATE_CHECK.emit(vs)
         except:
             log.exception('Checking Update: FAIL')
-            self.UPDATE_CHECK.emit('this is a very long text which is sure to be over limit')
