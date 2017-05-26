@@ -1,6 +1,7 @@
 """App module.
 
-It contain app window."""
+It contain app window.
+"""
 # """
 # This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
@@ -14,14 +15,14 @@ It contain app window."""
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
-import logging
 import os
 import random
 import sys
 import traceback
 
-import requests
 import qtawesome as qta
+import requests
+import structlog
 from PyQt5.QtCore import (
     QSize,
     QThread,
@@ -66,7 +67,7 @@ from . import (
 )
 #
 from .app_bubble import AppBubble
-from .app_dialog import AppDialog
+from .app_dialog import AppDialog, AppErrorDialog
 from .common_view import CommonView
 from .completer_popup_view import CompleterPopupView
 from .gallery_model import GalleryModel
@@ -102,19 +103,14 @@ from .gallery_popup import GalleryPopup
 from .modified_popup import ModifiedPopup
 from .moved_popup import MovedPopup
 
+from .__init__ import (
+    __app_name__ as app_name,
+    __version__ as app_version,
+)
 
-log = logging.getLogger(__name__)
+
+log = structlog.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
-log_i = log.info
-""":meth:`logging.Logger.info`: Info logger func"""
-log_d = log.debug
-""":meth:`logging.Logger.debug`: Debug logger func"""
-log_w = log.warning
-""":meth:`logging.Logger.warning`: Warning logger func"""
-log_e = log.error
-""":meth:`logging.Logger.error`: Error logger func"""
-log_c = log.critical
-""":meth:`logging.Logger.critical`: Critical logger func"""
 
 
 def get_window_size(main_window):
@@ -204,7 +200,7 @@ class AppWindow(QMainWindow):
         #
         self.init_ui()
         self.startup()
-        QTimer.singleShot(3000, self._check_update)
+        QTimer.singleShot(3000, self.check_update)
         self.setFocusPolicy(Qt.NoFocus)
         self.set_shortcuts()
         self.graphics_blur.setParent(self)
@@ -256,7 +252,7 @@ class AppWindow(QMainWindow):
         if index:
             CommonView.remove_gallery(self.get_current_view(), [index])
         else:
-            log_e('Could not find gallery to remove from watcher')
+            log.error('Could not find gallery to remove from watcher')
 
     def _update_gallery(self, g):
         """update the gallery.
@@ -270,7 +266,7 @@ class AppWindow(QMainWindow):
             gal.path = g.path
             gal.chapters = g.chapters
         else:
-            log_e('Could not find gallery to update from watcher')
+            log.error('Could not find gallery to update from watcher')
         self.default_manga_view.replace_gallery(g, False)
 
     def _watcher_deleted(self, path, gallery):
@@ -331,7 +327,7 @@ class AppWindow(QMainWindow):
                 10
             )
 
-    def _startup_done(self, status=True):
+    def startup_done(self, status=True):
         """Function to run after startup done.
 
         Args:
@@ -358,7 +354,7 @@ class AppWindow(QMainWindow):
         self.download_manager.start_manager(4)
 
     @staticmethod
-    def _reset_default_hen():
+    def reset_default_hen():
         """set default hen url."""
         eh_url = app_constants.DEFAULT_EHEN_URL
         if 'g.e-h' in eh_url or 'http://' in eh_url:
@@ -379,7 +375,7 @@ class AppWindow(QMainWindow):
     def startup(self):
         """startup func."""
         if app_constants.FIRST_TIME_LEVEL < 5:
-            log_i('Invoking first time level {}'.format(5))
+            log.info('Invoking first time level {}'.format(5))
             app_constants.INTERNAL_LEVEL = 5
             app_widget = AppDialog(self)
             app_widget.note_info.setText(
@@ -387,7 +383,7 @@ class AppWindow(QMainWindow):
             app_widget.restart_info.hide()
             self.admin_db = gallerydb.AdminDB()
             self.admin_db.moveToThread(app_constants.GENERAL_THREAD)
-            self.admin_db.DONE.connect(self._startup_done)
+            self.admin_db.DONE.connect(self.startup_done)
             self.admin_db.DONE.connect(
                 lambda: app_constants.NOTIF_BAR.add_text("Application requires a restart"))
             self.admin_db.DONE.connect(self.admin_db.deleteLater)
@@ -399,13 +395,13 @@ class AppWindow(QMainWindow):
             db_p = os.path.join(os.path.split(database.db_constants.DB_PATH)[0], 'sadpanda.db')
             self.admin_db_method_invoker.emit(db_p)
         elif app_constants.FIRST_TIME_LEVEL < 7:
-            log_i('Invoking first time level {}'.format(7))
+            log.info('Invoking first time level {}'.format(7))
             self.invoke_first_time_level()
 
-        self._reset_default_hen
+        self.reset_default_hen()
 
         if not(app_constants.FIRST_TIME_LEVEL < 5):
-            self._startup_done()
+            self.startup_done()
 
     def tray_activate(self, r=None):
         """activate tray.
@@ -421,16 +417,19 @@ class AppWindow(QMainWindow):
         """create system tray."""
         self.system_tray = SystemTray(QIcon(app_constants.APP_ICO_PATH), self)
         app_constants.SYSTEM_TRAY = self.system_tray
+
         tray_menu = QMenu(self)
         self.system_tray.setContextMenu(tray_menu)
-        self.system_tray.setToolTip('Happypanda {}'.format(app_constants.vs))
-        tray_quit = QAction('Quit', tray_menu)
+        self.system_tray.setToolTip('{} {}'.format(app_name, app_version))
+
         tray_update = tray_menu.addAction('Check for update')
-        tray_update.triggered.connect(self._check_update)
+        tray_update.triggered.connect(self.check_update)
+
+        tray_quit = QAction('Quit', tray_menu)
         tray_menu.addAction(tray_quit)
         tray_quit.triggered.connect(self.close)
-        self.system_tray.show()
 
+        self.system_tray.show()
         self.system_tray.messageClicked.connect(self.tray_activate)
         self.system_tray.activated.connect(self.tray_activate)
 
@@ -491,16 +490,16 @@ class AppWindow(QMainWindow):
         self.download_window.hide()
 
         self.init_toolbar()
-        log_d('Create statusbar: OK')
+        log.debug('Create statusbar: OK')
         self.create_system_tray()
-        log_d('Create system tray: OK')
+        log.debug('Create system tray: OK')
         self.show_window()
-        log_d('Show window: OK')
+        log.debug('Show window: OK')
         self.create_notification_bar()
-        log_d('Create notificationbar: OK')
-        log_d('Window Create: OK')
+        log.debug('Create notificationbar: OK')
+        log.debug('Window Create: OK')
 
-    def _open_web_link(self, url):
+    def open_web_link(self, url):
         """open web link.
 
         Args:
@@ -511,15 +510,15 @@ class AppWindow(QMainWindow):
         except requests.exceptions.ConnectionError:
             self.notification_bar.show()
             self.notification_bar.add_text("Connection error.")
-            log_i('Connection error when opening following url:\n{}'.format(url))
+            log.info('Connection error.', url=url)
 
-    def _check_update_func(self, vs):
+    def check_update_func(self, vs):
         """check update.
 
         Args:
             vs(str):Version of the program.
         """
-        log_i('Received version: {}\nCurrent version: {}'.format(vs, app_constants.vs))
+        log.info('Received version: {}\nCurrent version: {}'.format(vs, app_constants.vs))
         if vs != app_constants.vs and len(vs) < 10:
             self.notification_bar.begin_show()
             self.notification_bar.add_text(
@@ -531,13 +530,13 @@ class AppWindow(QMainWindow):
             self.notification_bar.add_text(
                 "An error occurred while checking for new version")
 
-    def _check_update(self):
+    def check_update(self):
         """check update."""
         self.update_instance = UpdateCheckerObject()
         thread = QThread(self)
         self.update_instance.moveToThread(thread)
         thread.started.connect(self.update_instance.fetch_vs)
-        self.update_instance.UPDATE_CHECK.connect(self._check_update_func)
+        self.update_instance.UPDATE_CHECK.connect(self.check_update_func)
         self.update_instance.UPDATE_CHECK.connect(self.update_instance.deleteLater)
         thread.finished.connect(thread.deleteLater)
         thread.start()
@@ -628,7 +627,7 @@ class AppWindow(QMainWindow):
             #
             galleries = self.get_metadata_gallery(gal)
             if not galleries:
-                log_d('Gallery is empty when getting metadata.')
+                log.debug('Gallery is empty when getting metadata.')
                 return
             #
             fetch_instance.galleries = galleries
@@ -1202,7 +1201,7 @@ class AppWindow(QMainWindow):
                 """
                 fetch_spinner.hide()
                 if not status:
-                    log_e('Populating DB from gallery folder: Nothing was added!')
+                    log.error('Populating DB from gallery folder: Nothing was added!')
                     self.notif_bubble.update_text(
                         "Gallery Populate",
                         "<font color='red'>Nothing was added. "
@@ -1268,12 +1267,12 @@ class AppWindow(QMainWindow):
             data_thread.finished.connect(data_thread.deleteLater)
             data_thread.started.connect(self.g_populate_inst.local)
             data_thread.start()
-            log_i('Populating DB from directory/archive')
+            log.info('Populating DB from directory/archive')
 
     @staticmethod
     def _scan_finished():
         """scan finished."""
-        log_d('Set [SCANNING_FOR_GALLERIES]:False')
+        log.debug('Set [SCANNING_FOR_GALLERIES]:False')
         app_constants.SCANNING_FOR_GALLERIES = False
 
     def scan_for_new_galleries(self):
@@ -1283,7 +1282,7 @@ class AppWindow(QMainWindow):
         if available_folders and not app_constants.SCANNING_FOR_GALLERIES:
             app_constants.SCANNING_FOR_GALLERIES = True
             self.notification_bar.add_text("Scanning for new galleries...")
-            log_i('Scanning for new galleries...')
+            log.info('Scanning for new galleries...')
             try:
                 new_gall_spinner = SpinnerWidget(self)
                 new_gall_spinner.set_text("Gallery Scan")
@@ -1333,12 +1332,12 @@ class AppWindow(QMainWindow):
                 acceptable.append(path)
             else:
                 unaccept.append(path)
-        log_i('Acceptable dropped items: {}'.format(len(acceptable)))
-        log_i('Unacceptable dropped items: {}'.format(len(unaccept)))
-        log_d('Dropped items: {}\n{}'.format(acceptable, unaccept).encode(errors='ignore'))
+        log.info('Acceptable dropped items: {}'.format(len(acceptable)))
+        log.info('Unacceptable dropped items: {}'.format(len(unaccept)))
+        log.debug('Dropped items: {}\n{}'.format(acceptable, unaccept).encode(errors='ignore'))
         if acceptable:
             self.notification_bar.add_text('Adding dropped items...')
-            log_i('Adding dropped items')
+            log.info('Adding dropped items')
             l = len(acceptable) == 1
             f_item = acceptable[0]
             if f_item.endswith(utils.ARCHIVE_FILES):
@@ -1393,9 +1392,9 @@ class AppWindow(QMainWindow):
     def clean_up_db():
         """clean up db."""
         try:
-            log_i("Analyzing database...")
+            log.info("Analyzing database...")
             gallerydb.GalleryDB.analyze()
-            log_i("Closing database...")
+            log.info("Closing database...")
             gallerydb.GalleryDB.close()
         except:
             pass
@@ -1405,7 +1404,7 @@ class AppWindow(QMainWindow):
         """clean temp up dir."""
         try:
             cleanup_dir(path='temp')
-            log_d('Flush temp on exit: OK')
+            log.debug('Flush temp on exit: OK')
         except:
             log.exception('Flush temp on exit: FAIL')
 
@@ -1477,7 +1476,7 @@ class AppWindow(QMainWindow):
         except TypeError:
             pass
         mode = 'simple' if simple else 'advanced'
-        log_i('Checking for duplicates in mode: {}'.format(mode))
+        log.info('Checking for duplicates in mode: {}'.format(mode))
         notifbar = app_constants.NOTIF_BAR
         notifbar.add_text('Checking for duplicates...')
         duplicate_spinner = SpinnerWidget(self)
@@ -1508,8 +1507,8 @@ class AppWindow(QMainWindow):
         """
         w = AppDialog(self, AppDialog.MESSAGE)
         w.show()
-        log_c(''.join(traceback.format_tb(tb)))
-        log_c('{}: {}'.format(ex_type, ex))
+        log.critical(''.join(traceback.format_tb(tb)))
+        log.critical('{}: {}'.format(ex_type, ex))
         traceback.print_exception(ex_type, ex, tb)
 
     def closeEvent(self, event):
@@ -1518,16 +1517,15 @@ class AppWindow(QMainWindow):
         Args:
             event:Event
         """
-
         r_code = self.cleanup_exit()
         if r_code == app_constants.ExitCode.force_exit_code:
-            log_d('Force Exit App: OK')
+            log.debug('Force Exit App: OK')
             super().closeEvent(event)
         elif r_code == app_constants.ExitCode.ignore_code:
-            log_d('Ignore Exit App')
+            log.debug('Ignore Exit App')
             event.ignore()
         elif r_code == app_constants.ExitCode.normal_code:
-            log_d('Normal Exit App: OK')
+            log.debug('Normal Exit App: OK')
             super().closeEvent(event)
         else:
             raise ValueError('Unrecognized return code: {}'.format(r_code))
