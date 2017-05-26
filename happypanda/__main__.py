@@ -36,7 +36,7 @@ from . import (
 )
 
 
-def _confirm_with_user(text, informative_text):
+def confirm_with_user(text, informative_text):
     """confirm with user to create database.
 
     Args:
@@ -158,7 +158,7 @@ class Program:
             if not temp_dir_parent_exists:
                 os.mkdir(temp_dir_parent_dir)
             os.mkdir(app_constants.temp_dir)
-        except FileExistsError as e:
+        except OSError as e:
             self.log.exception('Create temp: Fail', exceptions=e)
             try:
                 send2trash(app_constants.temp_dir)
@@ -265,9 +265,7 @@ class Program:
             self.log.exception('Database connection failed!')
             text = 'Invalid database'
             info_text = "Do you want to create new database?"
-            if _confirm_with_user(text=text, informative_text=info_text):
-                pass
-            else:
+            if not confirm_with_user(text=text, informative_text=info_text):
                 application.exit()
                 self.log.debug('Normal Exit App: OK')
                 sys.exit()
@@ -289,7 +287,7 @@ class Program:
             "It shouldn't take more than a second. "
             "Don't start a new instance!"
         )
-        if _confirm_with_user(text=text, informative_text=info_text):
+        if confirm_with_user(text=text, informative_text=info_text):
             utils.backup_database()
 
             db_p = db_constants.DB_PATH
@@ -308,7 +306,6 @@ class Program:
         Returns:
             int: Return code.
         """
-
         self.init_logger(
             log_path=self.log_path,
             debug_log_path=self.debug_log_path,
