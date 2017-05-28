@@ -8,13 +8,6 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
-
 
 class BaseMoveWidget(QWidget):
     """BaseMoveWidget.
