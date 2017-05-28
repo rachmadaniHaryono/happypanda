@@ -67,7 +67,8 @@ from . import (
 )
 #
 from .app_bubble import AppBubble
-from .app_dialog import AppDialog, AppErrorDialog
+from .app_dialog import AppDialog
+from .app_error_dialog import AppErrorDialog
 from .common_view import CommonView
 from .completer_popup_view import CompleterPopupView
 from .gallery_model import GalleryModel
@@ -176,6 +177,8 @@ class AppWindow(QMainWindow):
     def __init__(self, disable_excepthook=False):
         """init func."""
         super().__init__()
+
+        log.debug('disable_excepthook', v=disable_excepthook)
         if not disable_excepthook:
             sys.excepthook = self.excepthook
         # app_constants
@@ -1505,10 +1508,9 @@ class AppWindow(QMainWindow):
             ex:Exception.
             tb:Traceback.
         """
-        w = AppDialog(self, AppDialog.MESSAGE)
-        w.show()
-        log.critical(''.join(traceback.format_tb(tb)))
-        log.critical('{}: {}'.format(ex_type, ex))
+        formatted_tb = ''.join(traceback.format_tb(tb))
+        self.error_dialog = AppErrorDialog(traceback_info=formatted_tb)
+        self.error_dialog.show()
         traceback.print_exception(ex_type, ex, tb)
 
     def closeEvent(self, event):
