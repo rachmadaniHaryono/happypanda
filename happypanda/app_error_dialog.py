@@ -2,6 +2,9 @@
 """Widget to show error."""
 
 import sys
+from PyQt5.QtGui import (
+    QGuiApplication
+)
 from PyQt5.QtWidgets import (
     QApplication,
     QLabel,
@@ -27,23 +30,34 @@ class AppErrorDialog(QWidget):
     def init_ui(self, traceback_info):
         """init ui method."""
         layout = QVBoxLayout()
+        self.general_err_msg = QLabel(
+            "An exception has ben encountered.<br>"
+            "Contact the developer to get this fixed.<br>"
+            "Stability from this point onward cannot be guaranteed."
+        )
         self.stacked_widget = QStackedWidget()
         subwidget = QWidget()
         subwidget_layout = QVBoxLayout()
         self.show_btn = QPushButton('Show text', self)
         self.hide_btn = QPushButton('Hide text', self)
         self.msg = QLabel(traceback_info)
+        self.copy_btn = QPushButton('Copy to clipboard', self)
+        self.clipboard = QGuiApplication.clipboard()
 
         subwidget_layout.addWidget(self.hide_btn)
         subwidget_layout.addWidget(self.msg)
         subwidget.setLayout(subwidget_layout)
         self.stacked_widget.addWidget(self.show_btn)
         self.stacked_widget.addWidget(subwidget)
+
+        layout.addWidget(self.general_err_msg)
         layout.addWidget(self.stacked_widget)
+        layout.addWidget(self.copy_btn)
         self.setLayout(layout)
 
         self.show_btn.clicked.connect(self.toggle_stacked_widget)
         self.hide_btn.clicked.connect(self.toggle_stacked_widget)
+        self.copy_btn.clicked.connect(lambda: self.clipboard.setText(traceback_info))
 
     def toggle_stacked_widget(self):
         """toggle stacked widget."""
