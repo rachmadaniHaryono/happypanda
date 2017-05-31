@@ -129,6 +129,15 @@ def get_window_size(main_window):
         return(app_constants.MAIN_W, app_constants.MAIN_H)
 
 
+class WidgetWithFixedSize(QWidget):
+    """widget with fixed size."""
+
+    def __init__(self, size):
+        """init method."""
+        super().__init__()
+        self.setFixedSize(size)
+
+
 class AppWindow(QMainWindow):
     """The application's main window.
 
@@ -181,59 +190,45 @@ class AppWindow(QMainWindow):
         log.debug('disable_excepthook', v=disable_excepthook)
         if not disable_excepthook:
             sys.excepthook = self.excepthook
-        # app_constants
+
         app_constants.GENERAL_THREAD = QThread(self)
+        self._db_startup_thread = QThread(self)
+        self.db_startup = gallerydb.DatabaseStartup()
+
+        # app_constants
         app_constants.GENERAL_THREAD.finished.connect(app_constants.GENERAL_THREAD.deleteLater)
         app_constants.GENERAL_THREAD.start()
         #
         self.check_site_logins()
         # db_startup_thread
-        self._db_startup_thread = QThread(self)
         self._db_startup_thread.finished.connect(self._db_startup_thread.deleteLater)
         self._db_startup_thread.start()
         # db_startup
-        self.db_startup = gallerydb.DatabaseStartup()
         self.db_startup.moveToThread(self._db_startup_thread)
         self.db_startup.DONE.connect(
             lambda: self.scan_for_new_galleries()
             if app_constants.LOOK_NEW_GALLERY_STARTUP else None)
         self.db_startup_invoker.connect(self.db_startup.startup)
-        #
+
         self.setAcceptDrops(True)
-        #
         self.init_ui()
         self.startup()
-        QTimer.singleShot(3000, self.check_update)
         self.setFocusPolicy(Qt.NoFocus)
         self.set_shortcuts()
         self.graphics_blur.setParent(self)
 
+        QTimer.singleShot(3000, self.check_update)
+
     def set_shortcuts(self):
         """Set Shortcut func."""
         # quit
-        QShortcut(
-            QKeySequence('Ctrl+Q'),
-            self,
-            self.close
-        )
+        QShortcut(QKeySequence('Ctrl+Q'), self, self.close)
         # prev_view
-        QShortcut(
-            QKeySequence(QKeySequence.Find),
-            self,
-            lambda: self.search_bar.setFocus(Qt.ShortcutFocusReason)
-        )
+        QShortcut(QKeySequence(QKeySequence.Find), self, lambda: self.search_bar.setFocus(Qt.ShortcutFocusReason))  # NOQA
         # next_view
-        QShortcut(
-            QKeySequence(QKeySequence.NextChild),
-            self,
-            self.switch_display
-        )
-        # open help content
-        QShortcut(
-            QKeySequence(QKeySequence.HelpContents),
-            self,
-            lambda: self._open_web_link('https://github.com/Pewpews/happypanda/wiki')
-        )
+        QShortcut(QKeySequence(QKeySequence.NextChild), self, self.switch_display)  # NOQA
+        # open wiki
+        QShortcut(QKeySequence(QKeySequence.HelpContents), self, lambda: self._open_web_link('https://github.com/Pewpews/happypanda/wiki'))  # NOQA
 
     def check_site_logins(self):
         """checking logins.
@@ -245,7 +240,7 @@ class AppWindow(QMainWindow):
         login_check.moveToThread(app_constants.GENERAL_THREAD)
         self.login_check_invoker.emit()
 
-    def _remove_gallery(self, g):
+    def remove_gallery(self, g):
         """remove gallery.
 
         Args:
@@ -257,7 +252,7 @@ class AppWindow(QMainWindow):
         else:
             log.error('Could not find gallery to remove from watcher')
 
-    def _update_gallery(self, g):
+    def update_gallery(self, g):
         """update the gallery.
 
         Args:
@@ -272,7 +267,7 @@ class AppWindow(QMainWindow):
             log.error('Could not find gallery to update from watcher')
         self.default_manga_view.replace_gallery(g, False)
 
-    def _watcher_deleted(self, path, gallery):
+    def watcher_deleted(self, path, gallery):
         """function to run when watcher deleted.
 
         Args:
@@ -280,10 +275,10 @@ class AppWindow(QMainWindow):
             gallery(:class:`.gallery_model.GalleryModel`): Object gallery.
         """
         d_popup = DeletedPopup(path, gallery, self)
-        d_popup.UPDATE_SIGNAL.connect(self._update_gallery)
-        d_popup.REMOVE_SIGNAL.connect(self._remove_gallery)
+        d_popup.UPDATE_SIGNAL.connect(self.update_gallery)
+        d_popup.REMOVE_SIGNAL.connect(self.remove_gallery)
 
-    def _watcher_moved(self, new_path, gallery):
+    def watcher_moved(self, new_path, gallery):
         """watcher moved.
 
         Args:
@@ -291,7 +286,7 @@ class AppWindow(QMainWindow):
             gallery(:class:`.gallery_model.GalleryModel`): Object gallery.
         """
         mov_popup = MovedPopup(new_path, gallery, self)
-        mov_popup.UPDATE_SIGNAL.connect(self._update_gallery)
+        mov_popup.UPDATE_SIGNAL.connect(self.update_gallery)
 
     def init_watchers(self):
         """init watchers."""
@@ -299,11 +294,9 @@ class AppWindow(QMainWindow):
         self.watchers.gallery_handler.CREATE_SIGNAL.connect(
             lambda path: self.gallery_populate([path]))
         self.watchers.gallery_handler.MODIFIED_SIGNAL.connect(
-            lambda path, gallery:
-            ModifiedPopup(path, gallery, self)
-        )
-        self.watchers.gallery_handler.MOVED_SIGNAL.connect(self._watcher_moved)
-        self.watchers.gallery_handler.DELETED_SIGNAL.connect(self._watcher_deleted)
+            lambda path, gallery: ModifiedPopup(path, gallery, self))
+        self.watchers.gallery_handler.MOVED_SIGNAL.connect(self.watcher_moved)
+        self.watchers.gallery_handler.DELETED_SIGNAL.connect(self.watcher_deleted)
 
     @staticmethod
     def normalize_first_time():
@@ -379,12 +372,15 @@ class AppWindow(QMainWindow):
         """startup func."""
         if app_constants.FIRST_TIME_LEVEL < 5:
             log.info('Invoking first time level {}'.format(5))
+
             app_constants.INTERNAL_LEVEL = 5
             app_widget = AppDialog(self)
+            self.admin_db = gallerydb.AdminDB()
+            db_p = os.path.join(os.path.split(database.db_constants.DB_PATH)[0], 'sadpanda.db')
+
             app_widget.note_info.setText(
                 "<font color='red'>IMPORTANT:</font> Application restart is required when done")
             app_widget.restart_info.hide()
-            self.admin_db = gallerydb.AdminDB()
             self.admin_db.moveToThread(app_constants.GENERAL_THREAD)
             self.admin_db.DONE.connect(self.startup_done)
             self.admin_db.DONE.connect(
@@ -395,7 +391,6 @@ class AppWindow(QMainWindow):
             self.admin_db_method_invoker.connect(self.admin_db.from_v021_to_v022)
             self.admin_db_method_invoker.connect(app_widget.show)
             app_widget.adjustSize()
-            db_p = os.path.join(os.path.split(database.db_constants.DB_PATH)[0], 'sadpanda.db')
             self.admin_db_method_invoker.emit(db_p)
         elif app_constants.FIRST_TIME_LEVEL < 7:
             log.info('Invoking first time level {}'.format(7))
@@ -770,7 +765,7 @@ class AppWindow(QMainWindow):
         else:
             self.default_manga_view.get_current_view().sort_model.catalog_view()
 
-    def _debug_func(self):
+    def debug_func(self):
         """debug function."""
         print('Gallery model row count: {}'.format(
             self.current_manga_view.gallery_model.rowCount()
@@ -789,98 +784,102 @@ class AppWindow(QMainWindow):
         self._search_cursor_pos[0] = old
         self._search_cursor_pos[1] = new
 
-    def init_toolbar(self):
-        """init toolbar."""
-        self.toolbar = QToolBar()
-        self.toolbar.adjustSize()
-        self.toolbar.setWindowTitle("Show")  # text for the contextmenu
+    def init_gallery_tool_button(self):
+        """get gallery tool button."""
+        gallery_tool_button = QToolButton()
+        gallery_menu = QMenu()
+        # action
+        add_action = QAction(app_constants.PLUS_ICON, "Add a gallery...", self)
+        add_more_action = QAction(app_constants.PLUS_ICON, "Add galleries...", self)
+        populate_action = QAction( app_constants.PLUS_ICON, "Populate from directory/archive...", self)  # NOQA
+        scan_galleries_action = QAction('Scan for new galleries', self)
+        check_duplicate_action = QAction("Check for duplicate galleries", self)
+        open_random_action = QAction(app_constants.RANDOM_ICON, 'Open random gallery', self)
 
-        self.toolbar.setMovable(False)
-        self.toolbar.setFloatable(False)
-        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.toolbar.setIconSize(QSize(20, 20))
-
-        spacer_start = QWidget()  # aligns the first actions properly
-        spacer_start.setFixedSize(QSize(10, 1))
-        self.toolbar.addWidget(spacer_start)
-
-        self.tab_manager = ToolbarTabManagerObject(self.toolbar, self)
-        self.tab_manager.favorite_btn.clicked.connect(lambda: self._init_toolbar_switch_view(True))
-        self.tab_manager.library_btn.click()
-        self.tab_manager.library_btn.clicked.connect(lambda: self._init_toolbar_switch_view(False))
-
-        self.addition_tab = self.tab_manager.addTab(
-            "Inbox", app_constants.ViewType.Addition, icon=app_constants.INBOX_ICON)
-
+        # shortcut
         gallery_k = QKeySequence('Alt+G')
         new_gallery_k = QKeySequence('Ctrl+N')
         new_galleries_k = QKeySequence('Ctrl+Shift+N')
         new_populate_k = QKeySequence('Ctrl+Alt+N')
         scan_galleries_k = QKeySequence('Ctrl+Alt+S')
         open_random_k = QKeySequence(QKeySequence.Open)
-        get_all_metadata_k = QKeySequence('Ctrl+Alt+M')
-        gallery_downloader_k = QKeySequence('Ctrl+Alt+D')
 
-        gallery_menu = QMenu()
+        gallery_tool_button.setIcon(app_constants.PLUS_ICON)
+        gallery_tool_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        gallery_tool_button.setShortcut(gallery_k)
+        gallery_tool_button.setText('Gallery ')
+        gallery_tool_button.setPopupMode(QToolButton.InstantPopup)
+        gallery_tool_button.setToolTip('Contains various gallery related features')
+        gallery_tool_button.setMenu(gallery_menu)
 
-        # gallery k
-        gallery_menu = QMenu()
-        gallery_action = QToolButton()
-        gallery_action.setIcon(app_constants.PLUS_ICON)
-        gallery_action.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        gallery_action.setShortcut(gallery_k)
-        gallery_action.setText('Gallery ')
-        gallery_action.setPopupMode(QToolButton.InstantPopup)
-        gallery_action.setToolTip('Contains various gallery related features')
-        gallery_action.setMenu(gallery_menu)
+        add_action.triggered.connect(lambda: CommonView.spawn_dialog(self))
+        add_action.setToolTip('Add a single gallery thoroughly')
+        add_action.setShortcut(new_gallery_k)
+        gallery_menu.addAction(add_action)
 
-        # new_gallery_k
-        add_gallery_icon = QIcon(app_constants.PLUS_ICON)
-        gallery_action_add = QAction(add_gallery_icon, "Add a gallery...", self)
-        gallery_action_add.triggered.connect(lambda: CommonView.spawn_dialog(self))
-        gallery_action_add.setToolTip('Add a single gallery thoroughly')
-        gallery_action_add.setShortcut(new_gallery_k)
-        gallery_menu.addAction(gallery_action_add)
-
-        # new_galleries_k
-        add_more_action = QAction(add_gallery_icon, "Add galleries...", self)
         add_more_action.setStatusTip('Add galleries from different folders')
         add_more_action.setShortcut(new_galleries_k)
         add_more_action.triggered.connect(lambda: self.populate(True))
         gallery_menu.addAction(add_more_action)
 
-        # new_populate_k
-        populate_action = QAction(add_gallery_icon, "Populate from directory/archive...", self)
-        populate_action.setStatusTip(
-            'Populates the DB with galleries from a single folder or archive')
+        populate_action.setStatusTip('Populates the DB with galleries from a single folder or archive')  # NOQA
         populate_action.triggered.connect(self.populate)
         populate_action.setShortcut(new_populate_k)
         gallery_menu.addAction(populate_action)
 
-        # separator
         gallery_menu.addSeparator()
 
-        # get_all_metadata_k
-        scan_galleries_action = QAction('Scan for new galleries', self)
         scan_galleries_action.setIcon(app_constants.SPINNER_ICON)
         scan_galleries_action.triggered.connect(self.scan_for_new_galleries)
         scan_galleries_action.setStatusTip('Scan monitored folders for new galleries')
         scan_galleries_action.setShortcut(scan_galleries_k)
         gallery_menu.addAction(scan_galleries_action)
 
-        duplicate_check_simple = QAction("Check for duplicate galleries", self)
-        duplicate_check_simple.setIcon(app_constants.DUPLICATE_ICON)
-        # triggered emits False
-        duplicate_check_simple.triggered.connect(lambda: self.duplicate_check())
-        gallery_menu.addAction(duplicate_check_simple)
+        check_duplicate_action.setIcon(app_constants.DUPLICATE_ICON)
+        check_duplicate_action.triggered.connect(lambda: self.duplicate_check())  # NOQA triggered emits False
+        gallery_menu.addAction(check_duplicate_action)
 
-        self.toolbar.addWidget(gallery_action)
+        open_random_action.triggered.connect(lambda: CommonView.open_random_gallery(self.get_current_view())) # NOQA
+        open_random_action.setShortcut(open_random_k)
+        gallery_menu.addAction(open_random_action)
 
-        spacer_tool = QWidget()
-        spacer_tool.setFixedSize(QSize(5, 1))
-        self.toolbar.addWidget(spacer_tool)
+        return gallery_tool_button
 
+    def init_toolbar(self):
+        """init toolbar."""
+        self.toolbar = QToolBar()
+        self.tab_manager = ToolbarTabManagerObject(self.toolbar, self)
+        gallery_tool_button = self.init_gallery_tool_button()
+        spacer_middle = QWidget()
         metadata_action = QToolButton()
+        gallery_downloader = QToolButton()
+        sort_action = QToolButton()
+        sort_menu = SortMenu(self, self.toolbar, sort_action)
+        self.grid_toggle = QToolButton()
+
+        # key sequence
+        get_all_metadata_k = QKeySequence('Ctrl+Alt+M')
+        gallery_downloader_k = QKeySequence('Ctrl+Alt+D')
+        sort_k = QKeySequence('Alt+S')
+        togle_view_k = QKeySequence('Alt+Space')
+
+        self.toolbar.adjustSize()
+        self.toolbar.setWindowTitle("Show")  # text for the contextmenu
+        self.toolbar.setMovable(False)
+        self.toolbar.setFloatable(False)
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.toolbar.setIconSize(QSize(20, 20))
+
+        # aligns the first actions properly
+        self.toolbar.addWidget(WidgetWithFixedSize(QSize(10, 1)))
+
+        self.tab_manager.favorite_btn.clicked.connect(lambda: self._init_toolbar_switch_view(True))
+        self.tab_manager.library_btn.click()
+        self.tab_manager.library_btn.clicked.connect(lambda: self._init_toolbar_switch_view(False))
+        self.addition_tab = self.tab_manager.addTab( "Inbox", app_constants.ViewType.Addition, icon=app_constants.INBOX_ICON)  # NOQA
+        self.toolbar.addWidget(gallery_tool_button)
+        self.toolbar.addWidget(WidgetWithFixedSize(QSize(5, 1)))
+
         metadata_action.setText('Fetch all metadata')
         metadata_action.clicked.connect(self.get_metadata)
         metadata_action.setIcon(app_constants.DOWNLOAD_ICON)
@@ -888,24 +887,8 @@ class AppWindow(QMainWindow):
         metadata_action.setShortcut(get_all_metadata_k)
         self.toolbar.addWidget(metadata_action)
 
-        spacer_tool2 = QWidget()
-        spacer_tool2.setFixedSize(QSize(1, 1))
-        self.toolbar.addWidget(spacer_tool2)
+        self.toolbar.addWidget(WidgetWithFixedSize(QSize(1, 1)))
 
-        gallery_action_random = QToolButton()
-        gallery_action_random.setText("Open random gallery")
-        gallery_action_random.clicked.connect(
-            lambda: CommonView.open_random_gallery(self.get_current_view()))
-        gallery_action_random.setIcon(app_constants.RANDOM_ICON)
-        gallery_action_random.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        gallery_action_random.setShortcut(open_random_k)
-        self.toolbar.addWidget(gallery_action_random)
-
-        spacer_tool3 = QWidget()
-        spacer_tool3.setFixedSize(QSize(1, 1))
-        self.toolbar.addWidget(spacer_tool3)
-
-        gallery_downloader = QToolButton()
         gallery_downloader.setText("Downloader")
         gallery_downloader.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         gallery_downloader.clicked.connect(self.download_window.show)
@@ -913,42 +896,32 @@ class AppWindow(QMainWindow):
         gallery_downloader.setIcon(app_constants.MANAGER_ICON)
         self.toolbar.addWidget(gallery_downloader)
 
-        spacer_tool4 = QWidget()
-        spacer_tool4.setFixedSize(QSize(5, 1))
-        self.toolbar.addWidget(spacer_tool4)
+        self.toolbar.addWidget(WidgetWithFixedSize(QSize(5, 1)))
 
         # debug specfic code
         if app_constants.DEBUG:
             debug_btn = QToolButton()
             debug_btn.setText("DEBUG BUTTON")
             self.toolbar.addWidget(debug_btn)
-            debug_btn.clicked.connect(self._debug_func)
+            debug_btn.clicked.connect(self.debug_func)
 
-        spacer_middle = QWidget()  # aligns buttons to the right
+        # aligns buttons to the right
         spacer_middle.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.toolbar.addWidget(spacer_middle)
 
-        sort_k = QKeySequence('Alt+S')
-        sort_action = QToolButton()
-        sort_action.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         sort_action.setShortcut(sort_k)
         sort_action.setIcon(app_constants.SORT_ICON_DESC)
-        sort_menu = SortMenu(self, self.toolbar, sort_action)
         sort_menu.set_toolbutton_text()
         sort_action.setMenu(sort_menu)
         sort_action.setPopupMode(QToolButton.InstantPopup)
+        sort_action.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.toolbar.addWidget(sort_action)
-
         sort_menu.new_sort.connect(lambda s: self.set_new_sort(s=s, sort_menu=sort_menu))
 
-        spacer_tool4 = QWidget()
-        spacer_tool4.setFixedSize(QSize(5, 1))
-        self.toolbar.addWidget(spacer_tool4)
+        self.toolbar.addWidget(WidgetWithFixedSize(QSize(5, 1)))
 
-        togle_view_k = QKeySequence('Alt+Space')
         self.grid_toggle_g_icon = app_constants.GRID_ICON
         self.grid_toggle_l_icon = app_constants.LIST_ICON
-        self.grid_toggle = QToolButton()
         self.grid_toggle.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.grid_toggle.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.grid_toggle.setShortcut(togle_view_k)
@@ -960,9 +933,7 @@ class AppWindow(QMainWindow):
         self.grid_toggle.clicked.connect(self.toggle_view)
         self.toolbar.addWidget(self.grid_toggle)
 
-        spacer_mid2 = QWidget()
-        spacer_mid2.setFixedSize(QSize(5, 1))
-        self.toolbar.addWidget(spacer_mid2)
+        self.toolbar.addWidget(WidgetWithFixedSize(QSize(5, 1)))
 
         search_options = QToolButton()
         search_options.setIconSize(QSize(15, 15))
@@ -986,19 +957,14 @@ class AppWindow(QMainWindow):
         regex_search_option.setCheckable(True)
         regex_search_option.setChecked(app_constants.GALLERY_SEARCH_REGEX)
 
-        strict_search_option.toggled.connect(
-            lambda b: self.set_search_strict(b=b, regex_search_option=regex_search_option))
-
-        regex_search_option.toggled.connect(
-            lambda b: self.set_search_regex(b=b, strict_search_option=strict_search_option))
+        strict_search_option.toggled.connect(lambda b: self.set_search_strict(b=b, regex_search_option=regex_search_option)) # NOQA
+        regex_search_option.toggled.connect(lambda b: self.set_search_regex(b=b, strict_search_option=strict_search_option)) # NOQA
 
         self.search_bar = LineEdit()
 
         remove_txt = self.search_bar.addAction(app_constants.CROSS_ICON, QLineEdit.LeadingPosition)
-        refresh_search = self.search_bar.addAction(
-            app_constants.REFRESH_ICON, QLineEdit.TrailingPosition)
-        refresh_search.triggered.connect(
-            self.current_manga_view.get_current_view().sort_model.refresh)
+        refresh_search = self.search_bar.addAction(app_constants.REFRESH_ICON, QLineEdit.TrailingPosition)  # NOQA
+        refresh_search.triggered.connect(self.current_manga_view.get_current_view().sort_model.refresh) # NOQA
         remove_txt.setVisible(False)
         remove_txt.triggered.connect(self.clear_txt)
         # hide cross
@@ -1009,7 +975,6 @@ class AppWindow(QMainWindow):
         self.search_timer.setSingleShot(True)
         self.search_timer.timeout.connect(lambda: self.search(self.search_bar.text()))
         self._search_cursor_pos = [0, 0]
-
         self.search_bar.cursorPositionChanged.connect(self.set_cursor_pos)
 
         if app_constants.SEARCH_AUTOCOMPLETE:
