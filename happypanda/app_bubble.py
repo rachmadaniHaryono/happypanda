@@ -19,11 +19,6 @@ except ImportError:
     from .base_popup import BasePopup
 
 log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
 
 
 class AppBubble(BasePopup):
@@ -36,15 +31,13 @@ class AppBubble(BasePopup):
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
 
         self.hide_timer = QTimer(self)
-        self.hide_timer.timeout.connect(self.hide)
-
         main_layout = QVBoxLayout(self.main_widget)
-        #
         self.title = QLabel()
+        self.content = QLabel()
+
+        self.hide_timer.timeout.connect(self.hide)
         self.title.setTextFormat(Qt.RichText)
         main_layout.addWidget(self.title)
-        #
-        self.content = QLabel()
         self.content.setWordWrap(True)
         self.content.setTextFormat(Qt.RichText)
         self.content.setOpenExternalLinks(True)
