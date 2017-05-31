@@ -120,7 +120,7 @@ class SideBarWidgetFrame(QFrame):
         self.lists_btn.clicked.connect(
             lambda: self.stacked_layout.setCurrentIndex(lists_index))
         self.show_all_galleries_btn.clicked.connect(self.lists.clearSelection)
-        self.show_all_galleries_btn.clicked.connect(self.lists._reset_selected)
+        self.show_all_galleries_btn.clicked.connect(self.lists.reset_selected)
 
         # artists
         self.artists_list = GalleryArtistsListView(
