@@ -847,16 +847,21 @@ class AppWindow(QMainWindow):
 
     def init_toolbar(self):
         """init toolbar."""
+        # left side
         self.toolbar = QToolBar()
         self.tab_manager = ToolbarTabManagerObject(self.toolbar, self)
         gallery_tool_button = self.init_gallery_tool_button()
         spacer_middle = QWidget()
         metadata_action = QToolButton()
         gallery_downloader = QToolButton()
+
+        # right side
         sort_action = QToolButton()
         sort_menu = SortMenu(self, self.toolbar, sort_action)
         self.grid_toggle = QToolButton()
         settings_action = QToolButton(self.toolbar)
+        self.search_back_btn = QToolButton(self.toolbar)
+        self.search_forward_btn = QToolButton(self.toolbar)
 
         # key sequence
         get_all_metadata_k = QKeySequence('Ctrl+Alt+M')
@@ -1003,21 +1008,17 @@ class AppWindow(QMainWindow):
             lambda a: self.search_bar.setText(a))
         self.toolbar.addWidget(self.search_bar)
 
-        self.search_backbutton = QToolButton(self.toolbar)
-        self.search_backbutton.setIcon(app_constants.ARROW_LEFT_ICON)
-        self.search_backbutton.setFixedWidth(20)
-        self.search_backbutton.clicked.connect(self.search_history)
-        self.search_backbutton.setShortcut(back_k)
-        self.search_backward.setVisible(False)
-        self.toolbar.addWidget(self.search_backbutton)
+        self.search_back_btn.setIcon(app_constants.ARROW_LEFT_ICON)
+        self.search_back_btn.setFixedWidth(20)
+        self.search_back_btn.clicked.connect(self.search_history)
+        self.search_back_btn.setShortcut(back_k)
+        self.toolbar.addWidget(self.search_back_btn)
 
-        self.search_forwardbutton = QToolButton(self.toolbar)
-        self.search_forwardbutton.setIcon(app_constants.ARROW_RIGHT_ICON)
-        self.search_forwardbutton.setFixedWidth(20)
-        self.search_forwardbutton.clicked.connect(lambda: self.search_history(None, False))
-        self.search_forwardbutton.setShortcut(forward_k)
-        self.search_forward.setVisible(False)
-        self.toolbar.addWidget(self.search_forwardbutton)
+        self.search_forward_btn.setIcon(app_constants.ARROW_RIGHT_ICON)
+        self.search_forward_btn.setFixedWidth(20)
+        self.search_forward_btn.clicked.connect(lambda: self.search_history(None, False))
+        self.search_forward_btn.setShortcut(forward_k)
+        self.toolbar.addWidget(self.search_forward_btn)
 
         self.toolbar.addWidget(WidgetWithFixedSize(QSize(10, 1)))
 
@@ -1079,8 +1080,10 @@ class AppWindow(QMainWindow):
             self.current_manga_view.changeTo(self.current_manga_view.m_t_view_index)
             self.grid_toggle.setIcon(self.grid_toggle_g_icon)
 
-    def search_history(self, _, back=True):  # clicked signal passes a bool
+    def search_history(self, _, back=True):
         """search history.
+
+        clicked signal passes a bool.
 
         Args:
             back(bool):Search history backward.
@@ -1089,7 +1092,7 @@ class AppWindow(QMainWindow):
         nav = sort_model.PREV if back else sort_model.NEXT
         sort_model.navigate_history(nav)
         if back:
-            self.search_forward.setVisible(True)
+            self.search_forward_btn.setVisible(True)
 
     def _populate_from_dir(self, msg_box):
         """populate from dir."""
