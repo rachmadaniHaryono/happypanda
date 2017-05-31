@@ -856,12 +856,16 @@ class AppWindow(QMainWindow):
         sort_action = QToolButton()
         sort_menu = SortMenu(self, self.toolbar, sort_action)
         self.grid_toggle = QToolButton()
+        settings_action = QToolButton(self.toolbar)
 
         # key sequence
         get_all_metadata_k = QKeySequence('Ctrl+Alt+M')
         gallery_downloader_k = QKeySequence('Ctrl+Alt+D')
         sort_k = QKeySequence('Alt+S')
         togle_view_k = QKeySequence('Alt+Space')
+        settings_k = QKeySequence("Ctrl+P")
+        back_k = QKeySequence(QKeySequence.Back)
+        forward_k = QKeySequence(QKeySequence.Forward)
 
         self.toolbar.adjustSize()
         self.toolbar.setWindowTitle("Show")  # text for the contextmenu
@@ -999,35 +1003,28 @@ class AppWindow(QMainWindow):
             lambda a: self.search_bar.setText(a))
         self.toolbar.addWidget(self.search_bar)
 
-        back_k = QKeySequence(QKeySequence.Back)
-        forward_k = QKeySequence(QKeySequence.Forward)
-
-        search_backbutton = QToolButton(self.toolbar)
-        search_backbutton.setIcon(app_constants.ARROW_LEFT_ICON)
-        search_backbutton.setFixedWidth(20)
-        search_backbutton.clicked.connect(self.search_history)
-        search_backbutton.setShortcut(back_k)
-        self.search_backward = self.toolbar.addWidget(search_backbutton)
+        self.search_backbutton = QToolButton(self.toolbar)
+        self.search_backbutton.setIcon(app_constants.ARROW_LEFT_ICON)
+        self.search_backbutton.setFixedWidth(20)
+        self.search_backbutton.clicked.connect(self.search_history)
+        self.search_backbutton.setShortcut(back_k)
         self.search_backward.setVisible(False)
-        search_forwardbutton = QToolButton(self.toolbar)
-        search_forwardbutton.setIcon(app_constants.ARROW_RIGHT_ICON)
-        search_forwardbutton.setFixedWidth(20)
-        search_forwardbutton.clicked.connect(lambda: self.search_history(None, False))
-        search_forwardbutton.setShortcut(forward_k)
-        self.search_forward = self.toolbar.addWidget(search_forwardbutton)
+        self.toolbar.addWidget(self.search_backbutton)
+
+        self.search_forwardbutton = QToolButton(self.toolbar)
+        self.search_forwardbutton.setIcon(app_constants.ARROW_RIGHT_ICON)
+        self.search_forwardbutton.setFixedWidth(20)
+        self.search_forwardbutton.clicked.connect(lambda: self.search_history(None, False))
+        self.search_forwardbutton.setShortcut(forward_k)
         self.search_forward.setVisible(False)
+        self.toolbar.addWidget(self.search_forwardbutton)
 
-        spacer_end = QWidget()  # aligns settings action properly
-        spacer_end.setFixedSize(QSize(10, 1))
-        self.toolbar.addWidget(spacer_end)
+        self.toolbar.addWidget(WidgetWithFixedSize(QSize(10, 1)))
 
-        settings_k = QKeySequence("Ctrl+P")
-
-        settings_act = QToolButton(self.toolbar)
-        settings_act.setShortcut(settings_k)
-        settings_act.setIcon(qta.icon('fa.gear', color='white'))
-        settings_act.clicked.connect(self.settings)
-        self.toolbar.addWidget(settings_act)
+        settings_action.setShortcut(settings_k)
+        settings_action.setIcon(qta.icon('fa.gear', color='white'))
+        settings_action.clicked.connect(self.settings)
+        self.toolbar.addWidget(settings_action)
 
         self.addToolBar(self.toolbar)
 
