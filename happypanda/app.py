@@ -845,6 +845,74 @@ class AppWindow(QMainWindow):
 
         return gallery_tool_button
 
+    def init_search_option_tool_button(self):
+        """init search option tool button."""
+        search_options = QToolButton()
+        search_options.setIconSize(QSize(15, 15))
+        search_options.setPopupMode(QToolButton.InstantPopup)
+        search_options.setIcon(app_constants.SEARCH_ICON)
+        search_options_menu = QMenu(self)
+        case_search_option = search_options_menu.addAction('Case Sensitive')
+        case_search_option.setCheckable(True)
+        case_search_option.setChecked(app_constants.GALLERY_SEARCH_CASE)
+        case_search_option.toggled.connect(self.set_search_case)
+
+        search_options_menu.addSeparator()
+
+        strict_search_option = search_options_menu.addAction('Match whole terms')
+        strict_search_option.setCheckable(True)
+        strict_search_option.setChecked(app_constants.GALLERY_SEARCH_STRICT)
+
+        regex_search_option = search_options_menu.addAction('Regex')
+        regex_search_option.setCheckable(True)
+        regex_search_option.setChecked(app_constants.GALLERY_SEARCH_REGEX)
+
+        strict_search_option.toggled.connect(lambda b: self.set_search_strict(b=b, regex_search_option=regex_search_option)) # NOQA
+        regex_search_option.toggled.connect(lambda b: self.set_search_regex(b=b, strict_search_option=strict_search_option)) # NOQA
+
+        search_options.setMenu(search_options_menu)
+        return search_options
+
+    def init_search_line_edit(self):
+        """init search bar line editor."""
+        self.search_bar = LineEdit()
+
+        remove_txt = self.search_bar.addAction(app_constants.CROSS_ICON, QLineEdit.LeadingPosition)
+        refresh_search = self.search_bar.addAction(app_constants.REFRESH_ICON, QLineEdit.TrailingPosition)  # NOQA
+        refresh_search.triggered.connect(self.current_manga_view.get_current_view().sort_model.refresh) # NOQA
+        remove_txt.setVisible(False)
+        remove_txt.triggered.connect(self.clear_txt)
+        # hide cross
+        self.search_bar.textChanged.connect(lambda txt: remove_txt.setVisible(bool(txt)))
+
+        self.search_bar.setObjectName('search_bar')
+        self.search_timer = QTimer(self)
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(lambda: self.search(self.search_bar.text()))
+        self._search_cursor_pos = [0, 0]
+        self.search_bar.cursorPositionChanged.connect(self.set_cursor_pos)
+
+        if app_constants.SEARCH_AUTOCOMPLETE:
+            completer = QCompleter(self)
+            completer_view = CompleterPopupView()
+            completer.setPopup(completer_view)
+            completer_view._setup()
+            completer.setModel(self.manga_list_view.gallery_model)
+            completer.setCaseSensitivity(Qt.CaseInsensitive)
+            completer.setCompletionMode(QCompleter.PopupCompletion)
+            completer.setCompletionRole(Qt.DisplayRole)
+            completer.setCompletionColumn(app_constants.TITLE)
+            completer.setFilterMode(Qt.MatchContains)
+            completer.activated[str].connect(lambda a: self.search(a))
+            self.search_bar.setCompleter(completer)
+            self.search_bar.returnPressed.connect(lambda: self.search(self.search_bar.text()))
+        if not app_constants.SEARCH_ON_ENTER:
+            self.search_bar.textEdited.connect(lambda: self.search_timer.start(800))
+        self.search_bar.setPlaceholderText("Search title, artist, namespace & tags")
+        self.search_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.manga_list_view.sort_model.HISTORY_SEARCH_TERM.connect(lambda a: self.search_bar.setText(a))  # NOQA
+        return self.search_bar
+
     def init_toolbar(self):
         """init toolbar."""
         # left side
@@ -859,6 +927,7 @@ class AppWindow(QMainWindow):
         sort_action = QToolButton()
         sort_menu = SortMenu(self, self.toolbar, sort_action)
         self.grid_toggle = QToolButton()
+        search_option_tool_button = self.init_search_option_tool_button()
         settings_action = QToolButton(self.toolbar)
         self.search_back_btn = QToolButton(self.toolbar)
         self.search_forward_btn = QToolButton(self.toolbar)
@@ -887,6 +956,7 @@ class AppWindow(QMainWindow):
         self.tab_manager.library_btn.clicked.connect(lambda: self._init_toolbar_switch_view(False))
         self.addition_tab = self.tab_manager.addTab( "Inbox", app_constants.ViewType.Addition, icon=app_constants.INBOX_ICON)  # NOQA
         self.toolbar.addWidget(gallery_tool_button)
+
         self.toolbar.addWidget(WidgetWithFixedSize(QSize(5, 1)))
 
         metadata_action.setText('Fetch all metadata')
@@ -929,84 +999,20 @@ class AppWindow(QMainWindow):
 
         self.toolbar.addWidget(WidgetWithFixedSize(QSize(5, 1)))
 
-        self.grid_toggle_g_icon = app_constants.GRID_ICON
-        self.grid_toggle_l_icon = app_constants.LIST_ICON
         self.grid_toggle.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.grid_toggle.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.grid_toggle.setShortcut(togle_view_k)
-        if self.current_manga_view.current_view == MangaViews.View.List:
-            self.grid_toggle.setIcon(self.grid_toggle_l_icon)
-        else:
-            self.grid_toggle.setIcon(self.grid_toggle_g_icon)
+        self.toggle_view()  # toggle and set icon
+        self.toggle_view()  # toggle and set icon
         self.grid_toggle.setObjectName('gridtoggle')
         self.grid_toggle.clicked.connect(self.toggle_view)
         self.toolbar.addWidget(self.grid_toggle)
 
         self.toolbar.addWidget(WidgetWithFixedSize(QSize(5, 1)))
 
-        search_options = QToolButton()
-        search_options.setIconSize(QSize(15, 15))
-        search_options.setPopupMode(QToolButton.InstantPopup)
-        self.toolbar.addWidget(search_options)
-        search_options.setIcon(app_constants.SEARCH_ICON)
-        search_options_menu = QMenu(self)
-        search_options.setMenu(search_options_menu)
-        case_search_option = search_options_menu.addAction('Case Sensitive')
-        case_search_option.setCheckable(True)
-        case_search_option.setChecked(app_constants.GALLERY_SEARCH_CASE)
-        case_search_option.toggled.connect(self.set_search_case)
+        self.toolbar.addWidget(search_option_tool_button)
 
-        search_options_menu.addSeparator()
-
-        strict_search_option = search_options_menu.addAction('Match whole terms')
-        strict_search_option.setCheckable(True)
-        strict_search_option.setChecked(app_constants.GALLERY_SEARCH_STRICT)
-
-        regex_search_option = search_options_menu.addAction('Regex')
-        regex_search_option.setCheckable(True)
-        regex_search_option.setChecked(app_constants.GALLERY_SEARCH_REGEX)
-
-        strict_search_option.toggled.connect(lambda b: self.set_search_strict(b=b, regex_search_option=regex_search_option)) # NOQA
-        regex_search_option.toggled.connect(lambda b: self.set_search_regex(b=b, strict_search_option=strict_search_option)) # NOQA
-
-        self.search_bar = LineEdit()
-
-        remove_txt = self.search_bar.addAction(app_constants.CROSS_ICON, QLineEdit.LeadingPosition)
-        refresh_search = self.search_bar.addAction(app_constants.REFRESH_ICON, QLineEdit.TrailingPosition)  # NOQA
-        refresh_search.triggered.connect(self.current_manga_view.get_current_view().sort_model.refresh) # NOQA
-        remove_txt.setVisible(False)
-        remove_txt.triggered.connect(self.clear_txt)
-        # hide cross
-        self.search_bar.textChanged.connect(lambda txt: remove_txt.setVisible(bool(txt)))
-
-        self.search_bar.setObjectName('search_bar')
-        self.search_timer = QTimer(self)
-        self.search_timer.setSingleShot(True)
-        self.search_timer.timeout.connect(lambda: self.search(self.search_bar.text()))
-        self._search_cursor_pos = [0, 0]
-        self.search_bar.cursorPositionChanged.connect(self.set_cursor_pos)
-
-        if app_constants.SEARCH_AUTOCOMPLETE:
-            completer = QCompleter(self)
-            completer_view = CompleterPopupView()
-            completer.setPopup(completer_view)
-            completer_view._setup()
-            completer.setModel(self.manga_list_view.gallery_model)
-            completer.setCaseSensitivity(Qt.CaseInsensitive)
-            completer.setCompletionMode(QCompleter.PopupCompletion)
-            completer.setCompletionRole(Qt.DisplayRole)
-            completer.setCompletionColumn(app_constants.TITLE)
-            completer.setFilterMode(Qt.MatchContains)
-            completer.activated[str].connect(lambda a: self.search(a))
-            self.search_bar.setCompleter(completer)
-            self.search_bar.returnPressed.connect(lambda: self.search(self.search_bar.text()))
-        if not app_constants.SEARCH_ON_ENTER:
-            self.search_bar.textEdited.connect(lambda: self.search_timer.start(800))
-        self.search_bar.setPlaceholderText("Search title, artist, namespace & tags")
-        self.search_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.manga_list_view.sort_model.HISTORY_SEARCH_TERM.connect(
-            lambda a: self.search_bar.setText(a))
-        self.toolbar.addWidget(self.search_bar)
+        self.toolbar.addWidget(self.init_search_line_edit())
 
         self.search_back_btn.setIcon(app_constants.ARROW_LEFT_ICON)
         self.search_back_btn.setFixedWidth(20)
@@ -1075,10 +1081,10 @@ class AppWindow(QMainWindow):
         """Toggle the current display view."""
         if self.current_manga_view.current_view == MangaViews.View.Table:
             self.current_manga_view.changeTo(self.current_manga_view.m_l_view_index)
-            self.grid_toggle.setIcon(self.grid_toggle_l_icon)
+            self.grid_toggle.setIcon(app_constants.LIST_ICON)
         else:
             self.current_manga_view.changeTo(self.current_manga_view.m_t_view_index)
-            self.grid_toggle.setIcon(self.grid_toggle_g_icon)
+            self.grid_toggle.setIcon(app_constants.GRID_ICON)
 
     def search_history(self, _, back=True):
         """search history.
