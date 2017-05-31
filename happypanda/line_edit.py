@@ -1,19 +1,6 @@
 """line edit."""
-import logging
-
-from PyQt5.QtCore import (
-    Qt,
-)
-from PyQt5.QtWidgets import (
-    QLineEdit,
-)
-
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLineEdit
 
 
 class LineEdit(QLineEdit):
