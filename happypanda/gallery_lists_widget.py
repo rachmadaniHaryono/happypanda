@@ -3,19 +3,14 @@
 taken from misc_db.py.
 """
 import pickle
-import logging
 
-from PyQt5.QtWidgets import (
-    QListWidget,
-)
+import structlog
+from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtCore import (
     Qt,
     pyqtSignal,
 )
-from PyQt5.QtGui import (
-    QFont,
-    QIcon,
-)
+from PyQt5.QtGui import QFont
 
 from .custom_list_item import CustomListItem
 from .gallery_list_context_menu import GalleryListContextMenu
@@ -26,12 +21,7 @@ from . import (
     gallerydb,
 )
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+log = structlog.getLogger(__name__)
 
 
 class GalleryListsWidget(QListWidget):
@@ -44,31 +34,33 @@ class GalleryListsWidget(QListWidget):
     def __init__(self, parent):
         """init func."""
         super().__init__(parent)
+
         self.gallery_list_edit = GalleryListEdit(parent.parent_widget)
+        self.font_selected = QFont(self.font())
+        self.in_proccess_item = None
+        self.current_selected = None
+
         self.gallery_list_edit.hide()
-        self._g_list_icon = app_constants.G_LISTS_ICON
-        self._font_selected = QFont(self.font())
-        self._font_selected.setBold(True)
-        self._font_selected.setUnderline(True)
-        self.itemDoubleClicked.connect(self._item_double_clicked)
+        self.font_selected.setBold(True)
+        self.font_selected.setUnderline(True)
+        self.itemDoubleClicked.connect(self.item_double_clicked)
         self.setItemDelegate(ListDelegate(self))
-        self.itemDelegate().closeEditor.connect(self._add_new_list)
+        self.itemDelegate().closeEditor.connect(self.add_new_list)
         self.setEditTriggers(self.NoEditTriggers)
         self.viewport().setAcceptDrops(True)
-        self._in_proccess_item = None
-        self.current_selected = None
+
         self.gallery_list_edit.apply.connect(
-            lambda: self._item_double_clicked(self.current_selected))
+            lambda: self.item_double_clicked(self.current_selected))
         self.setup_lists()
 
-    def dragEnterEvent(self, event):  # NOQA
+    def dragEnterEvent(self, event):
         """drag enter event."""
         if event.mimeData().hasFormat("list/gallery"):
             event.acceptProposedAction()
         else:
             event.ignore()
 
-    def dragMoveEvent(self, event):  # NOQA
+    def dragMoveEvent(self, event):
         """drag move event."""
         item = self.itemAt(event.pos())
         self.clearSelection()
@@ -76,7 +68,7 @@ class GalleryListsWidget(QListWidget):
             item.setSelected(True)
         event.accept()
 
-    def dropEvent(self, event):  # NOQA
+    def dropEvent(self, event):
         """drop event."""
         galleries = []
 
@@ -87,52 +79,53 @@ class GalleryListsWidget(QListWidget):
             txt = "galleries" if len(galleries) > 1 else "gallery"
             app_constants.NOTIF_BUBBLE.update_text(
                 g_list_item.item.name, 'Added {} to list...'.format(txt), 5)
-            log_i('Adding gallery to list')
+            log.info('Adding gallery to list')
             g_list_item.item.add_gallery(galleries)
 
         super().dropEvent(event)
 
-    def _add_new_list(self, lineedit=None, hint=None, gallery_list=None):
+    def add_new_list(self, lineedit=None, hint=None, gallery_list=None):
         """add new list."""
-        if not self._in_proccess_item.text():
-            self.takeItem(self.row(self._in_proccess_item))
+        if not self.in_proccess_item.text():
+            self.takeItem(self.row(self.in_proccess_item))
             return
-        new_item = self._in_proccess_item
+        new_item = self.in_proccess_item
         if not gallery_list:
             new_list = gallerydb.GalleryList(new_item.text())
             new_list.add_to_db()
         else:
             new_list = gallery_list
         new_item.item = new_list
-        new_item.setIcon(self._g_list_icon)
+        new_item.setIcon(app_constants.G_LISTS_ICON)
         self.sortItems()
 
     def create_new_list(self, name=None, gallery_list=None):
         """create new list."""
         new_item = CustomListItem()
-        self._in_proccess_item = new_item
+        self.in_proccess_item = new_item
+
         new_item.setFlags(new_item.flags() | Qt.ItemIsEditable)
-        new_item.setIcon(QIcon(app_constants.LIST_PATH))
+        new_item.setIcon(app_constants.LIST_ICON)
         self.insertItem(0, new_item)
         if name:
             new_item.setText(name)
-            self._add_new_list(gallery_list=gallery_list)
+            self.add_new_list(gallery_list=gallery_list)
         else:
             self.editItem(new_item)
 
-    def _item_double_clicked(self, item):
+    def item_double_clicked(self, item):
         """item double clicked."""
-        if item:
-            self._reset_selected()
-            if item.item.filter:
-                app_constants.NOTIF_BUBBLE.update_text(
-                    item.item.name, "Updating list..", 5)
-                gallerydb.execute(item.item.scan, True)
-            self.GALLERY_LIST_CLICKED.emit(item.item)
-            item.setFont(self._font_selected)
-            self.current_selected = item
+        if not item:
+            return
+        self.reset_selected()
+        if item.item.filter:
+            app_constants.NOTIF_BUBBLE.update_text(item.item.name, "Updating list..", 5)
+            gallerydb.execute(item.item.scan, True)
+        self.GALLERY_LIST_CLICKED.emit(item.item)
+        item.setFont(self.font_selected)
+        self.current_selected = item
 
-    def _reset_selected(self):
+    def reset_selected(self):
         """reset selected."""
         if self.current_selected:
             self.current_selected.setFont(self.font())
@@ -143,7 +136,7 @@ class GalleryListsWidget(QListWidget):
             if g_l.type == gallerydb.GalleryList.REGULAR:
                 self.create_new_list(g_l.name, g_l)
 
-    def contextMenuEvent(self, event):  # NOQA
+    def contextMenuEvent(self, event):
         """context menu event."""
         item = self.itemAt(event.pos())
         if item and item.type() != self.CREATE_LIST_TYPE:
