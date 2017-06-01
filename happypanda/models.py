@@ -1,31 +1,17 @@
 """models for database."""
 from peewee import (
+    BlobField,
+    FloatField,
+    ForeignKeyField,
+    IntegerField,
+    Model,
+    PrimaryKeyField,
     SqliteDatabase,
     TextField,
-    Model,
-    FloatField,
-    IntegerField,
-    BlobField,
-    PrimaryKeyField,
-    ForeignKeyField,
-
-
+    UnknownField,
 )
 
-try:
-    from database.db_constants import DB_PATH
-except ImportError:
-    from .database.db_constants import DB_PATH
-
-database = SqliteDatabase(DB_PATH, **{})
-
-
-class UnknownField(object):
-    """Unknown field."""
-
-    def __init__(self, *_, **__):
-        """init func."""
-        pass
+database = SqliteDatabase(None)
 
 
 class BaseModel(Model):
