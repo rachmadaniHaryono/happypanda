@@ -1,25 +1,17 @@
 """commenhen module."""
 import requests
-import logging
 import random
 import time
 import threading
 
 from robobrowser import RoboBrowser
+from structlog import getLogger
+from fake_useragent import UserAgent
 
-try:
-    import app_constants
-except ImportError:
-    from . import (
-        app_constants,
-    )
+from . import app_constants
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+log = getLogger(__name__)
+ua = UserAgent()
 
 
 class CommenHen:
@@ -30,24 +22,24 @@ class CommenHen:
     QUEUE = []
     COOKIES = {}
     LAST_USED = time.time()
-    HEADERS = {'user-agent': "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0"}
+    HEADERS = {'user-agent': ua.firefox}
     _QUEUE_LIMIT = 25
     _browser = RoboBrowser(user_agent=HEADERS['user-agent'], parser='html.parser')
 
     def begin_lock(self):
         """begin lock."""
-        log_d('locked')
+        log.debug('locked')
         self.LOCK.acquire()
         t1 = time.time()
         while int(time.time() - self.LAST_USED) < self.TIME_RAND:
             t = random.randint(3, self.TIME_RAND)
             time.sleep(t)
         t2 = time.time() - t1
-        log_d("Slept for {}".format(t2))
+        log.debug("Slept for {}".format(t2))
 
     def end_lock(self):
         """end lock."""
-        log_d('unlocked')
+        log.debug('unlocked')
         self.LAST_USED = time.time()
         self.LOCK.release()
 
@@ -60,15 +52,16 @@ class CommenHen:
         """
         if url:
             self.QUEUE.append(url)
-            log_i("Status on queue: {}/{}".format(len(self.QUEUE), self._QUEUE_LIMIT))
+            log.info("Status on queue: {}/{}".format(len(self.QUEUE), self._QUEUE_LIMIT))
         try:
-            if proc:
-                if parse:
-                    return self.parse_metadata(*self.process_queue())
+            if proc and parse:
+                return self.parse_metadata(*self.process_queue())
+            elif proc:
                 return self.process_queue()
-            if len(self.QUEUE) >= self._QUEUE_LIMIT:
-                if parse:
-                    return self.parse_metadata(*self.process_queue())
+
+            if len(self.QUEUE) >= self._QUEUE_LIMIT and parse:
+                return self.parse_metadata(*self.process_queue())
+            elif len(self.QUEUE) >= self._QUEUE_LIMIT:
                 return self.process_queue()
             else:
                 return 1
@@ -81,7 +74,7 @@ class CommenHen:
         Note: Will only process _QUEUE_LIMIT entries (first come first out) while
             additional entries will get deleted.
         """
-        log_i("Processing queue...")
+        log.info("Processing queue...")
         if len(self.QUEUE) < 1:
             return None
 
@@ -93,7 +86,7 @@ class CommenHen:
         except TypeError:
             return None
         finally:
-            log_i("Flushing queue...")
+            log.info("Flushing queue...")
             self.QUEUE.clear()
         return api_data, galleryid_dict
 
@@ -130,7 +123,7 @@ class CommenHen:
             else:
                 present.append(False)
         if not all(present):
-            log_i("Updating cookies...")
+            log.info("Updating cookies...")
             try:
                 self.COOKIES.update(cookie)
             except requests.cookies.CookieConflictError:
