@@ -1,6 +1,6 @@
+#!/usr/bin/env python3
 """ehen module."""
 import requests
-import logging
 import random
 import time
 import html
@@ -9,6 +9,7 @@ from pprint import pformat
 
 from bs4 import BeautifulSoup
 from datetime import datetime
+from structlog import getLogger
 
 try:
     import app_constants
@@ -21,12 +22,7 @@ except ImportError:
     from .commenhen import CommenHen
     from .utils import get_gallery_tags, title_parser
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+log = getLogger(__name__)
 
 
 class EHen(CommenHen):
@@ -39,13 +35,13 @@ class EHen(CommenHen):
         self.e_url_o = "http://g.e-hentai.org/"
 
     @staticmethod
-    def _get_g_artist(g_artist, data):
+    def get_g_artist(g_artist, data):
         if 'Artist' in data['tags']:
             return data['tags']['Artist'][0].capitalize()
         return g_artist
 
     @staticmethod
-    def _get_title_from_data(data):
+    def get_title_from_data(data):
         """get title from data."""
         if app_constants.USE_JPN_TITLE:
             try:
@@ -53,11 +49,11 @@ class EHen(CommenHen):
                 if title:
                     return title
             except KeyError:
-                log_d("Item don't have japanese title.")
+                log.debug("Item don't have japanese title.")
         return data['title']['def']
 
     @staticmethod
-    def _get_lang_from_data(data):
+    def get_lang_from_data(data):
         """get language from data."""
         if 'Language' in data['tags']:
             try:
@@ -70,10 +66,10 @@ class EHen(CommenHen):
         return lang
 
     @classmethod
-    def _replace_gallery_data(cls, g, data):
+    def replace_gallery_data(cls, g, data):
         """replace gallery data."""
-        title = cls._get_title_from_data(data)
-        lang = cls._get_lang_from_data(data)
+        title = cls.get_title_from_data(data)
+        lang = cls.get_lang_from_data(data)
         #
         title_artist_dict = title_parser(title)
         #
@@ -81,7 +77,7 @@ class EHen(CommenHen):
         #  artist
         if title_artist_dict['artist']:
             g.artist = title_artist_dict['artist']
-        g.artist = cls._get_g_artist(g.artist, data)
+        g.artist = cls.get_g_artist(g.artist, data)
         #  lang
         g.language = title_artist_dict['language'].capitalize()
         if lang:
@@ -99,7 +95,7 @@ class EHen(CommenHen):
         return g
 
     @staticmethod
-    def _get_g_link(gallery, data):
+    def get_g_link(gallery, data):
         """Get gallery link.
 
         Args:
@@ -117,7 +113,7 @@ class EHen(CommenHen):
             g_link = gallery.temp_url
         return g_link
 
-    @classmethod  # NOQA
+    @classmethod
     def apply_metadata(cls, g, data, append=True):
         """Apply metadata to gallery, returns gallery.
 
@@ -132,12 +128,12 @@ class EHen(CommenHen):
         Returns:
             Gallery with updated metadata
         """
-        log_d('data:\n{}'.format(pformat(data)))
+        log.debug('data:\n{}'.format(pformat(data)))
         if not append:
-            return cls._replace_gallery_data(g=g, data=data)
+            return cls.replace_gallery_data(g=g, data=data)
 
-        title = cls._get_title_from_data(data)
-        lang = cls._get_lang_from_data(data)
+        title = cls.get_title_from_data(data)
+        lang = cls.get_lang_from_data(data)
         title_parser_result = title_parser(title)
 
         # language
@@ -147,7 +143,7 @@ class EHen(CommenHen):
 
         new_metadata = {
             'title': title_parser_result['title'],
-            'artist': cls._get_g_artist(title_parser_result['artist'], data),
+            'artist': cls.get_g_artist(title_parser_result['artist'], data),
             'language': language,
         }
 
@@ -157,11 +153,11 @@ class EHen(CommenHen):
             new_metadata["pub_date"] = g_pub_date
 
         # gallery link
-        g_link = cls._get_g_link(gallery=g, data=data)
+        g_link = cls.get_g_link(gallery=g, data=data)
         if g_link is not None:
             new_metadata['link'] = g_link
 
-        log_d('New metadata:\n{}'.format(pformat(new_metadata)))
+        log.debug('New metadata:\n{}'.format(pformat(new_metadata)))
 
         for key in new_metadata:
             if not getattr(g, key):
@@ -180,7 +176,7 @@ class EHen(CommenHen):
                         tags=data['tags'][ns], g_tags=g.tags, namespace=ns)
                 else:
                     g.tags[ns] = data['tags'][ns]
-            log_d('old tags:\n{}\nnew tags:\n{}'.format(
+            log.debug('old tags:\n{}\nnew tags:\n{}'.format(
                 pformat(old_gallery_tags),
                 pformat(g.tags))
             )
@@ -197,7 +193,7 @@ class EHen(CommenHen):
             return 0
 
     @staticmethod
-    def _add_text_to_notif_bar(txt):
+    def add_text_to_notif_bar(txt):
         """Add text to notif bar."""
         try:
             app_constants.NOTIF_BAR.add_text(txt)
@@ -214,14 +210,14 @@ class EHen(CommenHen):
         text = response.text
         if 'image/gif' in content_type:
             err_msg = 'Provided exhentai credentials are incorrect!'
-            self._add_text_to_notif_bar(err_msg)
-            log_e('Provided exhentai credentials are incorrect!')
+            self.add_text_to_notif_bar(err_msg)
+            log.debug('Provided exhentai credentials are incorrect!')
             time.sleep(5)
             return False
         elif 'text/html' in content_type and 'Your IP address has been' in text:
-            self._add_text_to_notif_bar(
+            self.add_text_to_notif_bar(
                 "Your IP address has been temporarily banned from g.e-/exhentai")
-            log_e('Your IP address has been temp banned from g.e- and ex-hentai')
+            log.debug('Your IP address has been temp banned from g.e- and ex-hentai')
             time.sleep(5)
             return False
         elif 'text/html' in content_type and 'You are opening' in text:
@@ -233,14 +229,14 @@ class EHen(CommenHen):
         """Parse url into a list of gallery id and token."""
         gallery_id_token = regex.search('(?<=g/)([0-9]+)/([a-zA-Z0-9]+)', url)
         if not gallery_id_token:
-            log_e("Error extracting g_id and g_token from url: {}".format(url))
+            log.debug("Error extracting g_id and g_token from url: {}".format(url))
             return None
         gallery_id_token = gallery_id_token.group()
         gallery_id, gallery_token = gallery_id_token.split('/')
         parsed_url = [int(gallery_id), gallery_token]
         return parsed_url
 
-    def _get_response(self, payload, cookies=None):
+    def get_response(self, payload, cookies=None):
         """get response."""
         try:
             if cookies:
@@ -252,12 +248,12 @@ class EHen(CommenHen):
                 r = requests.post(self.e_url, json=payload, timeout=30, headers=self.HEADERS)
         except requests.ConnectionError as err:
             self.end_lock()
-            log_e("Could not fetch metadata: {}".format(err))
+            log.error("Could not fetch metadata: {}".format(err))
             raise app_constants.MetadataFetchFail("connection error")
         return r
 
     @classmethod
-    def _get_dict_metadata(cls, list_of_urls):
+    def get_dict_metadata(cls, list_of_urls):
         """get dict_metadata from list_of_urls.
 
         Returns:
@@ -271,7 +267,7 @@ class EHen(CommenHen):
         return dict_metadata
 
     @classmethod
-    def _get_gallery_id_list_from_urls(cls, list_of_urls):
+    def get_gallery_id_list_from_urls(cls, list_of_urls):
         """get gallery id list from urls."""
         gid_list = []
         for url in list_of_urls:
@@ -288,18 +284,18 @@ class EHen(CommenHen):
         """
         assert isinstance(list_of_urls, list)
         if len(list_of_urls) > 25:
-            log_e('More than 25 urls are provided. Aborting.')
+            log.error('More than 25 urls are provided. Aborting.')
             return None
 
         payload = {"method": "gdata", "gidlist": [], "namespace": 1}
-        dict_metadata = self._get_dict_metadata(list_of_urls=list_of_urls)
-        payload['gidlist'] = self._get_gallery_id_list_from_urls(list_of_urls=list_of_urls)
+        dict_metadata = self.get_dict_metadata(list_of_urls=list_of_urls)
+        payload['gidlist'] = self.get_gallery_id_list_from_urls(list_of_urls=list_of_urls)
 
         if not payload['gidlist']:
             return None
         #
         self.begin_lock()
-        r = self._get_response(payload=payload, cookies=cookies)
+        r = self.get_response(payload=payload, cookies=cookies)
         self.end_lock()
         if not self.handle_error(r):
             return 'error'
@@ -312,7 +308,7 @@ class EHen(CommenHen):
         return r.json(), dict_metadata
 
     @staticmethod
-    def _invalid_token_check(g_dict):
+    def invalid_token_check(g_dict):
         """check if token is invalid."""
         if 'error' in g_dict:
             return False
@@ -320,24 +316,24 @@ class EHen(CommenHen):
             return True
 
     @staticmethod
-    def _fix_titles(text):
+    def fix_titles(text):
         t = html.unescape(text)
         t = " ".join(t.split())
         return t
 
     @classmethod
-    def _filter_gallery_from_metadata_json(cls, metadata_json, dict_metadata):
+    def filter_gallery_from_metadata_json(cls, metadata_json, dict_metadata):
         """filter gallery from metadata json."""
         valid_galleries = []
         for gallery in metadata_json['gmetadata']:
             url = dict_metadata[gallery['gid']]
-            if cls._invalid_token_check(gallery):
+            if cls.invalid_token_check(gallery):
                 valid_galleries.append((url, gallery))
             else:
-                log_e("Error in received response with URL: {}".format(url))
+                log.error("Error in received response with URL: {}".format(url))
         return valid_galleries
 
-    @classmethod  # NOQA
+    @classmethod
     def parse_metadata(cls, metadata_json, dict_metadata):
         """Parse metadata.
 
@@ -347,16 +343,16 @@ class EHen(CommenHen):
         returns a dict with url as key and gallery metadata as value
         """
         parsed_metadata = {}
-        valid_galleries = cls._filter_gallery_from_metadata_json(
+        valid_galleries = cls.filter_gallery_from_metadata_json(
             metadata_json=metadata_json, dict_metadata=dict_metadata)
         for url, gallery in valid_galleries:
             new_gallery = {}
             try:
-                gallery['title_jpn'] = cls._fix_titles(gallery['title_jpn'])
-                gallery['title'] = cls._fix_titles(gallery['title'])
+                gallery['title_jpn'] = cls.fix_titles(gallery['title_jpn'])
+                gallery['title'] = cls.fix_titles(gallery['title'])
                 new_gallery['title'] = {'def': gallery['title'], 'jpn': gallery['title_jpn']}
             except KeyError:
-                gallery['title'] = cls._fix_titles(gallery['title'])
+                gallery['title'] = cls.fix_titles(gallery['title'])
                 new_gallery['title'] = {'def': gallery['title']}
 
             new_gallery['type'] = gallery['category']
@@ -380,7 +376,7 @@ class EHen(CommenHen):
     @classmethod
     def login(cls, user, password):
         """Log into g.e-h."""
-        log_i("Attempting EH Login")
+        log.info("Attempting EH Login")
         eh_c = {}
         exprops = ExProperties()
         cls_cookies = cls.check_existing_cookies(cls, exprops)
@@ -402,10 +398,10 @@ class EHen(CommenHen):
         eh_c.update(exh_c)
 
         if not cls.check_login(eh_c):
-            log_w("EH login failed")
+            log.warning("EH login failed")
             raise app_constants.WrongLogin
 
-        log_i("EH login succes")
+        log.info("EH login succes")
         exprops.cookies = eh_c
         exprops.username = user
         exprops.password = password
@@ -413,6 +409,45 @@ class EHen(CommenHen):
         cls.COOKIES.update(eh_c)
 
         return eh_c
+
+    @staticmethod
+    def no_hits_found_check(soup):
+        """return true if hits are found."""
+        if not soup:
+            log.error("There is no soup!")
+        f_div = soup.body.find_all('div')
+        for d in f_div:
+            if 'No hits found' in d.text:
+                return False
+        return True
+
+    def do_filesearch(self, filepath, cookies=None):
+        file_search_delay = 5
+        if "exhentai" in self.e_url_o:
+            f_url = "http://ul.exhentai.org/image_lookup.php/"
+        else:
+            f_url = "https://upload.e-hentai.org/image_lookup.php/"
+        if cookies:
+            self.check_cookie(cookies)
+            self._browser.session.cookies.update(self.COOKIES)
+        log.debug("searching with color img: {}".format(filepath))
+        files = {'sfile': open(filepath, 'rb')}
+        values = {'fs_similar': '1'}
+        if app_constants.INCLUDE_EH_EXPUNGED:
+            values['fs_exp'] = '1'
+        try:
+            r = self._browser.session.post(f_url, files=files, data=values)
+        except requests.ConnectionError:
+            time.sleep(file_search_delay + 3)
+            r = self._browser.session.post(f_url, files=files, data=values)
+
+        s = BeautifulSoup(r.text, "html.parser")
+        if "Please wait a bit longer between each file search." in "{}".format(s):
+            log.error("Retrying filesearch due to interval response with delay: {}".format(
+                file_search_delay))
+            time.sleep(file_search_delay)
+            s = self.do_filesearch(filepath, cookies=cookies)
+        return s
 
     def search(self, search_string, **kwargs):  # NOQA
         """Search ehentai for the provided string or list of hashes.
@@ -426,54 +461,15 @@ class EHen(CommenHen):
             search_string = [search_string]
 
         cookies = kwargs.pop('cookies', {})
-
-        def no_hits_found_check(soup):
-            """return true if hits are found."""
-            if not soup:
-                log_e("There is no soup!")
-            f_div = soup.body.find_all('div')
-            for d in f_div:
-                if 'No hits found' in d.text:
-                    return False
-            return True
-
-        def do_filesearch(filepath):
-            file_search_delay = 5
-            if "exhentai" in self.e_url_o:
-                f_url = "http://ul.exhentai.org/image_lookup.php/"
-            else:
-                f_url = "https://upload.e-hentai.org/image_lookup.php/"
-            if cookies:
-                self.check_cookie(cookies)
-                self._browser.session.cookies.update(self.COOKIES)
-            log_d("searching with color img: {}".format(filepath))
-            files = {'sfile': open(filepath, 'rb')}
-            values = {'fs_similar': '1'}
-            if app_constants.INCLUDE_EH_EXPUNGED:
-                values['fs_exp'] = '1'
-            try:
-                r = self._browser.session.post(f_url, files=files, data=values)
-            except requests.ConnectionError:
-                time.sleep(file_search_delay + 3)
-                r = self._browser.session.post(f_url, files=files, data=values)
-
-            s = BeautifulSoup(r.text, "html.parser")
-            if "Please wait a bit longer between each file search." in "{}".format(s):
-                log_e("Retrying filesearch due to interval response with delay: {}".format(
-                    file_search_delay))
-                time.sleep(file_search_delay)
-                s = do_filesearch(filepath)
-            return s
-
         found_galleries = {}
-        log_i('Initiating hash search on ehentai')
-        log_d("search strings: ".format(search_string))
+        log.info('Initiating hash search on ehentai')
+        log.debug("search strings: ".format(search_string))
         for h in search_string:
-            log_d('Hash search: {}'.format(h))
+            log.debug('Hash search: {}'.format(h))
             self.begin_lock()
             try:
                 if 'color' in kwargs:
-                    soup = do_filesearch(h)
+                    soup = self.do_filesearch(h)
                 else:
                     hash_url = self.e_url_o + '?f_shash='
                     hash_search = hash_url + h
@@ -485,7 +481,7 @@ class EHen(CommenHen):
                             hash_search, timeout=30, headers=self.HEADERS, cookies=self.COOKIES)
                     else:
                         r = requests.get(hash_search, timeout=30, headers=self.HEADERS)
-                    log_d("searching with greyscale img: {}".format(hash_search))
+                    log.debug("searching with greyscale img: {}".format(hash_search))
                     if not self.handle_error(r):
                         return 'error'
                     soup = BeautifulSoup(r.text, "html.parser")
@@ -495,10 +491,10 @@ class EHen(CommenHen):
                 raise app_constants.MetadataFetchFail("connection error")
             self.end_lock()
 
-            if not no_hits_found_check(soup):
-                log_e('No hits found with hash/image: {}'.format(h))
+            if not self.no_hits_found_check(soup):
+                log.error('No hits found with hash/image: {}'.format(h))
                 continue
-            log_i('Parsing html')
+            log.info('Parsing html')
             try:
                 if soup.body:
                     found_galleries[h] = []
@@ -509,19 +505,20 @@ class EHen(CommenHen):
                     elif type == 'table':
                         visible_galleries = soup.find_all('div', attrs={'class': 'it5'})
 
-                    log_i('Found {} visible galleries'.format(len(visible_galleries)))
+                    log.info('Found {} visible galleries'.format(len(visible_galleries)))
                     for gallery in visible_galleries:
                         title = gallery.text
                         g_url = gallery.a.attrs['href']
                         found_galleries[h].append((title, g_url))
             except AttributeError:
                 log.exception('Unparseable html')
-                log_d("\n{}\n".format(soup.prettify()))
+                log.debug("\n{}\n".format(soup.prettify()))
                 continue
 
         if found_galleries:
-            log_i('Found {} out of {} galleries'.format(len(found_galleries), len(search_string)))
+            log.info(
+                'Found {} out of {} galleries'.format(len(found_galleries), len(search_string)))
             return found_galleries
         else:
-            log_w('Could not find any galleries')
+            log.warning('Could not find any galleries')
             return {}
