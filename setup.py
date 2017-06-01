@@ -9,6 +9,7 @@ here = path.abspath(path.dirname(__file__))
 install_requires = [
     'appdirs',
     'beautifulsoup4',
+    'fake-useragent>=0.1.7',
     'pillow',
     'python-dateutil',
     'QtAwesome',
