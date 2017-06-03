@@ -3,8 +3,10 @@ from itertools import product
 from unittest import mock
 
 import pytest
+from packaging.version import Version
 
 from happypanda.utils import IMG_FILES
+from happypanda.__init__ import __version__ as happypanda_version
 
 
 @pytest.mark.parametrize(
@@ -120,6 +122,8 @@ def test_get_gallery_tags(tag_in_gallery, add_second_tag):
         assert res == {namespace: [tag]}
 
 
+@pytest.mark.skipif(
+    Version(happypanda_version) >= Version('1.1.1'), reason="deprecated on 1.1.1")
 def test_cleanup_dir():
     """test func."""
     root = mock.Mock()
