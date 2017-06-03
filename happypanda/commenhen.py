@@ -3,15 +3,18 @@ import requests
 import random
 import time
 import threading
+from argparse import Namespace
 
 from robobrowser import RoboBrowser
 from structlog import getLogger
-from fake_useragent import UserAgent
+import fake_useragent
 
-from . import app_constants
+try:
+    from happypanda import app_constants
+except ImportError:
+    from . import app_constants
 
 log = getLogger(__name__)
-ua = UserAgent()
 
 
 class CommenHen:
@@ -22,9 +25,22 @@ class CommenHen:
     QUEUE = []
     COOKIES = {}
     LAST_USED = time.time()
-    HEADERS = {'user-agent': ua.firefox}
     _QUEUE_LIMIT = 25
-    _browser = RoboBrowser(user_agent=HEADERS['user-agent'], parser='html.parser')
+
+    def __init__(self):
+        """init method."""
+        # prepare browser instance
+        try:
+            ua = fake_useragent.UserAgent()
+        except fake_useragent.errors.FakeUserAgentError as e:
+            log.debug("can't load fake user agent, use fixed one.")
+            ua = Namespace(
+                firefox='Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:16.0.1) Gecko/20121011 '
+                'Firefox/16.0.1')
+        self.HEADERS = {'user-agent': ua.firefox}
+        self._browser = RoboBrowser(user_agent=self.HEADERS['user-agent'], parser='html.parser')
+
+        super().__init__()
 
     def begin_lock(self):
         """begin lock."""
