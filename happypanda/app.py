@@ -1394,8 +1394,8 @@ class AppWindow(QMainWindow):
         Return code are following::
 
             0:Clean up succes(normal exit).
-            1:User close despite db activity detected(force exit).
-            2:User don't want to close the window(ignore exit).
+            3:User don't want to close the window(ignore exit).
+            4:User close despite db activity detected(force exit).
         """
         self.system_tray.hide()
         # watchers
