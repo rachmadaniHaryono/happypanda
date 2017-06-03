@@ -1,30 +1,23 @@
+#!/usr/bin/env python3
 """asmhentai module."""
-import logging
 from pprint import pformat
 
+import click
+from structlog import getLogger
+
 try:  # pragma: no cover
-    from app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
-    from dl_manager_obj import DLManagerObject
-    from downloader_obj import DownloaderObject
-    from hen_item import HenItem
+    from happypanda.app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
+    from happypanda.dl_manager_obj import DLManagerObject
+    from happypanda.downloader_obj import DownloaderObject
+    from happypanda.hen_item import HenItem
 except ImportError:
     from .app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
     from .dl_manager_obj import DLManagerObject
     from .downloader_obj import DownloaderObject
     from .hen_item import HenItem
 
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
-log_i = log.info
-""":meth:`logging.Logger.info`: Info logger func"""
-log_d = log.debug
-""":meth:`logging.Logger.debug`: Debug logger func"""
-log_w = log.warning
-""":meth:`logging.Logger.warning`: Warning logger func"""
-log_e = log.error
-""":meth:`logging.Logger.error`: Error logger func"""
-log_c = log.critical
-""":meth:`logging.Logger.critical`: Critical logger func"""
 
 
 class AsmManager(DLManagerObject):
@@ -92,7 +85,7 @@ class AsmManager(DLManagerObject):
             server_id (str): server id.
         """
         gallery_id, url_basename = link_parts
-        url = 'http://asmhentai.com/gallery/{gallery_id}/{url_basename}/'.format(
+        url = 'https://asmhentai.com/gallery/{gallery_id}/{url_basename}/'.format(
             gallery_id=gallery_id, url_basename=url_basename)
         self._browser.open(url)
         link_tags = self._browser.select('img.no_image')
@@ -129,7 +122,7 @@ class AsmManager(DLManagerObject):
         # link = '/gallery/168260/22/'
         links_parts = self._split_href_links_to_parts(links)
         server_id = self._get_server_id(links_parts[0])
-        log_d('Server id: {}'.format(server_id))
+        log.debug('Server id: {}'.format(server_id))
         imgs = list(map(
             lambda x:
             'http://images.asmhentai.com/{}/{}/{}.jpg'.format(server_id, x[0], x[1]),
@@ -198,7 +191,7 @@ class AsmManager(DLManagerObject):
         if category_value and category_value in VALID_GALLERY_CATEGORY:
             h_item.update_metadata(key='category', value=category_value)
         elif category_value:
-            log_w('Unknown manga category:{}'.format(category_value))
+            log.warning('Unknown manga category:{}'.format(category_value))
 
         return h_item
 
@@ -215,9 +208,9 @@ class AsmManager(DLManagerObject):
         h_item.download_type = DOWNLOAD_TYPE_OTHER
         h_item.gallery_url = g_url
         # ex/g.e
-        log_d("Opening {}".format(g_url))
+        log.debug("Opening {}".format(g_url))
         dict_metadata = self._get_metadata(g_url=g_url)
-        log_d('dict_metadata:\n{}'.format(pformat(dict_metadata)))
+        log.debug('dict_metadata:\n{}'.format(pformat(dict_metadata)))
         h_item.thumb_url = 'http:' + self._browser.select('.cover img')[0].get('src')
         h_item.fetch_thumb()
 
@@ -227,17 +220,36 @@ class AsmManager(DLManagerObject):
         h_item.name = dict_metadata['title']
 
         # get dl link
-        log_d("Getting download URL!")
+        log.debug("Getting download URL!")
         h_item.download_url = self._get_dl_urls(g_url=g_url)
 
         h_item = self._set_metadata(h_item=h_item, dict_metadata=dict_metadata)
 
         old_metadata = h_item.metadata
         h_item = self._set_ehen_metadata(h_item=h_item, dict_metadata=dict_metadata)
-        log_d('Old metadata\n{}New metadata\n{}'.format(
+        log.debug('Old metadata\n{}New metadata\n{}'.format(
             pformat(old_metadata),
             pformat(h_item.metadata)
         ))
 
         DownloaderObject.add_to_queue(h_item, self._browser.session)
         return h_item
+
+
+@click.group()
+@click.option('--debug/--no-debug', default=False)
+def cli(debug):
+    click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+
+
+@cli.command()
+@click.argument('urls', nargs=-1)
+def get_download_urls(urls):
+    manager = AsmManager()
+    for url in urls:
+        print('url:{}'.format(url))
+        urls = manager._get_dl_urls(g_url=url)
+        print('\n'.join(urls))
+
+if __name__ == '__main__':
+    cli()
