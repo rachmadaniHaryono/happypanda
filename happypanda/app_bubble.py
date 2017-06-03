@@ -30,7 +30,7 @@ class AppBubble(BasePopup):
 
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
 
-        self.hide_timer = QTimer(self)
+        self.hide_timer = QTimer()
         main_layout = QVBoxLayout(self.main_widget)
         self.title = QLabel()
         self.content = QLabel()
