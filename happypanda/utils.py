@@ -1245,19 +1245,6 @@ def get_gallery_tags(tags, g_tags, namespace):
     return g_tags
 
 
-def cleanup_dir(path):
-    """Cleanup recursive in dir.
-
-    Args:
-        path: Target path.
-    """
-    for root, dirs, files in scandir.walk(path, topdown=False):
-        for name in files:
-            os.remove(os.path.join(root, name))
-        for name in dirs:
-            os.rmdir(os.path.join(root, name))
-
-
 def get_chapter_title(path):
     """Get chapter title.
 
