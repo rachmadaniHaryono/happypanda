@@ -26,13 +26,22 @@ import pkg_resources
 import PyQt5
 import qtawesome as qta
 
-from . import settings
-from .database import db_constants
-from .__init__ import (
-    __version__ as vs,
-    __author_name__ as app_author_name,
-    __app_name__ as app_name
-)
+try:
+    from happypanda import settings
+    from happypanda.database import db_constants
+    from happypanda.__init__ import (
+        __version__ as vs,
+        __author_name__ as app_author_name,
+        __app_name__ as app_name
+    )
+except ImportError:
+    from . import settings
+    from .database import db_constants
+    from .__init__ import (
+        __version__ as vs,
+        __author_name__ as app_author_name,
+        __app_name__ as app_name
+    )
 
 # DEBUG variable.
 DEBUG = False
