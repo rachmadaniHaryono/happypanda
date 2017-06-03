@@ -20,7 +20,6 @@ from PyQt5.QtCore import QFile, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox
 import appdirs
-from send2trash import send2trash
 
 from .app import AppWindow
 from .database import db, db_constants
@@ -134,6 +133,27 @@ class Program:
         style = str(style_file.readAll(), 'utf-8')
         return style
 
+    def init_temp_dir(self):
+        """init temp dir."""
+        try:
+            temp_dir_parent_dir = os.path.dirname(app_constants.temp_dir)
+            temp_dir_parent_exists = os.path.isdir(temp_dir_parent_dir)
+            if not temp_dir_parent_exists:
+                os.mkdir(temp_dir_parent_dir)
+            if not os.path.isdir(app_constants.temp_dir):
+                os.mkdir(app_constants.temp_dir)
+            else:
+                self.log.debug('Tempdir exist, skip create')
+        except OSError as e:
+            self.log.exception('Create temp: Fail', exceptions=e)
+            try:
+                AppWindow.clean_up_temp_dir()
+                os.mkdir(app_constants.temp_dir)
+                self.log.debug('Temp dir created.')
+            except Exception as e:
+                self.log.exception("Empty temp: FAIL", exception=str(e))
+        self.log.debug('Tempdir: OK')
+
     def start_main_window(self, conn, application):
         """start main window.
 
@@ -151,23 +171,7 @@ class Program:
         style = self._get_window_stylesheet()
         application.setStyleSheet(style)
 
-        # create temp dir.
-        try:
-            temp_dir_parent_dir = os.path.dirname(app_constants.temp_dir)
-            temp_dir_parent_exists = os.path.isdir(temp_dir_parent_dir)
-            if not temp_dir_parent_exists:
-                os.mkdir(temp_dir_parent_dir)
-            os.mkdir(app_constants.temp_dir)
-        except OSError as e:
-            self.log.exception('Create temp: Fail', exceptions=e)
-            try:
-                send2trash(app_constants.temp_dir)
-                self.log.debug('Temp dir moved to trash.')
-                os.mkdir(app_constants.temp_dir)
-                self.log.debug('Temp dir created.')
-            except Exception as e:
-                self.log.exception("Empty temp: FAIL", exception=e)
-        self.log.debug('Create temp: OK')
+        self.init_temp_dir()
 
         if self.is_test:
             return application, window
