@@ -23,6 +23,7 @@ import traceback
 import qtawesome as qta
 import requests
 import structlog
+from send2trash import send2trash
 from PyQt5.QtCore import (
     QSize,
     QThread,
@@ -78,7 +79,6 @@ from .misc import center_widget
 from .sidebar_widget_frame import SideBarWidgetFrame
 from .single_gallery_choices import SingleGalleryChoices
 from .system_tray import SystemTray
-from .utils import cleanup_dir
 from .watchers import Watchers
 # menu
 from .gallery_context_menu import GalleryContextMenu
@@ -228,7 +228,8 @@ class AppWindow(QMainWindow):
         # next_view
         QShortcut(QKeySequence(QKeySequence.NextChild), self, self.switch_display)  # NOQA
         # open wiki
-        QShortcut(QKeySequence(QKeySequence.HelpContents), self, lambda: self._open_web_link('https://github.com/Pewpews/happypanda/wiki'))  # NOQA
+        wiki_link = 'https://github.com/Pewpews/happypanda/wiki'
+        QShortcut(QKeySequence(QKeySequence.HelpContents), self, lambda: self._open_web_link(wiki_link))  # NOQA
 
     def check_site_logins(self):
         """checking logins.
@@ -728,7 +729,7 @@ class AppWindow(QMainWindow):
         """
         "Args should be Search Enums"
         self.search_bar.setText(srch_string)
-        self.search_backward.setVisible(True)
+        self.search_back_btn.setVisible(True)
         args = []
         if app_constants.GALLERY_SEARCH_REGEX:
             args.append(app_constants.Search.Regex)
@@ -1377,10 +1378,10 @@ class AppWindow(QMainWindow):
     def clean_up_temp_dir():
         """clean temp up dir."""
         try:
-            cleanup_dir(path='temp')
-            log.debug('Flush temp on exit: OK')
-        except:
-            log.exception('Flush temp on exit: FAIL')
+            send2trash(app_constants.temp_dir)
+            log.debug('Clean up temp dir: OK')
+        except Exception as e:
+            log.exception('Clean up temp dir: Fail', exception=e)
 
     def cleanup_exit(self):
         """clean up when exit.
