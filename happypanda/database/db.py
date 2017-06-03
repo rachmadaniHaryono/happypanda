@@ -13,10 +13,12 @@
 
 import os
 import sqlite3
-import logging
+
+import structlog
+from funclog import funclog
 
 from . import db_constants
-log = logging.getLogger(__name__)
+log = structlog.getLogger(__name__)
 log_i = log.info
 log_d = log.debug
 log_w = log.warning
@@ -250,6 +252,7 @@ STRUCTURE_SCRIPT = \
     series_list_map_sql()
 
 
+@funclog(log)
 def global_db_convert(conn):
     """
     Takes care of converting tables and columns.
@@ -296,6 +299,7 @@ def global_db_convert(conn):
     return c
 
 
+@funclog(log)
 def add_db_revisions(old_db):
     """
     Adds specific DB revisions items.
@@ -316,6 +320,7 @@ def add_db_revisions(old_db):
     return
 
 
+@funclog(log)
 def create_db_path(db_path=db_constants.DB_PATH):
     head = os.path.split(db_path)[0]
     os.makedirs(head, exist_ok=True)
@@ -325,6 +330,7 @@ def create_db_path(db_path=db_constants.DB_PATH):
     return db_path
 
 
+@funclog(log)
 def check_db_version(conn):
     "Checks if DB version is allowed. Raises dialog if not"
     vs = "SELECT version FROM version"
@@ -343,6 +349,7 @@ def check_db_version(conn):
     return True
 
 
+@funclog(log)
 def init_db(path=db_constants.DB_PATH):
     """Initialises the DB. Returns a sqlite3 connection,
     which will be passed to the db thread.
@@ -416,7 +423,7 @@ class DBBase:
         "Same as cursor.execute"
         if not self._DB_CONN:
             raise db_constants.NoDatabaseConnection
-        log_d('DB Query: {}'.format(args).encode(errors='ignore'))
+        log_d('DB Query: {}'.format(args))
         if self._AUTO_COMMIT:
             try:
                 with self._DB_CONN:
@@ -431,7 +438,7 @@ class DBBase:
         "Same as cursor.executemany"
         if not self._DB_CONN:
             raise db_constants.NoDatabaseConnection
-        log_d('DB Query: {}'.format(args).encode(errors='ignore'))
+        log_d('DB Query: {}'.format(args))
         if self._AUTO_COMMIT:
             with self._DB_CONN:
                 return self._DB_CONN.executemany(*args)
