@@ -1,6 +1,5 @@
 """single manga view."""
-import logging
-
+import structlog
 from PyQt5.QtCore import (
     pyqtSignal,
     QModelIndex,
@@ -40,12 +39,7 @@ except ImportError:
         open_idx_data_first_chapter_when_double_clicked,
     )
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+log = structlog.getLogger(__name__)
 
 
 class SingleMangaView(QListView):
@@ -58,6 +52,12 @@ class SingleMangaView(QListView):
         super().__init__(parent)
         self.parent_widget = parent
         self.view_type = v_type
+
+        self.sort_model = filter_model if filter_model else SortFilterModel(self)
+        self.manga_delegate = GridDelegate(parent, self)
+        self.gallery_model = model
+        self.gallery_window = GalleryMetaWindow(parent if parent else self)
+
         self.setViewMode(self.IconMode)
         self.setResizeMode(self.Adjust)
         self.setWrapping(True)
@@ -71,25 +71,27 @@ class SingleMangaView(QListView):
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
+
         self.viewport().setAcceptDrops(True)
+
         self.setDropIndicatorShown(True)
         self.setDragDropMode(self.DragDrop)
-        self.sort_model = filter_model if filter_model else SortFilterModel(self)
-        self.manga_delegate = GridDelegate(parent, self)
         self.setItemDelegate(self.manga_delegate)
         self.setSpacing(app_constants.GRID_SPACING)
         self.setFlow(QListView.LeftToRight)
         self.setIconSize(QSize(self.manga_delegate.W, self.manga_delegate.H))
         self.setSelectionBehavior(self.SelectItems)
         self.setSelectionMode(self.ExtendedSelection)
-        self.gallery_model = model
+
         self.sort_model.change_model(self.gallery_model)
         self.sort_model.sort(0)
+
         self.setModel(self.sort_model)
+
         self.doubleClicked.connect(open_idx_data_first_chapter_when_double_clicked)
+
         self.setViewportMargins(0, 0, 0, 0)
 
-        self.gallery_window = GalleryMetaWindow(parent if parent else self)
         self.gallery_window.arrow_size = (10, 10,)
         self.clicked.connect(lambda idx: self.gallery_window.show_gallery(idx, self))
 
@@ -98,24 +100,22 @@ class SingleMangaView(QListView):
             self.sort_model.setSortRole(GalleryModel.TIME_ROLE)
         else:
             self.sort(self.current_sort)
+
         if app_constants.DEBUG:
-            def debug_print(a):
-                g = a.data(Qt.UserRole + 1)
-                try:
-                    print(g)
-                except:
-                    print("{}".format(g).encode(errors='ignore'))
-                # log_d(gallerydb.HashDB.gen_gallery_hash(g, 0, 'mid')['mid'])
+            self.clicked.connect(lambda a: log.debug('click', g=(a.data(Qt.UserRole + 1))))
 
-            self.clicked.connect(debug_print)
+        self.init_scroll()
 
+    def init_scroll(self):
+        """init scroll."""
         self.k_scroller = QScroller.scroller(self)
         self._scroll_speed_timer = QTimer(self)
-        self._scroll_speed_timer.timeout.connect(self._calculate_scroll_speed)
-        self._scroll_speed_timer.setInterval(500)  # ms
         self._old_scroll_value = 0
         self._scroll_zero_once = True
         self._scroll_speed = 0
+
+        self._scroll_speed_timer.timeout.connect(self._calculate_scroll_speed)
+        self._scroll_speed_timer.setInterval(500)  # ms
         self._scroll_speed_timer.start()
 
     @property
@@ -278,7 +278,7 @@ class SingleMangaView(QListView):
         for kwarg in kwargs:
             if self._set_sort(**kwarg):
                 return
-        log_i('Unknown name [{}]'.format(name))
+        log.info('Unknown name [{}]'.format(name))
 
     def contextMenuEvent(self, event):
         """context menu event."""
