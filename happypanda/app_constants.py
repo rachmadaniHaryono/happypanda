@@ -53,6 +53,7 @@ class OSName(enum.Enum):
     osx = 'darwin'
     windows = 'windows'
     linux = 'linux'
+    unknown = 'unknown'
 
 
 def _get_os_name():
@@ -65,6 +66,8 @@ def _get_os_name():
         return OSName.windows
     elif os.name == 'posix':
         return OSName.linux
+    else:
+        return OSName.unknown
 
 OS_NAME = _get_os_name()
 
