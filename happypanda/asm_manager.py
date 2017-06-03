@@ -6,12 +6,12 @@ import click
 from structlog import getLogger
 
 try:  # pragma: no cover
-    from happypanda.app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
+    from happypanda import app_constants
     from happypanda.dl_manager_obj import DLManagerObject
     from happypanda.downloader_obj import DownloaderObject
     from happypanda.hen_item import HenItem
 except ImportError:
-    from .app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
+    from . import app_constants
     from .dl_manager_obj import DLManagerObject
     from .downloader_obj import DownloaderObject
     from .hen_item import HenItem
@@ -186,9 +186,9 @@ class AsmManager(DLManagerObject):
                 h_item.update_metadata(key=key, value=value)
         # for hitem gallery value
         catg_val = dict_metadata.get('category', None)
-        category_dict = {vcatg.lower(): vcatg for vcatg in VALID_GALLERY_CATEGORY}
+        category_dict = {vcatg.lower(): vcatg for vcatg in app_constants.VALID_GALLERY_CATEGORY}
         category_value = category_dict.get(catg_val, catg_val)
-        if category_value and category_value in VALID_GALLERY_CATEGORY:
+        if category_value and category_value in app_constants.VALID_GALLERY_CATEGORY:
             h_item.update_metadata(key='category', value=category_value)
         elif category_value:
             log.warning('Unknown manga category:{}'.format(category_value))
@@ -205,7 +205,7 @@ class AsmManager(DLManagerObject):
             Download item
         """
         h_item = HenItem(self._browser.session)
-        h_item.download_type = DOWNLOAD_TYPE_OTHER
+        h_item.download_type = app_constants.DownloadType.other
         h_item.gallery_url = g_url
         # ex/g.e
         log.debug("Opening {}".format(g_url))
