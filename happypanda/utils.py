@@ -17,7 +17,6 @@ import datetime
 import os
 import subprocess
 import sys
-import logging
 import hashlib
 import shutil
 import uuid
@@ -31,6 +30,7 @@ import webbrowser
 
 from PyQt5.QtGui import QImage, qRgba
 from PIL import Image, ImageChops
+from structlog import getLogger
 
 try:  # pragma: no cover
     import app_constants
@@ -47,12 +47,7 @@ except ImportError:
     from .gmetafile import GMetafile
     from .pretty_delta import PrettyDelta
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+log = getLogger(__name__)
 
 
 def backup_database(db_path=db_constants.DB_PATH):
@@ -64,7 +59,7 @@ def backup_database(db_path=db_constants.DB_PATH):
     Returns:
         bool: Return True if backup succesful
     """
-    log_i("Perfoming database backup")
+    log.info("Perfoming database backup")
     date = "{}".format(datetime.datetime.today()).split(' ')[0]
     base_path, name = os.path.split(db_path)
     backup_dir = os.path.join(base_path, 'backup')
@@ -85,7 +80,7 @@ def backup_database(db_path=db_constants.DB_PATH):
             break
         except ValueError:
             current_try += 1
-    log_i("Database backup performed: {}".format(db_name))
+    log.info("Database backup performed: {}".format(db_name))
     return True
 
 
@@ -157,7 +152,7 @@ def move_files(path, dest=''):
             return path
     f = os.path.split(path)[1]
     new_path = os.path.join(dest, f)
-    log_i("Moving to: {}".format(new_path))
+    log.info("Moving to: {}".format(new_path))
     # need to unpack to make sure we get the corrct sep
     if new_path == os.path.join(*os.path.split(path)):
         return path
@@ -259,7 +254,7 @@ def generate_img_hash(src):
     chunk = 8129
     sha1 = hashlib.sha1()
     buffer = src.read(chunk)
-    log_d("Generating hash")
+    log.debug("Generating hash")
     while len(buffer) > 0:
         sha1.update(buffer)
         buffer = src.read(chunk)
@@ -345,7 +340,7 @@ def recursive_gallery_check(path):  # NOQA
                 if gallery_probability >= (len(files) * 0.8):
                     found_paths += 1
                     gallery_dirs.append(root)
-    log_i('Found {} in {}'.format(found_paths, path).encode(errors='ignore'))
+    log.info('Found {} in {}'.format(found_paths, path).encode(errors='ignore'))
     return gallery_dirs, gallery_arch
 
 
@@ -480,7 +475,7 @@ def open_chapter(chapterpath, archive=None):  # NOQA
                 f_img = [x for x in sorted(
                     con) if x.lower().endswith(IMG_FILES)]
                 if not f_img:
-                    log_w(
+                    log.warning(
                         'Extracting archive.. There are no images in the top-folder. ({})'.format(
                             archive
                         )
@@ -550,7 +545,7 @@ def open_chapter(chapterpath, archive=None):  # NOQA
     except:
         app_constants.NOTIF_BAR.add_text(
             "Could not open chapter for unknown reasons. Check happypanda.log!")
-        log_e('Could not open chapter {}'.format(
+        log.error('Could not open chapter {}'.format(
             os.path.split(chapterpath)[1]))
 
 
@@ -582,7 +577,7 @@ def get_gallery_img(gallery_or_path, chap_number=0):  # NOQA
     img_path = None
     if is_archive:
         try:
-            log_i('Getting image from archive')
+            log.info('Getting image from archive')
             zip = ArchiveFile(real_path)
             temp_path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
             os.mkdir(temp_path)
@@ -597,7 +592,7 @@ def get_gallery_img(gallery_or_path, chap_number=0):  # NOQA
         except app_constants.CreateArchiveFail:
             img_path = app_constants.NO_IMAGE_PATH
     elif os.path.isdir(real_path):
-        log_i('Getting image from folder')
+        log.info('Getting image from folder')
         first_img = sorted([img.name for img in scandir.scandir(
             real_path) if img.name.lower().endswith(tuple(IMG_FILES))])
         if first_img:
@@ -606,7 +601,7 @@ def get_gallery_img(gallery_or_path, chap_number=0):  # NOQA
     if img_path:
         return os.path.abspath(img_path)
     else:
-        log_e("Could not get gallery image")
+        log.error("Could not get gallery image")
 
 
 def tag_to_string(gallery_tag, simple=False):  # NOQA
@@ -822,7 +817,7 @@ def open_web_link(url):
     try:
         webbrowser.open_new_tab(url)
     except:
-        log_e('Could not open URL in browser')
+        log.error('Could not open URL in browser')
 
 
 def open_path(path, select=''):
@@ -833,25 +828,23 @@ def open_path(path, select=''):
         select: Argument for select flag on explorer.exe in Windows os
     """
     notif_bar_text = None
+    ac = app_constants
     try:
-        if app_constants.OS_NAME == 'darwin':
+        if ac.OS_NAME == ac.OSName.osx:
             subprocess.Popen(['open', path])
-        elif app_constants.OS_NAME == 'windows' and select:
+        elif ac.OS_NAME == ac.OSName.windows and select:
             subprocess.Popen(
                 r'explorer.exe /select,"{}"'.format(os.path.normcase(select)), shell=True)
-        elif app_constants.OS_NAME == 'windows':
+        elif ac.OS_NAME == ac.OSName.windows:
             os.startfile(path)
-        elif app_constants.OS_NAME == 'linux':
+        elif ac.OS_NAME == ac.OSName.linux:
             subprocess.Popen(('xdg-open', path))
         else:
-            notif_bar_text = (
-                "I don't know how you've managed to do this.. "
-                "If you see this, you're in deep trouble..."
-            )
-            log_e('Could not open path: Unknown os [{}]'.format(os.name))
-    except:
+            notif_bar_text = ('Error in opening path.')
+            log.error('Could not open path: Unknown os [{}]'.format(os.name))
+    except Exception as e:
         notif_bar_text = "Could not open specified location. It might not exist anymore."
-        log_e('Could not open path')
+        log.error('Could not open path', path=path, e=e)
     if notif_bar_text:
         app_constants.NOTIF_BAR.add_text(notif_bar_text)
 
@@ -896,7 +889,7 @@ def delete_path(path):
 
         if error:
             p = os.path.split(path)[1]
-            log_e('Failed to delete: {}:{}'.format(error, p))
+            log.error('Failed to delete: {}:{}'.format(error, p))
             app_constants.NOTIF_BAR.add_text(
                 'An error occured while trying to delete: {}'.format(error))
             s = False
@@ -1174,15 +1167,15 @@ def make_chapters(gallery_object):
     path = gallery_object.path
     metafile = GMetafile()
     try:
-        log_d('Listing dir...')
+        log.debug('Listing dir...')
         con = scandir.scandir(path)  # list all folders in gallery dir
-        log_i('Gallery source is a directory')
-        log_d('Sorting')
+        log.info('Gallery source is a directory')
+        log.debug('Sorting')
         chapters = sorted([sub.path for sub in con if sub.is_dir(
         ) or sub.name.endswith(ARCHIVE_FILES)])  # subfolders
         # if gallery has chapters divided into sub folders
         if len(chapters) != 0:
-            log_d('Chapters divided in folders..')
+            log.debug('Chapters divided in folders..')
             for ch in chapters:
                 chap = chap_container.create_chapter()
                 chap.title = title_parser(ch)['title']
@@ -1201,7 +1194,7 @@ def make_chapters(gallery_object):
     except NotADirectoryError:  # NOQA
         if path.endswith(ARCHIVE_FILES):
             gallery_object.is_archive = 1
-            log_i("Gallery source is an archive")
+            log.info("Gallery source is an archive")
             archive_g = sorted(check_archive(path))
             for g in archive_g:
                 chap = chap_container.create_chapter()
