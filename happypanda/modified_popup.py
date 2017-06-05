@@ -38,7 +38,6 @@ class ModifiedPopup(BasePopup):
         """init func."""
         super().__init__(parent)
         main_layout = QVBoxLayout()
-        main_layout.addWidget(
-            QLabel("Modified:\npath: {}\nID:{}".format(path, gallery_id)))
+        main_layout.addWidget(QLabel("Modified:\npath: {}\nID:{}".format(path, gallery_id)))
         self.main_widget.setLayout(main_layout)
         self.show()
