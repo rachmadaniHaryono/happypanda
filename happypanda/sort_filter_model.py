@@ -150,8 +150,10 @@ class SortFilterModel(QSortFilterProxyModel):
                     gallery = index.data(Qt.UserRole + 1)
                     try:
                         return self.gallery_search.result[gallery.id]
-                    except KeyError:
-                        pass
+                    except KeyError as e:
+                        log.debug('Error', e=e)
+                    except AttributeError as e:
+                        log.debug('Error', e=e)
                 else:
                     return True
         return False
