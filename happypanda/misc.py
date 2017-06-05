@@ -111,27 +111,3 @@ def show_widget(widget_obj, use_parent=True):
     else:
         raise NotImplementedError
     sys.exit(app.exec_())
-
-
-# def center_parent(parent, child):
-#   "centers child window in parent"
-#   centerparent = QPoint(
-#   		parent.x() + (parent.frameGeometry().width() -
-#   				 child.frameGeometry().width())//2,
-#   				parent.y() + (parent.frameGeometry().width() -
-#   				   child.frameGeometry().width())//2)
-#   desktop = QApplication.desktop()
-#   sg_rect = desktop.screenGeometry(desktop.screenNumber(parent))
-#   child_frame = child.frameGeometry()
-#
-#   if centerparent.x() < sg_rect.left():
-#   	centerparent.setX(sg_rect.left())
-#   elif (centerparent.x() + child_frame.width()) > sg_rect.right():
-#   	centerparent.setX(sg_rect.right() - child_frame.width())
-#
-#   if centerparent.y() < sg_rect.top():
-#   	centerparent.setY(sg_rect.top())
-#   elif (centerparent.y() + child_frame.height()) > sg_rect.bottom():
-#   	centerparent.setY(sg_rect.bottom() - child_frame.height())
-#
-#   child.move(centerparent)
