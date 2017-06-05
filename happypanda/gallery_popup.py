@@ -1,6 +1,4 @@
 """gallery popup."""
-import logging
-
 from PyQt5.QtCore import (
     Qt,
     pyqtSignal,
@@ -22,19 +20,6 @@ except ImportError:
     from .flow_layout import FlowLayout
     from .gallery_showcase_widget import GalleryShowcaseWidget
     from . import gallerydb
-
-log = logging.getLogger(__name__)
-""":class:`logging.Logger`: Logger for module."""
-log_i = log.info
-""":meth:`logging.Logger.info`: Info logger func"""
-log_d = log.debug
-""":meth:`logging.Logger.debug`: Debug logger func"""
-log_w = log.warning
-""":meth:`logging.Logger.warning`: Warning logger func"""
-log_e = log.error
-""":meth:`logging.Logger.error`: Error logger func"""
-log_c = log.critical
-""":meth:`logging.Logger.critical`: Critical logger func"""
 
 
 class GalleryPopup(BasePopup):
@@ -61,10 +46,8 @@ class GalleryPopup(BasePopup):
             raise NotImplementedError
         super().__init__(parent)
         self.setMaximumWidth(16777215)
-        assert isinstance(
-            tup_gallery, tuple), "Incorrect type received, expected tuple"
-        assert isinstance(tup_gallery[0], str) and isinstance(
-            tup_gallery[1], list)
+        assert isinstance(tup_gallery, tuple), "Incorrect type received, expected tuple"
+        assert isinstance(tup_gallery[0], str) and isinstance(tup_gallery[1], list)
         main_layout = QVBoxLayout()
         # todo make it scroll
         dummy = QWidget()
