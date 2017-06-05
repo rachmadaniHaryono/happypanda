@@ -22,9 +22,6 @@ try:
     from gallery_model import GalleryModel
     from grid_delegate import GridDelegate
     from sort_filter_model import SortFilterModel
-    from misc import (
-        open_idx_data_first_chapter_when_double_clicked,
-    )
 except ImportError:
     from . import (
         gallerydb,
@@ -35,9 +32,6 @@ except ImportError:
     from .gallery_model import GalleryModel
     from .grid_delegate import GridDelegate
     from .sort_filter_model import SortFilterModel
-    from .misc import (
-        open_idx_data_first_chapter_when_double_clicked,
-    )
 
 log = structlog.getLogger(__name__)
 
@@ -88,7 +82,7 @@ class SingleMangaView(QListView):
 
         self.setModel(self.sort_model)
 
-        self.doubleClicked.connect(open_idx_data_first_chapter_when_double_clicked)
+        self.doubleClicked.connect(lambda idx: idx.data(Qt.UserRole + 1).chapters[0].open())
 
         self.setViewportMargins(0, 0, 0, 0)
 
