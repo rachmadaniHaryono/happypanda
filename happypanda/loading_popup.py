@@ -41,13 +41,6 @@ class LoadingPopup(BasePopup):
         inner_layout_.addWidget(self.progress)
         self.main_widget.setLayout(inner_layout_)
         self.resize(300, 100)
-        # frect = self.frameGeometry()
-        #  frect.moveCenter(QDesktopWidget().availableGeometry().center())
-        #  self.move(parent.window().frameGeometry().topLeft() +
-        # 	parent.window().rect().center() -
-        # 	self.rect().center() - QPoint(self.rect().width(),0))
-        #  self.setAttribute(Qt.WA_DeleteOnClose)
-        # self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
     def setText(self, string):
         """setText."""
