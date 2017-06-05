@@ -292,12 +292,14 @@ class AppWindow(QMainWindow):
     def init_watchers(self):
         """init watchers."""
         self.watchers = Watchers()
-        self.watchers.gallery_handler.CREATE_SIGNAL.connect(
-            lambda path: self.gallery_populate([path]))
-        self.watchers.gallery_handler.MODIFIED_SIGNAL.connect(
-            lambda path, gallery: ModifiedPopup(path, gallery, self))
-        self.watchers.gallery_handler.MOVED_SIGNAL.connect(self.watcher_moved)
-        self.watchers.gallery_handler.DELETED_SIGNAL.connect(self.watcher_deleted)
+        self.watchers.gallery_handler.\
+            CREATE_SIGNAL.connect(lambda path: self.gallery_populate([path]))
+        self.watchers.gallery_handler.\
+            MODIFIED_SIGNAL.connect(lambda path, gallery: ModifiedPopup(path, gallery, self))
+        self.watchers.gallery_handler.\
+            MOVED_SIGNAL.connect(self.watcher_moved)
+        self.watchers.gallery_handler.\
+            DELETED_SIGNAL.connect(self.watcher_deleted)
 
     @staticmethod
     def normalize_first_time():
