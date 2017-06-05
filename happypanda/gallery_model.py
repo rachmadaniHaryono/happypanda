@@ -1,7 +1,5 @@
 """gallery model."""
-
-import logging
-
+import structlog
 from PyQt5.QtCore import (
     QAbstractTableModel,
     QDateTime,
@@ -17,8 +15,10 @@ from PyQt5.QtGui import (
 try:
     import app_constants
     import utils
+    from pretty_delta import PrettyDelta
     from star_rating import StarRating
 except ImportError:
+    from .pretty_delta import PrettyDelta
     from .star_rating import StarRating
     from . import (
         app_constants,
@@ -26,12 +26,7 @@ except ImportError:
     )
 
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+log = structlog.getLogger(__name__)
 
 
 class GalleryModel(QAbstractTableModel):
@@ -79,11 +74,81 @@ class GalleryModel(QAbstractTableModel):
         self._gallery_to_add = []
         self._gallery_to_remove = []
 
+        self.get_qdatetime = lambda v: QDateTime.fromString("{}".format(v), "yyyy-MM-dd HH:mm:ss")
+
     def status_b_msg(self, msg):
         """set status b msg."""
         self.STATUSBAR_MSG.emit(msg)
 
-    def data(self, index, role=Qt.DisplayRole):  # NOQA
+    def column_checker(self, current_column, current_gallery):
+        """column check."""
+        current_gallery_fav_value = u'\u2605' if current_gallery.fav == 1 else ''
+        column_sets = (
+            (self._TITLE, current_gallery.title),
+            (self._ARTIST, current_gallery.artist),
+            (self._TAGS, utils.tag_to_string(current_gallery.tags)),
+            (self._TYPE, current_gallery.type),
+            (self._FAV, current_gallery_fav_value),
+            (self._CHAPTERS, len(current_gallery.chapters)),
+            (self._LANGUAGE, current_gallery.language),
+            (self._LINK, current_gallery.link),
+            (self._DESCR, current_gallery.info),
+            (self._DATE_ADDED, self.get_qdatetime(current_gallery.date_added)),
+        )
+        for column_set in column_sets:
+            column, value = column_set
+            if current_column == column:
+                return value
+
+        if current_column == self._PUB_DATE:
+            qdate_g_pdt = self.get_qdatetime(current_gallery.pub_date)
+            if qdate_g_pdt.isValid():
+                return qdate_g_pdt
+            else:
+                return 'No date set'
+        log.debug('Unknown column', column=current_column)
+
+    @staticmethod
+    def get_tooltip_value(current_gallery):
+        """get tooltip value."""
+        add_bold = []
+        add_tips = []
+        if not current_gallery.last_read:
+            last_read_tips = 'Never!'
+        else:
+            last_read_tips = \
+                '{} ago'.format(PrettyDelta(current_gallery.last_read).format(use_int=True))
+
+        tooltip_sets = (
+            (app_constants.TOOLTIP_TITLE, '<b>Title:</b>', current_gallery.title),
+            (app_constants.TOOLTIP_AUTHOR, '<b>Author:</b>', current_gallery.artist),
+            (app_constants.TOOLTIP_CHAPTERS, '<b>Chapters:</b>', len(current_gallery.chapters)),
+            (app_constants.TOOLTIP_STATUS, '<b>Status:</b>', current_gallery.status),
+            (app_constants.TOOLTIP_TYPE, '<b>Type:</b>', current_gallery.type),
+            (app_constants.TOOLTIP_LANG, '<b>Language:</b>', current_gallery.language),
+            (app_constants.TOOLTIP_DESCR, '<b>Description:</b><br />', current_gallery.info),
+            (app_constants.TOOLTIP_TAGS, '<b>Tags:</b>',
+             utils.tag_to_string(current_gallery.tags)),
+            (app_constants.TOOLTIP_LAST_READ, '<b>Last read:</b>', last_read_tips),
+            (app_constants.TOOLTIP_TIMES_READ, '<b>Times read:</b>', current_gallery.times_read),
+            (app_constants.TOOLTIP_PUB_DATE, '<b>Publication Date:</b>',
+             '{}'.format(current_gallery.pub_date).split(' ')[0]),
+            (app_constants.TOOLTIP_DATE_ADDED, '<b>Date added:</b>',
+             '{}'.format(current_gallery.date_added).split(' ')[0]),
+        )
+        for tooltip_set in tooltip_sets:
+            cond, bold, tips = tooltip_set
+            if cond:
+                add_bold.append(bold)
+                add_tips.append(tips)
+
+        tips = list(zip(add_bold, add_tips))
+        tooltip = []
+        for tip in tips:
+            tooltip.append("{} {}<br />".format(tip[0], tip[1]))
+        return ''.join(tooltip)
+
+    def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return QVariant()
         if index.row() >= len(self._data) or index.row() < 0:
@@ -93,159 +158,28 @@ class GalleryModel(QAbstractTableModel):
         current_gallery = self._data[current_row]
         current_column = index.column()
 
-        def column_checker():
-            if current_column == self._TITLE:
-                title = current_gallery.title
-                return title
-            elif current_column == self._ARTIST:
-                artist = current_gallery.artist
-                return artist
-            elif current_column == self._TAGS:
-                tags = utils.tag_to_string(current_gallery.tags)
-                return tags
-            elif current_column == self._TYPE:
-                type = current_gallery.type
-                return type
-            elif current_column == self._FAV:
-                if current_gallery.fav == 1:
-                    return u'\u2605'
-                else:
-                    return ''
-            elif current_column == self._CHAPTERS:
-                return len(current_gallery.chapters)
-            elif current_column == self._LANGUAGE:
-                return current_gallery.language
-            elif current_column == self._LINK:
-                return current_gallery.link
-            elif current_column == self._DESCR:
-                return current_gallery.info
-            elif current_column == self._DATE_ADDED:
-                g_dt = "{}".format(current_gallery.date_added)
-                qdate_g_dt = QDateTime.fromString(g_dt, "yyyy-MM-dd HH:mm:ss")
-                return qdate_g_dt
-            elif current_column == self._PUB_DATE:
-                g_pdt = "{}".format(current_gallery.pub_date)
-                qdate_g_pdt = QDateTime.fromString(g_pdt, "yyyy-MM-dd HH:mm:ss")
-                if qdate_g_pdt.isValid():
-                    return qdate_g_pdt
-                else:
-                    return 'No date set'
-
-        # TODO: name all these roles and put them in app_constants...
-
-        if role == Qt.DisplayRole:
-            return column_checker()
-        # for artist searching
-        if role == self.ARTIST_ROLE:
-            artist = current_gallery.artist
-            return artist
-
-        if role == Qt.DecorationRole:
-            pixmap = current_gallery.profile
-            return pixmap
-
-        if role == Qt.BackgroundRole:
-            bg_color = QColor(242, 242, 242)
-            # assigned but never used.
-            # bg_brush = QBrush(bg_color)
-            return bg_color
-
-        if app_constants.GRID_TOOLTIP and role == Qt.ToolTipRole:
-            add_bold = []
-            add_tips = []
-            if app_constants.TOOLTIP_TITLE:
-                add_bold.append('<b>Title:</b>')
-                add_tips.append(current_gallery.title)
-            if app_constants.TOOLTIP_AUTHOR:
-                add_bold.append('<b>Author:</b>')
-                add_tips.append(current_gallery.artist)
-            if app_constants.TOOLTIP_CHAPTERS:
-                add_bold.append('<b>Chapters:</b>')
-                add_tips.append(len(current_gallery.chapters))
-            if app_constants.TOOLTIP_STATUS:
-                add_bold.append('<b>Status:</b>')
-                add_tips.append(current_gallery.status)
-            if app_constants.TOOLTIP_TYPE:
-                add_bold.append('<b>Type:</b>')
-                add_tips.append(current_gallery.type)
-            if app_constants.TOOLTIP_LANG:
-                add_bold.append('<b>Language:</b>')
-                add_tips.append(current_gallery.language)
-            if app_constants.TOOLTIP_DESCR:
-                add_bold.append('<b>Description:</b><br />')
-                add_tips.append(current_gallery.info)
-            if app_constants.TOOLTIP_TAGS:
-                add_bold.append('<b>Tags:</b>')
-                add_tips.append(utils.tag_to_string(current_gallery.tags))
-            if app_constants.TOOLTIP_LAST_READ:
-                add_bold.append('<b>Last read:</b>')
-                add_tips.append(
-                    '{} ago'.format(
-                        utils.get_date_age(current_gallery.last_read)
-                    ) if current_gallery.last_read else "Never!"
-                )
-            if app_constants.TOOLTIP_TIMES_READ:
-                add_bold.append('<b>Times read:</b>')
-                add_tips.append(current_gallery.times_read)
-            add_bold, add_tips = self._add_tips_and_bold_for_date_attr(
-                add_bold=add_bold, add_tips=add_tips, current_gallery=current_gallery)
-
-            tooltip = ""
-            tips = list(zip(add_bold, add_tips))
-            for tip in tips:
-                tooltip += "{} {}<br />".format(tip[0], tip[1])
-            return tooltip
-
-        if role == self.GALLERY_ROLE:
-            return current_gallery
-
-        # favorite satus
-        if role == self.FAV_ROLE:
-            return current_gallery.fav
-
-        if role == self.DATE_ADDED_ROLE:
-            return self._get_qdatetime_from_string(current_gallery.date_added)
-
-        if role == self.PUB_DATE_ROLE and current_gallery.pub_date:
-            return self._get_qdatetime_from_string(current_gallery.pub_date)
-
-        if role == self.TIMES_READ_ROLE:
-            return current_gallery.times_read
-
-        if role == self.LAST_READ_ROLE and current_gallery.last_read:
-            return self._get_qdatetime_from_string(current_gallery.last_read)
-
-        if role == self.TIME_ROLE:
-            return current_gallery.qtime
-
-        if role == self.RATING_ROLE:
-            return StarRating(current_gallery.rating)
-
-        return None
-
-    @staticmethod
-    def _add_tips_and_bold_for_date_attr(add_bold, add_tips, current_gallery):
-        """add tips var and bold var arg."""
-        val_packs = [
-            (
-                app_constants.TOOLTIP_PUB_DATE,
-                '<b>Publication Date:</b>', current_gallery.pub_date
-            ),
-            (
-                app_constants.TOOLTIP_DATE_ADDED,
-                '<b>Date added:</b>', current_gallery.date_added
-            ),
-        ]
-        for constant, bold, tips in val_packs:
-            if constant:
-                add_bold.append(bold)
-                add_tips.append('{}'.format(tips).split(' ')[0])
-        return add_bold, add_tips
-
-    @staticmethod
-    def _get_qdatetime_from_string(value):
-        """get QDateTime from string with pre-defined format."""
-        return QDateTime.fromString("{}".format(value), "yyyy-MM-dd HH:mm:ss")
+        role_sets = (
+            (role == Qt.DisplayRole, self.column_checker(current_column, current_gallery)),
+            (role == self.ARTIST_ROLE, current_gallery.artist),
+            (role == Qt.DecorationRole, current_gallery.profile),
+            (role == Qt.BackgroundRole, QColor(242, 242, 242)),
+            (role == Qt.ToolTipRole and app_constants.GRID_TOOLTIP,
+             self.get_tooltip_value(current_gallery)),
+            (role == self.GALLERY_ROLE, current_gallery),
+            (role == self.FAV_ROLE, current_gallery.fav),
+            (role == self.DATE_ADDED_ROLE, self.get_qdatetime(current_gallery.date_added)),
+            (role == self.PUB_DATE_ROLE and current_gallery.pub_date,
+             self.get_qdatetime(current_gallery.pub_date)),
+            (role == self.TIMES_READ_ROLE, current_gallery.times_read),
+            (role == self.LAST_READ_ROLE and current_gallery.last_read,
+             self.get_qdatetime(current_gallery.last_read)),
+            (role == self.TIME_ROLE, current_gallery.qtime),
+            (role == self.RATING_ROLE, StarRating(current_gallery.rating)),
+        )
+        for role_set in role_sets:
+            cond, value = role_set
+            if cond:
+                return value
 
     def rowCount(self, index=QModelIndex()):
         """row count."""
