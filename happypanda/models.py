@@ -139,12 +139,23 @@ class TagsMappings(BaseModel):
         db_column='namespace_id', null=True, rel_model=Namespaces, to_field='namespace_id')
     tag = ForeignKeyField(db_column='tag_id', null=True, rel_model=Tags, to_field='tag_id')
     tags_mappings = PrimaryKeyField(db_column='tags_mappings_id', null=True)
+    sibling = ForeignKeyField('self', null=True, related_name='sibling')
 
     class Meta:
         db_table = 'tags_mappings'
         indexes = (
             (('namespace', 'tag'), True),
         )
+
+
+class ParentTagsMappings(BaseModel):
+
+    child = ForeignKeyField(Tags, related_name='child')
+    parent = ForeignKeyField(Tags, related_name='parent')
+
+    class Meta:
+        db_table = 'parent_tags_mapping'
+        indexes = ((('child', 'parent'), True),)
 
 
 class SeriesTagsMap(BaseModel):
