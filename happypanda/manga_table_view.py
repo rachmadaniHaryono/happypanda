@@ -16,14 +16,8 @@ from PyQt5.QtWidgets import (
 )
 try:
     from common_view import CommonView, handle_keypress_event_on_manga_view
-    from misc import (
-        open_idx_data_first_chapter_when_double_clicked,
-    )
 except ImportError:
     from .common_view import CommonView, handle_keypress_event_on_manga_view
-    from .misc import (
-        open_idx_data_first_chapter_when_double_clicked,
-    )
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -66,7 +60,7 @@ class MangaTableView(QTableView):
         palette.setColor(palette.HighlightedText, QColor('black'))
         self.setPalette(palette)
         self.setIconSize(QSize(0, 0))
-        self.doubleClicked.connect(open_idx_data_first_chapter_when_double_clicked)
+        self.doubleClicked.connect(lambda idx: idx.data(Qt.UserRole + 1).chapters[0].open())
         self.grabGesture(Qt.SwipeGesture)
         self.k_scroller = QScroller.scroller(self)
 
