@@ -53,7 +53,6 @@ class UniqueInfoModel(QSortFilterProxyModel):
     def __init__(self, gallerymodel, role, parent=None):
         """init."""
         super().__init__(parent)
-        log.debug('gallery model', v=gallerymodel, type=type(gallerymodel))
         self.setSourceModel(NoTooltipModel(gallerymodel, parent))
         self._unique = set()
         self._unique_role = role
