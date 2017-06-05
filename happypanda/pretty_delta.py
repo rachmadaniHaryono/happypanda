@@ -40,16 +40,21 @@ class PrettyDelta:
         """
         return a / b, a % b
 
-    def format(self):
+    def format(self, use_int=False):
         """Pretty delta Format.
+
+        Args:
+            int: integer rounding the value.
 
         Returns:
             str: readable pretty delta datetime.
         """
         for period in ['year', 'month', 'day', 'hour', 'minute', 'second']:
             n = getattr(self, period)
-            if n > 0.9:
+            if n > 0.9 and not use_int:
                 return self.formatn(n, period)
+            elif n > 0.9 and use_int:
+                return self.formatn(int(n), period)
         return "0 second"
 
     @staticmethod
