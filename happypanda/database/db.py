@@ -19,11 +19,6 @@ from funclog import funclog
 
 from . import db_constants
 log = structlog.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
 
 
 def hashes_sql(cols=False):
@@ -258,7 +253,7 @@ def global_db_convert(conn):
     Takes care of converting tables and columns.
     Don't use this method directly. Use the add_db_revisions instead.
     """
-    log_i('Converting tables')
+    log.info('Converting tables')
     c = conn.cursor()
     series, series_cols = series_sql(True)
     chapters, chapters_cols = chapters_sql(True)
@@ -282,20 +277,20 @@ def global_db_convert(conn):
     t_d['list'] = list_cols
     t_d['series_list_map'] = series_list_map_cols
 
-    log_d('Checking table structures')
+    log.debug('Checking table structures')
     c.executescript(STRUCTURE_SCRIPT)
     conn.commit()
 
-    log_d('Checking columns')
+    log.debug('Checking columns')
     for table in t_d:
         for col in t_d[table]:
             try:
                 c.execute('ALTER TABLE {} ADD COLUMN {}'.format(table, col))
-                log_d('Added new column: {}'.format(col))
+                log.debug('Added new column', col=col)
             except:
-                log_d('Skipped column: {}'.format(col))
+                log.debug('Skipped column', col=col)
     conn.commit()
-    log_d('Commited DB changes')
+    log.debug('Commited DB changes')
     return c
 
 
@@ -305,14 +300,14 @@ def add_db_revisions(old_db):
     Adds specific DB revisions items.
     Note: pass a path to db
     """
-    log_i('Converting DB')
+    log.info('Converting DB')
     conn = sqlite3.connect(old_db, check_same_thread=False)
     conn.row_factory = sqlite3.Row
 
-    log_i('Converting tables and columns')
+    log.info('Converting tables and columns')
     c = global_db_convert(conn)
 
-    log_d('Updating DB version')
+    log.debug('Updating DB version')
     c.execute('UPDATE version SET version=? WHERE 1',
               (db_constants.CURRENT_DB_VERSION,))
     conn.commit()
@@ -336,14 +331,16 @@ def check_db_version(conn):
     vs = "SELECT version FROM version"
     c = conn.cursor()
     c.execute(vs)
-    log_d('Checking DB Version')
+    log.debug('Checking DB Version')
     db_vs = c.fetchone()
     db_constants.REAL_DB_VERSION = db_vs[0]
     if db_vs[0] not in db_constants.DB_VERSION:
         msg = "Incompatible database"
-        log_c(msg)
-        log_d('Local database version: {}\nProgram database version:{}'.format(
-            db_vs[0], db_constants.CURRENT_DB_VERSION))
+        log.critical(msg)
+        log.debug(
+            'version info',
+            local_database_version=db_vs[0],
+            program_database_version=db_constants.CURRENT_DB_VERSION)
         # ErrorQueue.put(msg)
         return False
     return True
@@ -423,7 +420,7 @@ class DBBase:
         "Same as cursor.execute"
         if not self._DB_CONN:
             raise db_constants.NoDatabaseConnection
-        log_d('DB Query: {}'.format(args))
+        log.debug('DB Query', args=args)
         if self._AUTO_COMMIT:
             try:
                 with self._DB_CONN:
@@ -438,7 +435,7 @@ class DBBase:
         "Same as cursor.executemany"
         if not self._DB_CONN:
             raise db_constants.NoDatabaseConnection
-        log_d('DB Query: {}'.format(args))
+        log.debug('DB Query', args=args)
         if self._AUTO_COMMIT:
             with self._DB_CONN:
                 return self._DB_CONN.executemany(*args)
