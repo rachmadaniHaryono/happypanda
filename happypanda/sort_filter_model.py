@@ -1,6 +1,7 @@
 """sort filter model."""
-import logging
 import pickle
+
+from structlog import getLogger
 
 from PyQt5.QtCore import (
     pyqtSignal,
@@ -24,12 +25,7 @@ except ImportError:
     from .gallery_model import GalleryModel
     from .gallery_search_obj import GallerySearchObject
 
-log = logging.getLogger(__name__)
-log_i = log.info
-log_d = log.debug
-log_w = log.warning
-log_e = log.error
-log_c = log.critical
+log = getLogger(__name__)
 
 
 class SortFilterModel(QSortFilterProxyModel):
