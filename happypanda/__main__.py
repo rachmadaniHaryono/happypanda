@@ -79,6 +79,66 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
+def init_logger(log_path, debug_log_path, dev, debug):
+    """init logging.
+
+    Args:
+        log_path: Path for log file for normal logging.
+        debug_log_path: Path for log file for debug logging.
+        dev (bool): Set logging for dev mode.
+        debug (bool: Set logging for debug mode.)
+    """
+    log_handlers = []
+    log_level = logging.INFO
+    file_logger = None
+    if dev:
+        log_handlers.append(logging.StreamHandler())
+    if debug:
+        print("{} created at \n{}".format(
+            os.path.basename(debug_log_path),
+            os.path.dirname(debug_log_path)
+        ))
+        os.makedirs(os.path.dirname(debug_log_path), exist_ok=True)
+
+        file_logger = logging.FileHandler(debug_log_path, encoding='utf-8')
+        log_handlers.append(file_logger)
+        log_level = logging.DEBUG
+        app_constants.DEBUG = True
+    else:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        log_handlers.append(logging.handlers.RotatingFileHandler(
+            log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
+
+    # Fix for logging not working
+    # clear the handlers first before adding these custom handler
+    # http://stackoverflow.com/a/15167862
+    logging.getLogger('').handlers = []
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
+        datefmt='%d-%m %H:%M',
+        handlers=log_handlers)
+    log = getLogger()
+    log.debug('logger initiated', logfile=file_logger, log_level=log_level)
+
+
+def get_log_path():
+    """get info level log path, and debug level path."""
+    log_dir = appdirs.user_log_dir(app_name, app_author_name)
+    log_path = os.path.join(log_dir, 'happypanda.log')
+    debug_log_path = os.path.join(log_dir, 'happypanda_debug.log')
+    return log_path, debug_log_path
+
+
+def set_requests_certificate():
+    """Set requests certificate, if exist by set environment variable."""
+    log = getLogger()
+    if os.path.exists('cacert.pem'):
+        req_cert_file = os.path.join(os.getcwd(), "cacert.pem")
+        os.environ["REQUESTS_CA_BUNDLE"] = req_cert_file
+        log.debug('change REQUESTS_CA_BUNDLE environ', file=req_cert_file)
+
+
 class Program:
     """Program class.
 
@@ -98,19 +158,9 @@ class Program:
         """init func."""
         self.args = args
         self.is_test = test
-        # set log path
-        log_dir = appdirs.user_log_dir(app_name, app_author_name)
-        self.log_path = os.path.join(log_dir, 'happypanda.log')
-        self.debug_log_path = os.path.join(log_dir, 'happypanda_debug.log')
+        self.log = getLogger(__name__)
 
-    def set_requests_certificate(self):
-        """Set requests certificate, if exist by set environment variable."""
-        if os.path.exists('cacert.pem'):
-            req_cert_file = os.path.join(os.getcwd(), "cacert.pem")
-            os.environ["REQUESTS_CA_BUNDLE"] = req_cert_file
-            self.log.debug('change REQUESTS_CA_BUNDLE environ', file=req_cert_file)
-
-    def _get_window_stylesheet(self):
+    def get_window_stylesheet(self):
         """create window style.
 
         Returns:
@@ -168,7 +218,7 @@ class Program:
         window = AppWindow(self.args.exceptions)
 
         # styling
-        style = self._get_window_stylesheet()
+        style = self.get_window_stylesheet()
         application.setStyleSheet(style)
 
         self.init_temp_dir()
@@ -177,57 +227,6 @@ class Program:
             return application, window
 
         return application.exec_()
-
-    @staticmethod
-    def create_log_file(path):
-        """create log file.
-
-        taken and modified from http://stackoverflow.com/a/12517490/1766261
-
-        Args:
-            path: Path of the log file.
-        """
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
-    @staticmethod
-    def init_logger(log_path, debug_log_path, dev, debug):
-        """init logging.
-
-        Args:
-            log_path: Path for log file for normal logging.
-            debug_log_path: Path for log file for debug logging.
-            dev (bool): Set logging for dev mode.
-            debug (bool: Set logging for debug mode.)
-        """
-        log_handlers = []
-        log_level = logging.INFO
-        if dev:
-            log_handlers.append(logging.StreamHandler())
-        if debug:
-            print("{} created at \n{}".format(
-                os.path.basename(debug_log_path),
-                os.path.dirname(debug_log_path)
-            ))
-            Program.create_log_file(debug_log_path)
-
-            file_logger = logging.FileHandler(debug_log_path, encoding='utf-8')
-            log_handlers.append(file_logger)
-            log_level = logging.DEBUG
-            app_constants.DEBUG = True
-        else:
-            Program.create_log_file(log_path)
-            log_handlers.append(logging.handlers.RotatingFileHandler(
-                log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
-
-        # Fix for logging not working
-        # clear the handlers first before adding these custom handler
-        # http://stackoverflow.com/a/15167862
-        logging.getLogger('').handlers = []
-        logging.basicConfig(
-            level=log_level,
-            format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
-            datefmt='%d-%m %H:%M',
-            handlers=log_handlers)
 
     def uncaught_exceptions(self, ex_type, ex, tb):
         """Uncaught exceptions.
@@ -310,15 +309,6 @@ class Program:
         Returns:
             int: Return code.
         """
-        self.init_logger(
-            log_path=self.log_path,
-            debug_log_path=self.debug_log_path,
-            dev=self.args.dev,
-            debug=self.args.dev)
-        self.log = getLogger(__name__)
-
-        self.set_requests_certificate()
-
         if self.args.exceptions:
             sys.excepthook = self.uncaught_exceptions
 
@@ -343,14 +333,13 @@ class Program:
 
         self.log.info(
             'Starting', app_name=app_name, app_version=app_version, debug=self.args.debug)
+        self.log.info(
+            'Status', platform_system=platform.system(), platform_release=platform.release())
+
         if self.args.debug:
             sys.displayhook = pprint.pprint
 
         app_constants.load_icons()
-
-        self.log.info(
-            'Status', app_name=app_name, app_version=app_version,
-            platform_system=platform.system(), platform_release=platform.release())
 
         # start database and main window
         conn = self.handle_database(application)
@@ -365,8 +354,23 @@ class Program:
 def main():
     """main function."""
     exit_code = app_constants.ExitCode.restart_code
+    args = parse_args(sys.argv[1:])
+
+    # logging
+    log_path, debug_log_path = get_log_path()
+    logger_kwargs = {
+        'log_path': log_path,
+        'debug_log_path': debug_log_path,
+        'dev': args.dev,
+        "debug": args.debug}
+    init_logger(**logger_kwargs)
+    log = getLogger(__name__)
+    log.debug('args', v=args)
+    log.debug('logger', **logger_kwargs)
+
+    set_requests_certificate()
+
     while exit_code == app_constants.ExitCode.restart_code:
-        args = parse_args(sys.argv[1:])
         program = Program(args=args)
         exit_code = program.run()
 
