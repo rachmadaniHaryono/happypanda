@@ -30,6 +30,7 @@ class EHen(CommenHen):
 
     def __init__(self, cookies=None):
         """init func."""
+        super().__init__()
         self.cookies = cookies
         self.e_url = "http://g.e-hentai.org/api.php"
         self.e_url_o = "http://g.e-hentai.org/"
@@ -325,6 +326,12 @@ class EHen(CommenHen):
     def filter_gallery_from_metadata_json(cls, metadata_json, dict_metadata):
         """filter gallery from metadata json."""
         valid_galleries = []
+        error = metadata_json.get('error', None)
+        if error is not None:
+            log.error('metadata_json error', e=error)
+            return valid_galleries
+        else:
+            log.debug('metadata_json', v=metadata_json)
         for gallery in metadata_json['gmetadata']:
             url = dict_metadata[gallery['gid']]
             if cls.invalid_token_check(gallery):
