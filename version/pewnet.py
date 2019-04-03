@@ -1496,8 +1496,8 @@ class EHen(CommenHen):
 
                     log_i('Found {} visible galleries'.format(len(visible_galleries)))
                     for gallery in visible_galleries:
-                        title = gallery.div.a.text
-                        g_url = gallery.div.a.attrs['href']
+                        title = gallery.a.div.text
+                        g_url = gallery.a.attrs['href']
                         found_galleries[h].append((title,g_url))
             except AttributeError:
                 log.exception('Unparseable html')
