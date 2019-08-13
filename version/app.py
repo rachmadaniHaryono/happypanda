@@ -289,7 +289,7 @@ class AppWindow(QMainWindow):
                 log_d('Checking Update')
                 time.sleep(1.5)
                 try:
-                    r = requests.get("https://raw.githubusercontent.com/Pewpews/happypanda/master/VS.txt")
+                    r = requests.get("https://raw.githubusercontent.com/Kramoule/happypanda/master/VS.txt")
                     a = r.text
                     vs = a.strip()
                     self.UPDATE_CHECK.emit(vs)
