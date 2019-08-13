@@ -926,14 +926,18 @@ import re as regex
 def title_parser(title):
     "Receives a title to parse. Returns dict with 'title', 'artist' and language"
     log_d("Parsing title: {}".format(title))
+
+    #If title is not absolute, then it's not a pathname and we allow a "/" inside it
+    if(os.path.isabs(title)):
+        title = os.path.basename(title)
     title = " ".join(title.split())
-    if '/' in title:
-        try:
-            title = os.path.split(title)[1]
-            if not title:
-                title = title
-        except IndexError:
-            pass
+    # if '/' in title:
+    #     try:
+    #         title = os.path.split(title)[1]
+    #         if not title:
+    #             title = title
+    #     except IndexError:
+    #         pass
 
     for x in ARCHIVE_FILES:
         if title.endswith(x):
