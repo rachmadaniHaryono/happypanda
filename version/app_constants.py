@@ -1,4 +1,4 @@
-﻿#This file is part of Happypanda.
+#This file is part of Happypanda.
 #Happypanda is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
 #the Free Software Foundation, either version 2 of the License, or
@@ -654,7 +654,7 @@ ABOUT =\
 <li>Various python libraries (see github repo)</li>
 </ul>
 <p>Contributors (github):
-rachmadaniHaryono (big thanks!), nonamethanks, ImoutoChan, Moshidesu, peaceanpizza, utterbull, LePearlo</p>
+rachmadaniHaryono (big thanks!), nonamethanks, ImoutoChan, Moshidesu, peaceanpizza, utterbull, LePearlo, Kramoule</p>
 
 </body></html>
 	""".format(vs, db_constants.CURRENT_DB_VERSION)
