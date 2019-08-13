@@ -1,4 +1,4 @@
-﻿#"""
+#"""
 #This file is part of Happypanda.
 #Happypanda is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -1193,7 +1193,7 @@ class HashDB(DBBase):
             try:
                 if gallery.is_archive:
                     raise NotADirectoryError
-                imgs = sorted([x.path for x in scandir.scandir(chap.path) if x.path.endswith(utils.IMG_FILES)])
+                imgs = sorted([x.path for x in scandir.scandir(chap.path) if x.path.lower().endswith(utils.IMG_FILES)])
                 pages = {}
                 for n, i in enumerate(imgs):
                     pages[n] = i
