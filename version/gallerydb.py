@@ -1963,10 +1963,10 @@ class ChaptersContainer:
         chap = self[number]
         if chap.in_archive:
             _archive = utils.ArchiveFile(chap.gallery.path)
-            chap.pages = len([x for x in _archive.dir_contents(chap.path) if x.endswith(IMG_FILES)])
+            chap.pages = len([x for x in _archive.dir_contents(chap.path) if x.lower().endswith(IMG_FILES)])
             _archive.close()
         else:
-            chap.pages = len([x for x in scandir.scandir(chap.path) if x.path.endswith(IMG_FILES)])
+            chap.pages = len([x for x in scandir.scandir(chap.path) if x.path.lower().endswith(IMG_FILES)])
 
         execute(ChapterDB.update_chapter, True, self, [chap.number])
         return True

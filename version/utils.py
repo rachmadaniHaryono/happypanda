@@ -1265,14 +1265,14 @@ def make_chapters(gallery_object):
                 chap.title = title_parser(ch)['title']
                 chap.path = os.path.join(path, ch)
                 metafile.update(GMetafile(chap.path))
-                chap.pages = len([x for x in scandir.scandir(chap.path) if x.name.endswith(IMG_FILES)])
+                chap.pages = len([x for x in scandir.scandir(chap.path) if x.name.lower().endswith(IMG_FILES)])
 
         else: #else assume that all images are in gallery folder
             chap = chap_container.create_chapter()
             chap.title = title_parser(os.path.split(path)[1])['title']
             chap.path = path
             metafile.update(GMetafile(path))
-            chap.pages = len([x for x in scandir.scandir(path) if x.name.endswith(IMG_FILES)])
+            chap.pages = len([x for x in scandir.scandir(path) if x.name.lower().endswith(IMG_FILES)])
 
     except NotADirectoryError:
         if path.endswith(ARCHIVE_FILES):
