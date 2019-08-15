@@ -1960,6 +1960,7 @@ class ChaptersContainer:
         "Returns status on success"
         if self.parent.dead_link:
             return False
+        execute(HashDB.del_gallery_hashes, True, self.parent.id)
         chap = self[number]
         if chap.in_archive:
             _archive = utils.ArchiveFile(chap.gallery.path)
