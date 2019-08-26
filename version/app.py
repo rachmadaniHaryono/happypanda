@@ -303,7 +303,7 @@ class AppWindow(QMainWindow):
                 if len(vs) < 10:
                     self.notification_bar.begin_show()
                     self.notification_bar.add_text("Version {} of Happypanda is".format(vs) + " available. Click here to update!", False)
-                    self.notification_bar.clicked.connect(lambda: utils.open_web_link('https://github.com/Pewpews/happypanda/releases'))
+                    self.notification_bar.clicked.connect(lambda: utils.open_web_link('https://github.com/Kramoule/happypanda/releases'))
                     self.notification_bar.set_clickable(True)
                 else:
                     self.notification_bar.add_text("An error occurred while checking for new version")
