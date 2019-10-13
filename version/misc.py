@@ -235,6 +235,8 @@ class SortMenu(QMenu):
         s_title.triggered.connect(functools.partial(self.new_sort.emit, 'title'))
         s_artist = self.sort_actions.addAction(QAction("Author", self.sort_actions, checkable=True))
         s_artist.triggered.connect(functools.partial(self.new_sort.emit, 'artist'))
+        s_group = self.sort_actions.addAction(QAction("Group", self.sort_actions, checkable=True))
+        s_group.triggered.connect(functools.partial(self.new_sort.emit, 'group'))
         s_date = self.sort_actions.addAction(QAction("Date Added", self.sort_actions, checkable=True))
         s_date.triggered.connect(functools.partial(self.new_sort.emit, 'date_added'))
         s_pub_d = self.sort_actions.addAction(QAction("Date Published", self.sort_actions, checkable=True))
@@ -249,6 +251,7 @@ class SortMenu(QMenu):
         self.addAction(asc_desc_act)
         self.addSeparator()
         self.addAction(s_artist)
+        self.addAction(s_group)
         self.addAction(s_date)
         self.addAction(s_pub_d)
         self.addAction(s_last_read)
@@ -273,6 +276,8 @@ class SortMenu(QMenu):
                 check_key(act, 'title')
             elif act.text() == 'Author':
                 check_key(act, 'artist')
+            elif act.text() == 'Group':
+                check_key(act, 'group')
             elif act.text() == 'Date Added':
                 check_key(act, 'date_added')
             elif act.text() == 'Date Published':

@@ -418,14 +418,15 @@ class GalleryModel(QAbstractTableModel):
     """
     GALLERY_ROLE = Qt.UserRole + 1
     ARTIST_ROLE = Qt.UserRole + 2
-    FAV_ROLE = Qt.UserRole + 3
-    DATE_ADDED_ROLE = Qt.UserRole + 4
-    PUB_DATE_ROLE = Qt.UserRole + 5
-    TIMES_READ_ROLE = Qt.UserRole + 6
-    LAST_READ_ROLE = Qt.UserRole + 7
-    TIME_ROLE = Qt.UserRole + 8
-    RATING_ROLE = Qt.UserRole + 9
-    RATING_COUNT = Qt.UserRole + 10
+    GROUP_ROLE = Qt.UserRole + 3
+    FAV_ROLE = Qt.UserRole + 4
+    DATE_ADDED_ROLE = Qt.UserRole + 5
+    PUB_DATE_ROLE = Qt.UserRole + 6
+    TIMES_READ_ROLE = Qt.UserRole + 7
+    LAST_READ_ROLE = Qt.UserRole + 8
+    TIME_ROLE = Qt.UserRole + 9
+    RATING_ROLE = Qt.UserRole + 10
+    RATING_COUNT = Qt.UserRole + 11
 
     ROWCOUNT_CHANGE = pyqtSignal()
     STATUSBAR_MSG = pyqtSignal(str)
@@ -443,6 +444,7 @@ class GalleryModel(QAbstractTableModel):
         self.CUSTOM_STATUS_MSG.connect(self.status_b_msg)
         self._TITLE = app_constants.TITLE
         self._ARTIST = app_constants.ARTIST
+        self._GROUP = app_constants.GROUP
         self._TAGS = app_constants.TAGS
         self._TYPE = app_constants.TYPE
         self._FAV = app_constants.FAV
@@ -476,9 +478,21 @@ class GalleryModel(QAbstractTableModel):
             if current_column == self._TITLE:
                 title = current_gallery.title
                 return title
-            elif current_column == self._ARTIST:
-                artist = current_gallery.artist
-                return artist
+            elif current_column == self._ARTIST or current_column == self._GROUP:
+                # When artist name is "Circle (artist)", this will get only the artist
+                a = regex.findall('((?<=\() *[^\)]+( +\S+)* *(?=\)))', current_gallery.artist)
+                try:
+                    artist = a[0][0].strip()
+                except IndexError:
+                    artist = current_gallery.artist
+                if current_column == self._ARTIST:
+                    return artist
+                else:
+                    if current_gallery.artist.replace(artist,'') == '':
+                        group = ''
+                    else:
+                        group = current_gallery.artist.replace('({})'.format(artist),'').strip()
+                    return group
             elif current_column == self._TAGS:
                 tags = utils.tag_to_string(current_gallery.tags)
                 return tags
@@ -514,10 +528,24 @@ class GalleryModel(QAbstractTableModel):
 
         if role == Qt.DisplayRole:
             return column_checker()
-        # for artist searching
-        if role == self.ARTIST_ROLE:
-            artist = current_gallery.artist
-            return artist
+        # for artist and group searching
+        if role == self.ARTIST_ROLE or role == self.GROUP_ROLE:
+            
+            # When artist name is "Circle (artist)", this will get only the artist
+            a = regex.findall('((?<=\() *[^\)]+( +\S+)* *(?=\)))', current_gallery.artist)
+            try:
+                artist = a[0][0].strip()
+            except IndexError:
+                artist = current_gallery.artist
+
+            if role == self.ARTIST_ROLE:
+                return artist
+            else:
+                if current_gallery.artist.replace(artist,'') == '':
+                    group = ''
+                else:
+                    group = current_gallery.artist.replace('({})'.format(artist),'').strip()
+                return group
 
         if role == Qt.DecorationRole:
             pixmap = current_gallery.profile
@@ -630,6 +658,8 @@ class GalleryModel(QAbstractTableModel):
                 return 'Title'
             elif section == self._ARTIST:
                 return 'Author'
+            elif section == self._GROUP:
+                return 'Group'
             elif section == self._TAGS:
                 return 'Tags'
             elif section == self._TYPE:
@@ -1301,6 +1331,10 @@ class MangaView(QListView):
                 self.sort_model.setSortRole(GalleryModel.ARTIST_ROLE)
                 self.sort_model.sort(0, Qt.AscendingOrder)
                 self.current_sort = 'artist'
+            elif name == 'group':
+                self.sort_model.setSortRole(GalleryModel.GROUP_ROLE)
+                self.sort_model.sort(0, Qt.AscendingOrder)
+                self.current_sort = 'group'
             elif name == 'date_added':
                 self.sort_model.setSortRole(GalleryModel.DATE_ADDED_ROLE)
                 self.sort_model.sort(0, Qt.DescendingOrder)
