@@ -19,11 +19,18 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QFile, Qt
 from PyQt5.QtGui import QFontDatabase
 
-from database import db, db_constants
-import app
-import app_constants
-import gallerydb
-import utils
+try:
+    from database import db, db_constants
+    import app
+    import app_constants
+    import gallerydb
+    import utils
+except ImportError:
+    from .database import db, db_constants
+    from . import app
+    from . import app_constants
+    from . import gallerydb
+    from . import utils
 
 
 # IMPORTANT STUFF
