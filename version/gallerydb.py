@@ -1538,10 +1538,10 @@ class Gallery:
     tags: List[str]
     pub_date: Optional[datetime]
     date_added: datetime
-    last_read: Any # DOnt know
+    last_read: Any  # DOnt know
     times_read: int
     hashes: List
-    exed: Any # Dont really know for now
+    exed: Any  # Dont really know for now
     valid: bool
 
     _chapters: ChaptersContainer
@@ -1890,7 +1890,9 @@ class Gallery:
                     utils.move_files(chap.path, os.path.join(self.path, tail))
 
     def __lt__(self, other):
-        return self.id < other.id
+        if hasattr(other, 'id'):
+            return self.id < other.id
+        return super().__lt__(other)
 
     def __str__(self):
         s = ""
@@ -1911,8 +1913,16 @@ class Chapter:
     pages -> chapter pages
     in_archive -> 1 if the chapter path is in an archive else 0
     """
+    parent: ChaptersContainer
+    gallery: Gallery
+    title: Union[str, List[str]]  # based on docstring of Gallery
+    path: Union[str, 'os.PathLike']
+    number: int
+    pages: int
+    in_archive: Literal[0, 1]
 
-    def __init__(self, parent, gallery, number=0, path='', pages=0, in_archive=0, title=''):
+    def __init__(self, parent: ChaptersContainer, gallery: Gallery, number: int = 0,
+                 path: Union[str, 'os.PathLike'] = '', pages: int = 0, in_archive: Literal[0, 1] = 0, title: str = ''):
         self.parent = parent
         self.gallery = gallery
         self.title = title
@@ -1922,33 +1932,35 @@ class Chapter:
         self.in_archive = in_archive
 
     def __lt__(self, other):
-        return self.number < other.number
+        if hasattr(other, 'number'):
+            return self.number < other.number
+        return super().__lt__(other)
 
     def __str__(self):
         s = """
-        Chapter: {}
-        Title: {}
-        Path: {}
-        Pages: {}
-        in_archive: {}
-        """.format(self.number, self.title, self.path, self.pages, self.in_archive)
+        Chapter: {0.number}
+        Title: {0.title}
+        Path: {0.path}
+        Pages: {0.pages}
+        in_archive: {0.in_archive}
+        """.format(self)
         return s
 
     @property
-    def next_chapter(self):
-        try:
+    def next_chapter(self) -> Optional[Chapter]:
+        if self.number + 1 < len(self.parent):
             return self.parent[self.number + 1]
-        except KeyError:
+        else:
             return None
 
     @property
-    def previous_chapter(self):
-        try:
+    def previous_chapter(self) -> Optional[Chapter]:
+        if self.number - 1 >= 0:
             return self.parent[self.number - 1]
-        except KeyError:
+        else:
             return None
 
-    def open(self, stat_msg=True):
+    def open(self, stat_msg: bool = True) -> None:
         if stat_msg:
             txt = "Opening chapter {} of {}".format(self.number + 1, self.gallery.title)
             app_constants.STAT_MSG_METHOD(txt)
