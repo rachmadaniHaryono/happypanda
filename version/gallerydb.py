@@ -16,7 +16,7 @@ from __future__ import annotations
 import datetime
 import os
 import enum
-from typing import Any, Callable
+from typing import Any, Callable, List
 
 import scandir
 import threading
@@ -1070,7 +1070,7 @@ class HashDB(DBBase):
     """
 
     @classmethod
-    def find_gallery(cls, hashes):
+    def find_gallery(cls, hashes: List):
         assert isinstance(hashes, list)
         gallery_ids = {}
         hash_status = []
@@ -1098,8 +1098,9 @@ class HashDB(DBBase):
             g_id = None
             h_match_count = 0
             for g in gallery_ids:
-                if gallery_ids[g] > h_match_count:
-                    h_match_count = gallery_ids[h]
+                gallery_id = gallery_ids[g]
+                if gallery_id > h_match_count:
+                    h_match_count = gallery_id
                     g_id = g
             if g_id:
                 weak_gallery = Gallery()
