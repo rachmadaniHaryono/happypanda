@@ -11,9 +11,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
-
+import sqlite3
 import sys, logging, logging.handlers, os, argparse, platform, scandir
 import traceback
+from typing import Optional
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QFile, Qt
@@ -134,7 +135,7 @@ def start(test=False):
     app_constants.load_icons()
     log_i('Happypanda Version {}'.format(app_constants.vs))
     log_i('OS: {} {}\n'.format(platform.system(), platform.release()))
-    conn = None
+    conn: Optional[sqlite3.dbapi2.Connection] = None
     try:
         conn = db.init_db()
         log_d('Init DB Conn: OK')
@@ -158,7 +159,7 @@ def start(test=False):
             log_d('Normal Exit App: OK')
             sys.exit()
 
-    def start_main_window(conn):
+    def start_main_window(conn: sqlite3.dbapi2.Connection):
         db.DBBase._DB_CONN = conn
         # if args.test:
         #	import threading, time
