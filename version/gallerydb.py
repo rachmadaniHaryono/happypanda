@@ -27,15 +27,26 @@ from dateutil import parser as dateparser
 
 from PyQt5.QtCore import QObject, pyqtSignal, QTime
 
-from utils import (today, ArchiveFile, generate_img_hash, delete_path,
-                     ARCHIVE_FILES, get_gallery_img, IMG_FILES)
-from database import db_constants
-from database import db
-from database.db import DBBase
-from executors import Executors
+try:
+    from utils import (today, ArchiveFile, generate_img_hash, delete_path,
+                         ARCHIVE_FILES, get_gallery_img, IMG_FILES)
+    from database import db_constants
+    from database import db
+    from database.db import DBBase
+    from executors import Executors
 
-import app_constants
-import utils
+    import app_constants
+    import utils
+except ImportError:
+    from .utils import (today, ArchiveFile, generate_img_hash, delete_path,
+                         ARCHIVE_FILES, get_gallery_img, IMG_FILES)
+    from .database import db_constants
+    from .database import db
+    from .database.db import DBBase
+    from .executors import Executors
+
+    from . import app_constants
+    from . import utils
 
 log = logging.getLogger(__name__)
 log_i = log.info
