@@ -45,13 +45,22 @@ from PyQt5.QtWidgets import (QListView, QFrame, QLabel,
                              QWidget, QHeaderView, QTableView, QApplication,
                              QMessageBox, QActionGroup, QScroller, QStackedLayout)
 
-from executors import Executors
-import gallerydb
-import app_constants
-import misc
-import gallerydialog
-import io_misc
-import utils
+try:
+    from executors import Executors
+    import gallerydb
+    import app_constants
+    import misc
+    import gallerydialog
+    import io_misc
+    import utils
+except ImportError:
+    from .executors import Executors
+    from . import gallerydb
+    from . import app_constants
+    from . import misc
+    from . import gallerydialog
+    from . import io_misc
+    from . import utils
 
 log = logging.getLogger(__name__)
 log_i = log.info
