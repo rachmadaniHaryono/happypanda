@@ -1,16 +1,16 @@
-#"""
-#This file is part of Happypanda.
-#Happypanda is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 2 of the License, or
-#any later version.
-#Happypanda is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#You should have received a copy of the GNU General Public License
-#along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
-#"""
+# """
+# This file is part of Happypanda.
+# Happypanda is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# any later version.
+# Happypanda is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
+# """
 
 import sys, logging, logging.handlers, os, argparse, platform, scandir
 import traceback
@@ -25,7 +25,8 @@ import app_constants
 import gallerydb
 import utils
 
-#IMPORTANT STUFF
+
+# IMPORTANT STUFF
 def start(test=False):
     app_constants.APP_RESTART_CODE = -123456789
 
@@ -40,15 +41,15 @@ def start(test=False):
         os.environ["REQUESTS_CA_BUNDLE"] = os.path.join(os.getcwd(), "cacert.pem")
 
     parser = argparse.ArgumentParser(prog='Happypanda',
-                                  description='A manga/doujinshi manager with tagging support')
+                                     description='A manga/doujinshi manager with tagging support')
     parser.add_argument('-d', '--debug', action='store_true',
-                     help='happypanda_debug_log.log will be created in main directory')
+                        help='happypanda_debug_log.log will be created in main directory')
     parser.add_argument('-v', '--version', action='version',
-                     version='Happypanda v{}'.format(app_constants.vs))
+                        version='Happypanda v{}'.format(app_constants.vs))
     parser.add_argument('-e', '--exceptions', action='store_true',
-                     help='Disable custom excepthook')
+                        help='Disable custom excepthook')
     parser.add_argument('-x', '--dev', action='store_true',
-                     help='Development Switch')
+                        help='Development Switch')
 
     args = parser.parse_args()
     log_handlers = []
@@ -71,18 +72,19 @@ def start(test=False):
         try:
             with open(log_path, 'x') as f:
                 pass
-        except FileExistsError: pass
+        except FileExistsError:
+            pass
         log_handlers.append(logging.handlers.RotatingFileHandler(
-            log_path, maxBytes=1000000*10, encoding='utf-8', backupCount=2))
+            log_path, maxBytes=1000000 * 10, encoding='utf-8', backupCount=2))
 
     # Fix for logging not working
     # clear the handlers first before adding these custom handler
     # http://stackoverflow.com/a/15167862
     logging.getLogger('').handlers = []
     logging.basicConfig(level=log_level,
-                    format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
-                    datefmt='%d-%m %H:%M',
-                    handlers=tuple(log_handlers))
+                        format='%(asctime)-8s %(levelname)-6s %(name)-6s %(message)s',
+                        datefmt='%d-%m %H:%M',
+                        handlers=tuple(log_handlers))
 
     log = logging.getLogger(__name__)
     log_i = log.info
@@ -104,7 +106,7 @@ def start(test=False):
         os.environ.putenv("QT_DEVICE_PIXEL_RATIO", "auto")
 
     effects = [Qt.UI_AnimateCombo, Qt.UI_FadeMenu, Qt.UI_AnimateMenu,
-            Qt.UI_AnimateTooltip, Qt.UI_FadeTooltip]
+               Qt.UI_AnimateTooltip, Qt.UI_FadeTooltip]
     for effect in effects:
         QApplication.setEffectEnabled(effect)
 
@@ -151,7 +153,7 @@ def start(test=False):
 
     def start_main_window(conn):
         db.DBBase._DB_CONN = conn
-        #if args.test:
+        # if args.test:
         #	import threading, time
         #	ser_list = []
         #	for x in range(5000):
@@ -171,7 +173,7 @@ def start(test=False):
         #	while not done:
         #		try:
         #			if threading.active_count() > 5000:
-            #				thread_list = []
+        #				thread_list = []
         #				done = True
         #			else:
         #				thread_list.append(
@@ -188,9 +190,9 @@ def start(test=False):
 
         # styling
         d_style = app_constants.default_stylesheet_path
-        u_style =  app_constants.user_stylesheet_path
+        u_style = app_constants.user_stylesheet_path
 
-        if len(u_style) is not 0:
+        if len(u_style) > 0:
             try:
                 style_file = QFile(u_style)
                 log_i('Select userstyle: OK')
@@ -231,7 +233,7 @@ def start(test=False):
         msg_box.setWindowIcon(QIcon(app_constants.APP_ICO_PATH))
         msg_box.setText('Incompatible database!')
         msg_box.setInformativeText("Do you want to upgrade to newest version?" +
-                             " It shouldn't take more than a second. Don't start a new instance!")
+                                   " It shouldn't take more than a second. Don't start a new instance!")
         msg_box.setIcon(QMessageBox.Critical)
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg_box.setDefaultButton(QMessageBox.Yes)
@@ -251,6 +253,7 @@ def start(test=False):
         return start_main_window(conn)
     else:
         return db_upgrade()
+
 
 if __name__ == '__main__':
     current_exit_code = 0
