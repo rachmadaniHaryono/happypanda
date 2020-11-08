@@ -1506,7 +1506,7 @@ class Gallery:
     type <- str (Manga? Doujin? Other?)
     language <- str
     status <- "unknown", "completed" or "ongoing"
-    tags <- list of str
+    tags <- list of str???? probably meant dict with str keys
     pub_date <- date
     date_added <- date, will be defaulted to today if not specified
     last_read <- timestamp (e.g. time.time())
@@ -1535,7 +1535,7 @@ class Gallery:
     type: str
     language: str
     status: Literal['unknown', 'completed', 'ongoing', '']
-    tags: List[str]
+    tags: Dict[str, Any]
     pub_date: Optional[datetime]
     date_added: datetime
     last_read: Any  # DOnt know
@@ -2204,7 +2204,7 @@ class AdminDB(QObject):
         return True
 
     def rebuild_database(self):
-        "Rebuilds database"
+        """Rebuilds database"""
         log_i("Initiating database rebuild")
         utils.backup_database()
         log_i("Getting galleries...")
