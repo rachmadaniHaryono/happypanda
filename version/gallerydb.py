@@ -518,7 +518,7 @@ class GalleryDB(DBBase):
                 else:
                     paths = [x.path for x in gallery.chapters]
                     [app_constants.TEMP_PATH_IGNORE.append(os.path.normcase(x)) for x in paths]  # to avoid data race?
-                    for path in paths:
+                    for chap, path in enumerate(paths):
                         s = delete_path(path)
                         if not s:
                             log_e('Failed to delete chapter {}:{}, {}'.format(chap,
