@@ -1,16 +1,16 @@
-#"""
-#This file is part of Happypanda.
-#Happypanda is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 2 of the License, or
-#any later version.
-#Happypanda is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#You should have received a copy of the GNU General Public License
-#along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
-#"""
+# """
+# This file is part of Happypanda.
+# Happypanda is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# any later version.
+# Happypanda is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
+# """
 
 import datetime
 import os
@@ -22,6 +22,9 @@ import hashlib
 import shutil
 import uuid
 import re
+from typing import ClassVar, Union, List
+
+import webbrowser
 import scandir
 import rarfile
 import json
@@ -30,7 +33,7 @@ import functools
 import time
 
 from PyQt5.QtGui import QImage, qRgba
-from PIL import Image,ImageChops
+from PIL import Image, ImageChops
 
 try:
     import app_constants
@@ -46,7 +49,7 @@ log_w = log.warning
 log_e = log.error
 log_c = log.critical
 
-IMG_FILES = ('.jpg','.bmp','.png','.gif', '.jpeg')
+IMG_FILES = ('.jpg', '.bmp', '.png', '.gif', '.jpeg')
 ARCHIVE_FILES = ('.zip', '.cbz', '.rar', '.cbr')
 FILE_FILTER = '*.zip *.cbz *.rar *.cbr'
 IMG_FILTER = '*.jpg *.bmp *.png *.jpeg'
@@ -56,19 +59,20 @@ if not app_constants.unrar_tool_path:
     FILE_FILTER = '*.zip *.cbz'
     ARCHIVE_FILES = ('.zip', '.cbz')
 
+
 class GMetafile:
     def __init__(self, path=None, archive=''):
         self.metadata = {
-            "title":'',
-            "artist":'',
-            "type":'',
-            "tags":{},
-            "language":'',
-            "pub_date":'',
-            "link":'',
-            "info":'',
+            "title": '',
+            "artist": '',
+            "type": '',
+            "tags": {},
+            "language": '',
+            "pub_date": '',
+            "link": '',
+            "info": '',
 
-            }
+        }
         self.files = []
         if path is None:
             return
@@ -102,13 +106,13 @@ class GMetafile:
             for ns in ezedata['tags']:
                 self.metadata['tags'][ns.capitalize()] = ezedata['tags'][ns]
             self.metadata['tags']['default'] = self.metadata['tags'].pop('Misc', [])
-            self.metadata['artist'] = self.metadata['tags']['Artist'][0].capitalize()\
+            self.metadata['artist'] = self.metadata['tags']['Artist'][0].capitalize() \
                 if 'Artist' in self.metadata['tags'] else t_parser['artist']
             self.metadata['language'] = ezedata['language']
             d = ezedata['upload_date']
             # should be zero padded
             d[1] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1]
-            d[3] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1] 
+            d[3] = int("0" + str(d[1])) if len(str(d[1])) == 1 else d[1]
             self.metadata['pub_date'] = datetime.datetime.strptime("{} {} {}".format(d[0], d[1], d[3]), "%Y %m %d")
             l = ezedata['source']
             self.metadata['link'] = 'http://' + l['site'] + '.org/g/' + str(l['gid']) + '/' + l['token']
@@ -144,7 +148,7 @@ class GMetafile:
                 return True
 
         ## Doesnt work for some reason.. too lazy to debug
-        #elif fp.name.endswith('info.json'):
+        # elif fp.name.endswith('info.json'):
         #    log_i('Detected metafile: HDoujin json')
         #    j = json.load(fp, encoding='utf-8')
         #    j = j['manga_info']
@@ -207,6 +211,7 @@ class GMetafile:
             gallery.info = self.metadata['info']
         return gallery
 
+
 def backup_database(db_path=db_constants.DB_PATH):
     log_i("Perfoming database backup")
     date = "{}".format(datetime.datetime.today()).split(' ')[0]
@@ -232,6 +237,7 @@ def backup_database(db_path=db_constants.DB_PATH):
     log_i("Database backup perfomed: {}".format(db_name))
     return True
 
+
 def get_date_age(date):
     """
     Take a datetime and return its "age" as a string.
@@ -242,7 +248,7 @@ def get_date_age(date):
     """
 
     def formatn(n, s):
-        '''Add "s" if it's plural'''
+        """Add "s" if it's plural"""
 
         if n == 1:
             return "1 %s" % s
@@ -250,7 +256,7 @@ def get_date_age(date):
             return "%d %ss" % (n, s)
 
     def q_n_r(a, b):
-        '''Return quotient and remaining'''
+        """Return quotient and remaining"""
 
         return a / b, a % b
 
@@ -276,16 +282,18 @@ def get_date_age(date):
 
     return PrettyDelta(date).format()
 
+
 def all_opposite(*args):
-    "Returns true if all items in iterable evaluae to false"
+    """Returns true if all items in iterable evaluae to false"""
     for iterable in args:
         for x in iterable:
             if x:
                 return False
     return True
 
+
 def update_gallery_path(new_path, gallery):
-    "Updates a gallery's chapters path"
+    """Updates a gallery's chapters path"""
     for chap in gallery.chapters:
         head, tail = os.path.split(chap.path)
         if gallery.path == chap.path:
@@ -295,6 +303,7 @@ def update_gallery_path(new_path, gallery):
 
     gallery.path = new_path
     return gallery
+
 
 def move_files(path, dest='', only_path=False):
     """
@@ -309,7 +318,7 @@ def move_files(path, dest='', only_path=False):
     new_path = os.path.join(dest, f)
     if not only_path:
         log_i("Moving to: {}".format(new_path))
-    if new_path == os.path.join(*os.path.split(path)): # need to unpack to make sure we get the corrct sep
+    if new_path == os.path.join(*os.path.split(path)):  # need to unpack to make sure we get the corrct sep
         return path
     if not os.path.exists(new_path):
         app_constants.TEMP_PATH_IGNORE.append(os.path.normcase(new_path))
@@ -318,6 +327,7 @@ def move_files(path, dest='', only_path=False):
     else:
         return path
     return new_path
+
 
 def check_ignore_list(key):
     k = os.path.normcase(key)
@@ -331,6 +341,7 @@ def check_ignore_list(key):
         if p in k:
             return False
     return True
+
 
 def gallery_text_fixer(gallery):
     regex_str = app_constants.GALLERY_DATA_FIX_REGEX
@@ -353,6 +364,7 @@ def gallery_text_fixer(gallery):
 
         return gallery
 
+
 def b_search(data, key):
     if key:
         lo = 0
@@ -366,6 +378,7 @@ def b_search(data, key):
             else:
                 return data[mid]
     return None
+
 
 def generate_img_hash(src):
     """
@@ -381,7 +394,8 @@ def generate_img_hash(src):
         buffer = src.read(chunk)
     return sha1.hexdigest()
 
-class ArchiveFile():
+
+class ArchiveFile:
     """
     Work with archive files, raises exception if instance fails.
     namelist -> returns a list with all files in archive
@@ -389,11 +403,17 @@ class ArchiveFile():
     open -> open the given file in archive, returns bytes
     close -> close archive
     """
-    zip, rar = range(2)
-    def __init__(self, filepath):
+    zip: ClassVar[int] = 0
+    rar: ClassVar[int] = 1
+
+    type: int
+    archive: Union[zipfile.ZipFile, rarfile.RarFile]
+
+    def __init__(self, filepath: Union[str, 'os.PathLike']) -> None:
         self.type = 0
         try:
             if filepath.endswith(ARCHIVE_FILES):
+                b_f = None
                 if filepath.endswith(ARCHIVE_FILES[:2]):
                     self.archive = zipfile.ZipFile(os.path.normcase(filepath))
                     b_f = self.archive.testzip()
@@ -414,17 +434,17 @@ class ArchiveFile():
             log.exception('Create archive: FAIL')
             raise app_constants.CreateArchiveFail
 
-    def namelist(self):
+    def namelist(self) -> List[str]:
         filelist = self.archive.namelist()
         return filelist
 
-    def is_dir(self, name):
+    def is_dir(self, name: str) -> bool:
         """
         Checks if the provided name in the archive is a directory or not
         """
         if not name:
             return False
-        if not name in self.namelist():
+        if name not in self.namelist():
             log_e('File {} not found in archive'.format(name))
             raise app_constants.FileNotFoundInArchive
         if self.type == self.zip:
@@ -435,12 +455,12 @@ class ArchiveFile():
             return info.isdir()
         return False
 
-    def dir_list(self, only_top_level=False):
+    def dir_list(self, only_top_level=False) -> List[Union[str, 'os.PathLike']]:
         """
         Returns a list of all directories found recursively. For directories not in toplevel
         a path in the archive to the diretory will be returned.
         """
-        
+
         if only_top_level:
             if self.type == self.zip:
                 return [x for x in self.namelist() if x.endswith('/') and x.count('/') == 1]
@@ -453,7 +473,7 @@ class ArchiveFile():
             elif self.type == self.rar:
                 return [x.filename for x in self.archive.infolist() if x.isdir()]
 
-    def dir_contents(self, dir_name):
+    def dir_contents(self, dir_name: str) -> List:
         """
         Returns a list of contents in the directory
         An empty string will return the contents of the top folder
@@ -462,20 +482,21 @@ class ArchiveFile():
             log_e('Directory {} not found in archive'.format(dir_name))
             raise app_constants.FileNotFoundInArchive
         if not dir_name:
+            con = []
             if self.type == self.zip:
-                con = [x for x in self.namelist() if x.count('/') == 0 or \
-                    (x.count('/') == 1 and x.endswith('/'))]
+                con = [x for x in self.namelist() if x.count('/') == 0
+                       or (x.count('/') == 1 and x.endswith('/'))]
             elif self.type == self.rar:
                 con = [x for x in self.namelist() if x.count('/') == 0]
             return con
         if self.type == self.zip:
             dir_con_start = [x for x in self.namelist() if x.startswith(dir_name)]
-            return [x for x in dir_con_start if x.count('/') == dir_name.count('/') and \
-                (x.count('/') == dir_name.count('/') and not x.endswith('/')) or \
-                (x.count('/') == 1 + dir_name.count('/') and x.endswith('/'))]
+            return [x for x in dir_con_start if x.count('/') == dir_name.count('/')
+                    and (x.count('/') == dir_name.count('/') and not x.endswith('/'))
+                    or (x.count('/') == 1 + dir_name.count('/') and x.endswith('/'))]
         elif self.type == self.rar:
-            return [x for x in self.namelist() if x.startswith(dir_name) and \
-                x.count('/') == 1 + dir_name.count('/')]
+            return [x for x in self.namelist() if x.startswith(dir_name)
+                    and x.count('/') == 1 + dir_name.count('/')]
         return []
 
     def extract(self, file_to_ext, path=None):
@@ -517,7 +538,7 @@ class ArchiveFile():
         self.archive.extractall(path)
         return path
 
-    def open(self, file_to_open, fp=False):
+    def open(self, file_to_open: str, fp=False) -> Union['AnyStr', 'IO[bytes]']:
         """
         Returns bytes. If fp set to true, returns file-like object.
         """
@@ -526,8 +547,9 @@ class ArchiveFile():
         else:
             return self.archive.open(file_to_open).read()
 
-    def close(self):
+    def close(self) -> None:
         self.archive.close()
+
 
 def check_archive(archive_path):
     """
@@ -543,6 +565,7 @@ def check_archive(archive_path):
         return []
     galleries = []
     zip_dirs = zip.dir_list()
+
     def gallery_eval(d):
         con = zip.dir_contents(d)
         if con:
@@ -552,7 +575,8 @@ def check_archive(archive_path):
                     gallery_probability -= 1
             if gallery_probability >= (len(con) * 0.8):
                 return d
-    if zip_dirs: # There are directories in the top folder
+
+    if zip_dirs:  # There are directories in the top folder
         # check parent
         r = gallery_eval('')
         if r:
@@ -562,12 +586,13 @@ def check_archive(archive_path):
             if r:
                 galleries.append(r)
         zip.close()
-    else: # all pages are in top folder
+    else:  # all pages are in top folder
         if isinstance(gallery_eval(''), str):
             galleries.append('')
         zip.close()
 
     return galleries
+
 
 def recursive_gallery_check(path):
     """
@@ -588,7 +613,7 @@ def recursive_gallery_check(path):
                     for g in check_archive(arch_path):
                         found_paths += 1
                         gallery_arch.append((g, arch_path))
-                                    
+
             if not subfolders:
                 if not files:
                     continue
@@ -602,13 +627,15 @@ def recursive_gallery_check(path):
     log_i('Found {} in {}'.format(found_paths, path).encode(errors='ignore'))
     return gallery_dirs, gallery_arch
 
+
 def today():
-    "Returns current date in a list: [dd, Mmm, yyyy]"
+    """Returns current date in a list: [dd, Mmm, yyyy]"""
     _date = datetime.date.today()
     day = _date.strftime("%d")
     month = _date.strftime("%b")
     year = _date.strftime("%Y")
     return [day, month, year]
+
 
 def external_viewer_checker(path):
     check_dict = app_constants.EXTERNAL_VIEWER_SUPPORT
@@ -621,6 +648,7 @@ def external_viewer_checker(path):
                 break
         if allow:
             return x
+
 
 def open_chapter(chapterpath, archive=None):
     is_archive = True if archive else False
@@ -644,8 +672,9 @@ def open_chapter(chapterpath, archive=None):
             send_folder = False
 
     def find_f_img_folder():
-        filepath = os.path.join(temp_p, [x for x in sorted([y.name for y in scandir.scandir(temp_p)])\
-            if x.lower().endswith(IMG_FILES) and not x.startswith('.')][0]) # Find first page
+        filepath = os.path.join(temp_p, [x for x in sorted([y.name for y in scandir.scandir(temp_p)]) \
+                                         if x.lower().endswith(IMG_FILES) and not x.startswith('.')][
+            0])  # Find first page
         return temp_p if send_folder else filepath
 
     def find_f_img_archive(extract=True):
@@ -668,12 +697,13 @@ def open_chapter(chapterpath, archive=None):
                 else:
                     t_p = zip.extract(chapterpath, t_p)
             else:
-                zip.extract_all(t_p) # Compatibility reasons..  TODO: REMOVE IN BETA
+                zip.extract_all(t_p)  # Compatibility reasons..  TODO: REMOVE IN BETA
             if send_folder:
                 filepath = t_p
             else:
-                filepath = os.path.join(t_p, [x for x in sorted([y.name for y in scandir.scandir(t_p)])\
-                    if x.lower().endswith(IMG_FILES) and not x.startswith('.')][0]) # Find first page
+                filepath = os.path.join(t_p, [x for x in sorted([y.name for y in scandir.scandir(t_p)]) \
+                                              if x.lower().endswith(IMG_FILES) and not x.startswith('.')][
+                    0])  # Find first page
                 filepath = os.path.abspath(filepath)
         else:
             if is_archive or chapterpath.endswith(ARCHIVE_FILES):
@@ -689,9 +719,9 @@ def open_chapter(chapterpath, archive=None):
         return filepath
 
     try:
-        try: # folder
+        try:  # folder
             filepath = find_f_img_folder()
-        except NotADirectoryError: # archive
+        except NotADirectoryError:  # archive
             try:
                 if not app_constants.EXTRACT_CHAPTER_BEFORE_OPENING and app_constants.EXTERNAL_VIEWER_PATH:
                     filepath = find_f_img_archive(False)
@@ -746,6 +776,7 @@ def open_chapter(chapterpath, archive=None):
         app_constants.NOTIF_BAR.add_text("Could not open chapter for unknown reasons. Check happypanda.log!")
         log_e('Could not open chapter {}'.format(os.path.split(chapterpath)[1]))
 
+
 def get_gallery_img(gallery_or_path, chap_number=0):
     """
     Returns a path to image in gallery chapter
@@ -773,16 +804,21 @@ def get_gallery_img(gallery_or_path, chap_number=0):
             temp_path = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
             os.mkdir(temp_path)
             if not archive:
-                f_img_name = sorted([img for img in zip.namelist() if img.lower().endswith(IMG_FILES) and not img.startswith('.')])[0]
+                f_img_name = \
+                    sorted(
+                        [img for img in zip.namelist() if img.lower().endswith(IMG_FILES) and not img.startswith('.')])[
+                        0]
             else:
-                f_img_name = sorted([img for img in zip.dir_contents(path) if img.lower().endswith(IMG_FILES) and not img.startswith('.')])[0]
+                f_img_name = sorted([img for img in zip.dir_contents(path) if
+                                     img.lower().endswith(IMG_FILES) and not img.startswith('.')])[0]
             img_path = zip.extract(f_img_name, temp_path)
             zip.close()
         except app_constants.CreateArchiveFail:
             img_path = app_constants.NO_IMAGE_PATH
     elif os.path.isdir(real_path):
         log_i('Getting image from folder')
-        first_img = sorted([img.name for img in scandir.scandir(real_path) if img.name.lower().endswith(tuple(IMG_FILES)) and not img.name.startswith('.')])
+        first_img = sorted([img.name for img in scandir.scandir(real_path) if
+                            img.name.lower().endswith(tuple(IMG_FILES)) and not img.name.startswith('.')])
         if first_img:
             img_path = os.path.join(real_path, first_img[0])
 
@@ -790,6 +826,7 @@ def get_gallery_img(gallery_or_path, chap_number=0):
         return os.path.abspath(img_path)
     else:
         log_e("Could not get gallery image")
+
 
 def tag_to_string(gallery_tag, simple=False):
     """
@@ -839,21 +876,21 @@ def tag_to_string(gallery_tag, simple=False):
 
     return string
 
+
 def tag_to_dict(string, ns_capitalize=True):
-    "Receives a string of tags and converts it to a dict of tags"
-    namespace_tags = {'default':[]}
-    level = 0 # so we know if we are in a list
+    """Receives a string of tags and converts it to a dict of tags"""
+    namespace_tags = {'default': []}
+    level = 0  # so we know if we are in a list
     buffer = ""
-    stripped_set = set() # we only need unique values
+    stripped_set = set()  # we only need unique values
     for n, x in enumerate(string, 1):
 
         if x == '[':
-            level += 1 # we are now entering a list
+            level += 1  # we are now entering a list
         if x == ']':
-            level -= 1 # we are now exiting a list
+            level -= 1  # we are now exiting a list
 
-
-        if x == ',': # if we meet a comma
+        if x == ',':  # if we meet a comma
             # we trim our buffer if we are at top level
             if level == 0:
                 # add to list
@@ -861,7 +898,7 @@ def tag_to_dict(string, ns_capitalize=True):
                 buffer = ""
             else:
                 buffer += x
-        elif n == len(string): # or at end of string
+        elif n == len(string):  # or at end of string
             buffer += x
             # add to list
             stripped_set.add(buffer.strip())
@@ -870,9 +907,9 @@ def tag_to_dict(string, ns_capitalize=True):
             buffer += x
 
     def tags_in_list(br_tags):
-        "Receives a string of tags enclosed in brackets, returns a list with tags"
+        """Receives a string of tags enclosed in brackets, returns a list with tags"""
         unique_tags = set()
-        tags = br_tags.replace('[', '').replace(']','')
+        tags = br_tags.replace('[', '').replace(']', '')
         tags = tags.split(',')
         for t in tags:
             if len(t) != 0:
@@ -905,13 +942,13 @@ def tag_to_dict(string, ns_capitalize=True):
                 else:
                     # to avoid empty strings
                     namespace_tags[namespace] = tags
-            else: # only one tag
+            else:  # only one tag
                 if len(tags) != 0:
                     if namespace in namespace_tags:
                         namespace_tags[namespace].append(tags)
                     else:
                         namespace_tags[namespace] = [tags]
-        else: # no namespace specified
+        else:  # no namespace specified
             tag = splitted_tag[0]
             if len(tag) != 0:
                 unique_tags.add(tag.lower())
@@ -922,9 +959,12 @@ def tag_to_dict(string, ns_capitalize=True):
 
     return namespace_tags
 
+
 import re as regex
+
+
 def title_parser(title):
-    "Receives a title to parse. Returns dict with 'title', 'artist' and language"
+    """Receives a title to parse. Returns dict with 'title', 'artist' and language"""
     log_d("Parsing title: {}".format(title))
     title = " ".join(title.split())
     if '/' in title:
@@ -939,7 +979,7 @@ def title_parser(title):
         if title.endswith(x):
             title = title[:-len(x)]
 
-    parsed_title = {'title':"", 'artist':"", 'language':""}
+    parsed_title = {'title': "", 'artist': "", 'language': ""}
     try:
         a = regex.findall('((?<=\[) *[^\]]+( +\S+)* *(?=\]))', title)
         assert len(a) != 0
@@ -976,7 +1016,7 @@ def title_parser(title):
 
     return parsed_title
 
-import webbrowser
+
 def open_web_link(url):
     if not url:
         return
@@ -985,8 +1025,9 @@ def open_web_link(url):
     except:
         log_e('Could not open URL in browser')
 
+
 def open_path(path, select=''):
-    ""
+    """"""
     try:
         if sys.platform.startswith('darwin'):
             subprocess.Popen(['open', path])
@@ -998,11 +1039,13 @@ def open_path(path, select=''):
         elif os.name == 'posix':
             subprocess.Popen(('xdg-open', path))
         else:
-            app_constants.NOTIF_BAR.add_text("I don't know how you've managed to do this.. If you see this, you're in deep trouble...")
+            app_constants.NOTIF_BAR.add_text(
+                "I don't know how you've managed to do this.. If you see this, you're in deep trouble...")
             log_e('Could not open path: no OS found')
     except:
         app_constants.NOTIF_BAR.add_text("Could not open specified location. It might not exist anymore.")
         log_e('Could not open path')
+
 
 def open_torrent(path):
     if not app_constants.TORRENT_CLIENT:
@@ -1010,8 +1053,9 @@ def open_torrent(path):
     else:
         subprocess.Popen([app_constants.TORRENT_CLIENT, path])
 
+
 def delete_path(path):
-    "Deletes the provided recursively"
+    """Deletes the provided recursively"""
     s = True
     if os.path.exists(path):
         error = ''
@@ -1039,11 +1083,14 @@ def delete_path(path):
             s = False
     return s
 
-def regex_search(a, b, override_case=False, args=[]):
-    "Looks for a in b"
+
+def regex_search(a, b, override_case=False, args: List = None):
+    """Looks for a in b"""
+    if args is None:
+        args = []
     if a and b:
         try:
-            if not app_constants.Search.Case in args or override_case:
+            if app_constants.Search.Case not in args or override_case:
                 if regex.search(a, b, regex.IGNORECASE):
                     return True
             else:
@@ -1053,10 +1100,11 @@ def regex_search(a, b, override_case=False, args=[]):
             pass
     return False
 
+
 def search_term(a, b, override_case=False, args=[]):
-    "Searches for a in b"
+    """Searches for a in b"""
     if a and b:
-        if not app_constants.Search.Case in args or override_case:
+        if override_case or app_constants.Search.Case not in args:
             b = b.lower()
             a = a.lower()
 
@@ -1068,8 +1116,9 @@ def search_term(a, b, override_case=False, args=[]):
                 return True
     return False
 
+
 def get_terms(term):
-    "Dividies term into pieces. Returns a list with the pieces"
+    """Dividies term into pieces. Returns a list with the pieces"""
 
     # some variables we will use
     pieces = []
@@ -1085,7 +1134,7 @@ def get_terms(term):
         # if we meet brackets
         if x == '[':
             bracket_level += 1
-            brackets_tags[piece] = set() # we want unique tags!
+            brackets_tags[piece] = set()  # we want unique tags!
             current_bracket_ns = piece
         elif x == ']':
             bracket_level -= 1
@@ -1104,23 +1153,23 @@ def get_terms(term):
             if (n == len(term) - 1) and not x in blacklist and x != ' ':
                 piece += x
             if piece:
-                if bracket_level > 0 or end_of_bracket: # if we are inside a bracket we put piece in the set
+                if bracket_level > 0 or end_of_bracket:  # if we are inside a bracket we put piece in the set
                     end_of_bracket = False
                     if piece.startswith(current_bracket_ns):
                         piece = piece[len(current_bracket_ns):]
                     if piece:
                         try:
                             brackets_tags[current_bracket_ns].add(piece)
-                        except KeyError: # keyerror when there is a closing bracket without a starting bracket
+                        except KeyError:  # keyerror when there is a closing bracket without a starting bracket
                             pass
                 else:
-                    pieces.append(piece) # else put it in the normal list
+                    pieces.append(piece)  # else put it in the normal list
             piece = ''
             continue
 
         # else append to the buffers
         if not x in blacklist:
-            if qoute_level > 0: # we want to include everything if in double qoute
+            if qoute_level > 0:  # we want to include everything if in double qoute
                 piece += x
             elif x != ' ':
                 piece += x
@@ -1133,7 +1182,7 @@ def get_terms(term):
             if tag[0] == '-':
                 if ns_tag[0] != '-':
                     ns_tag = '-' + ns
-                tag = tag[1:] # remove the '-'
+                tag = tag[1:]  # remove the '-'
 
             # put them together
             ns_tag += tag
@@ -1142,6 +1191,7 @@ def get_terms(term):
             pieces.append(ns_tag)
 
     return pieces
+
 
 def image_greyscale(filepath):
     """
@@ -1154,11 +1204,12 @@ def image_greyscale(filepath):
 
     if im.mode == "RGB":
         rgb = im.split()
-        if ImageChops.difference(rgb[0],rgb[1]).getextrema()[1] != 0: 
+        if ImageChops.difference(rgb[0], rgb[1]).getextrema()[1] != 0:
             return False
-        if ImageChops.difference(rgb[0],rgb[2]).getextrema()[1] != 0: 
+        if ImageChops.difference(rgb[0], rgb[2]).getextrema()[1] != 0:
             return False
     return True
+
 
 def PToQImageHelper(im):
     """
@@ -1167,6 +1218,7 @@ def PToQImageHelper(im):
     Copyright © 1997-2011 by Secret Labs AB
     Copyright © 1995-2011 by Fredrik Lundh
     """
+
     def rgb(r, g, b, a=255):
         """(Internal) Turns an RGB color into a Qt compatible color integer."""
         # use qRgb to pack the colors, and then turn the resulting long
@@ -1197,7 +1249,7 @@ def PToQImageHelper(im):
 
         new_data = []
         for i in range(len(bytes) // bytes_per_line):
-            new_data.append(bytes[i*bytes_per_line:(i+1)*bytes_per_line] + b'\x00' * extra_padding)
+            new_data.append(bytes[i * bytes_per_line:(i + 1) * bytes_per_line] + b'\x00' * extra_padding)
 
         return b''.join(new_data)
 
@@ -1226,7 +1278,7 @@ def PToQImageHelper(im):
         colortable = []
         palette = im.getpalette()
         for i in range(0, len(palette), 3):
-            colortable.append(rgb(*palette[i:i+3]))
+            colortable.append(rgb(*palette[i:i + 3]))
     elif im.mode == "RGB":
         data = im.tobytes("raw", "BGRX")
         format = QImage.Format_RGB32
@@ -1247,16 +1299,17 @@ def PToQImageHelper(im):
         'data': __data, 'im': im, 'format': format, 'colortable': colortable
     }
 
+
 def make_chapters(gallery_object):
     chap_container = gallery_object.chapters
     path = gallery_object.path
     metafile = GMetafile()
     try:
         log_d('Listing dir...')
-        con = scandir.scandir(path) # list all folders in gallery dir
+        con = scandir.scandir(path)  # list all folders in gallery dir
         log_i('Gallery source is a directory')
         log_d('Sorting')
-        chapters = sorted([sub.path for sub in con if sub.is_dir() or sub.name.endswith(ARCHIVE_FILES)]) #subfolders
+        chapters = sorted([sub.path for sub in con if sub.is_dir() or sub.name.endswith(ARCHIVE_FILES)])  # subfolders
         # if gallery has chapters divided into sub folders
         if len(chapters) != 0:
             log_d('Chapters divided in folders..')
@@ -1267,7 +1320,7 @@ def make_chapters(gallery_object):
                 metafile.update(GMetafile(chap.path))
                 chap.pages = len([x for x in scandir.scandir(chap.path) if x.name.endswith(IMG_FILES)])
 
-        else: #else assume that all images are in gallery folder
+        else:  # else assume that all images are in gallery folder
             chap = chap_container.create_chapter()
             chap.title = title_parser(os.path.split(path)[1])['title']
             chap.path = path
@@ -1290,14 +1343,16 @@ def make_chapters(gallery_object):
 
     metafile.apply_gallery(gallery_object)
 
+
 def timeit(func):
     @functools.wraps(func)
     def newfunc(*args, **kwargs):
-        startTime = time.time()
+        start_time = time.time()
         func(*args, **kwargs)
-        elapsedTime = time.time() - startTime
+        elapsed_time = time.time() - start_time
         print('function [{}] finished in {} ms'.format(
-            func.__name__, int(elapsedTime * 1000)))
+            func.__name__, int(elapsed_time * 1000)))
+
     return newfunc
 
 
@@ -1309,8 +1364,9 @@ def makedirs_if_not_exists(folder):
     if not os.path.isdir(folder):
         os.makedirs(folder)
 
-def lookup_tag(tag):
-    "Issues a tag lookup on preferred site"
+
+def lookup_tag(tag: str) -> None:
+    """Issues a tag lookup on preferred site"""
     assert isinstance(tag, str), "str not " + str(type(tag))
     # remove whitespace at edges and replace whitespace with +
     tag = tag.strip().lower().replace(' ', '+')
@@ -1318,7 +1374,7 @@ def lookup_tag(tag):
     if not url.endswith('/'):
         url += '/'
 
-    if not ':' in tag:
+    if ':' not in tag:
         tag = 'misc:' + tag
 
     url += 'tag/' + tag
