@@ -1638,11 +1638,11 @@ class Gallery:
             execute(GalleryDB.modify_gallery, True, self.id, profile=self.profile, priority=0)
 
     @property
-    def chapters(self):
+    def chapters(self) -> ChaptersContainer:
         return self._chapters
 
     @chapters.setter
-    def chapters(self, chp_cont):
+    def chapters(self, chp_cont: ChaptersContainer) -> None:
         assert isinstance(chp_cont, ChaptersContainer)
         chp_cont.set_parent(self)
         self._chapters = chp_cont
@@ -1987,30 +1987,31 @@ class ChaptersContainer:
     Sets to gallery.chapters
     """
 
-    def __init__(self, gallery=None):
+    parent: Optional[Gallery]
+    _data: Dict
+
+    def __init__(self, gallery: Optional[Gallery]=None):
         self.parent = None
         self._data = {}
 
         if gallery:
             gallery.chapters = self
 
-    def set_parent(self, gallery):
+    def set_parent(self, gallery: Optional[Gallery]) -> None:
         assert isinstance(gallery, (Gallery, None))
         self.parent = gallery
         for n in self._data:
             chap = self._data[n]
             chap.gallery = gallery
 
-    def add_chapter(self, chp, overwrite=True, db=False):
-        "Add a chapter of Chapter class to this container"
+    def add_chapter(self, chp: Chapter, overwrite: bool =True, db=False) -> None:
+        """Add a chapter of Chapter class to this container"""
         assert isinstance(chp, Chapter), "Chapter must be an instantiated Chapter class"
 
         if not overwrite:
-            try:
-                _ = self._data[chp.number]
+            if chp.number in self._data:
                 raise app_constants.ChapterExists
-            except KeyError:
-                pass
+
         chp.gallery = self.parent
         chp.parent = self
         self[chp.number] = chp
@@ -2019,12 +2020,12 @@ class ChaptersContainer:
             # TODO: implement this
             pass
 
-    def create_chapter(self, number=None):
+    def create_chapter(self, number: Optional[int]=None):
         """
         Creates Chapter class with the next chapter number or passed number arg and adds to container
         The chapter will be returned
         """
-        if number:
+        if number is not None:
             chp = Chapter(self, self.parent, number=number)
             self[number] = chp
         else:
@@ -2038,8 +2039,8 @@ class ChaptersContainer:
             self[next_number] = chp
         return chp
 
-    def update_chapter_pages(self, number):
-        "Returns status on success"
+    def update_chapter_pages(self, number) -> bool:
+        """Returns status on success"""
         if self.parent.dead_link:
             return False
         chap = self[number]
@@ -2053,14 +2054,18 @@ class ChaptersContainer:
         execute(ChapterDB.update_chapter, True, self, [chap.number])
         return True
 
-    def pages(self):
+    def pages(self) -> int:
+        """Returns the sum of all pages from every chapter contained."""
         p = 0
         for c in self:
             p += c.pages
         return p
 
-    def get_chapter(self, number):
-        return self[number]
+    def get_chapter(self, number: int):
+        if number in self._data:
+            return self[number]
+        else:
+            raise KeyError("ChaptersContainer does not have chapter {}.".format(number))
 
     def get_all_chapters(self):
         return list(self._data.values())
