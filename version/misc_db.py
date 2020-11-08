@@ -25,11 +25,18 @@ from PyQt5.QtCore import (Qt, QTimer, pyqtSignal, QRect, QSize, QEasingCurve,
 from PyQt5.QtGui import (QIcon, QStandardItem, QFont, QPainter, QColor, QBrush,
                          QPixmap, QPalette)
 
-import gallerydb
-import app_constants
-import utils
-import misc
-import gallery
+try:
+    import gallerydb
+    import app_constants
+    import utils
+    import misc
+    import gallery
+except ImportError:
+    from . import gallerydb
+    from . import app_constants
+    from . import utils
+    from . import misc
+    from . import gallery
 
 log = logging.getLogger(__name__)
 log_i = log.info
