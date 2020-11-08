@@ -1,21 +1,24 @@
-#"""
-#This file is part of Happypanda.
-#Happypanda is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 2 of the License, or
-#any later version.
-#Happypanda is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#You should have received a copy of the GNU General Public License
-#along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
-#"""
+# """
+# This file is part of Happypanda.
+# Happypanda is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# any later version.
+# Happypanda is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
+# """
 
-import os, sqlite3, threading, queue
-import logging, time, shutil
+import logging
+import os
+import sqlite3
+from typing import Tuple, List, Callable, Union, Optional
 
 from . import db_constants
+
 log = logging.getLogger(__name__)
 log_i = log.info
 log_d = log.debug
@@ -23,25 +26,25 @@ log_w = log.warning
 log_e = log.error
 log_c = log.critical
 
-def hashes_sql(cols=False):
+
+def hashes_sql() -> Tuple[str, List[str]]:
     col_list = [
-    'hash_id INTEGER PRIMARY KEY',
-    'hash BLOB',
-    'series_id INTEGER',
-    'chapter_id INTEGER',
-    'page INTEGER',
-    'FOREIGN KEY(series_id) REFERENCES series(series_id) ON DELETE CASCADE',
-    'FOREIGN KEY(chapter_id) REFERENCES chapters(chapter_id) ON DELETE CASCADE',
-    'UNIQUE(hash, series_id, chapter_id, page)'
+        'hash_id INTEGER PRIMARY KEY',
+        'hash BLOB',
+        'series_id INTEGER',
+        'chapter_id INTEGER',
+        'page INTEGER',
+        'FOREIGN KEY(series_id) REFERENCES series(series_id) ON DELETE CASCADE',
+        'FOREIGN KEY(chapter_id) REFERENCES chapters(chapter_id) ON DELETE CASCADE',
+        'UNIQUE(hash, series_id, chapter_id, page)'
     ]
 
     sql = "CREATE TABLE IF NOT EXISTS hashes({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def series_sql(cols=False):
+
+def series_sql() -> Tuple[str, List[str]]:
     col_list = [
         'series_id INTEGER PRIMARY KEY',
         'title TEXT',
@@ -64,15 +67,14 @@ def series_sql(cols=False):
         'exed INTEGER NOT NULL DEFAULT 0',
         'db_v REAL',
         'view INTEGER DEFAULT 1'
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS series({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def chapters_sql(cols=False):
+
+def chapters_sql() -> Tuple[str, List[str]]:
     col_list = [
         'chapter_id INTEGER PRIMARY KEY',
         'series_id INTEGER',
@@ -82,39 +84,36 @@ def chapters_sql(cols=False):
         'pages INTEGER',
         'in_archive INTEGER',
         'FOREIGN KEY(series_id) REFERENCES series(series_id) ON DELETE CASCADE'
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS chapters({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def namespaces_sql(cols=False):
+
+def namespaces_sql() -> Tuple[str, List[str]]:
     col_list = [
         'namespace_id INTEGER PRIMARY KEY',
         'namespace TEXT NOT NULL UNIQUE'
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS namespaces({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def tags_sql(cols=False):
+
+def tags_sql() -> Tuple[str, List[str]]:
     col_list = [
         'tag_id INTEGER PRIMARY KEY',
         'tag TEXT NOT NULL UNIQUE'
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS tags({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def tags_mappings_sql(cols=False):
+
+def tags_mappings_sql() -> Tuple[str, List[str]]:
     col_list = [
         'tags_mappings_id INTEGER PRIMARY KEY',
         'namespace_id INTEGER',
@@ -122,30 +121,28 @@ def tags_mappings_sql(cols=False):
         'FOREIGN KEY(namespace_id) REFERENCES namespaces(namespace_id) ON DELETE CASCADE',
         'FOREIGN KEY(tag_id) REFERENCES tags(tag_id) ON DELETE CASCADE',
         'UNIQUE(namespace_id, tag_id)'
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS tags_mappings({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def series_tags_mappings_sql(cols=False):
+
+def series_tags_mappings_sql() -> Tuple[str, List[str]]:
     col_list = [
         'series_id INTEGER',
         'tags_mappings_id INTEGER',
         'FOREIGN KEY(series_id) REFERENCES series(series_id) ON DELETE CASCADE',
         'FOREIGN KEY(tags_mappings_id) REFERENCES tags_mappings(tags_mappings_id) ON DELETE CASCADE',
         'UNIQUE(series_id, tags_mappings_id)'
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS series_tags_map({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def list_sql(cols=False):
+
+def list_sql() -> Tuple[str, List[str]]:
     col_list = [
         'list_id INTEGER PRIMARY KEY',
         "list_name TEXT NOT NULL DEFAULT ''",
@@ -156,59 +153,61 @@ def list_sql(cols=False):
         "regex INTEGER DEFAULT 0",
         "l_case INTEGER DEFAULT 0",
         "strict INTEGER DEFAULT 0",
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS list({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-def series_list_map_sql(cols=False):
+
+def series_list_map_sql() -> Tuple[str, List[str]]:
     col_list = [
         'list_id INTEGER NOT NULL',
         'series_id INTEGER INTEGER NOT NULL',
         'FOREIGN KEY(list_id) REFERENCES list(list_id) ON DELETE CASCADE',
         'FOREIGN KEY(series_id) REFERENCES series(series_id) ON DELETE CASCADE',
         'UNIQUE(list_id, series_id)'
-        ]
+    ]
 
     sql = "CREATE TABLE IF NOT EXISTS series_list_map({});".format(",".join(col_list))
 
-    if cols:
-        return sql, col_list
-    return sql
+    return sql, col_list
 
-STRUCTURE_SCRIPT = series_sql()+chapters_sql()+namespaces_sql()+tags_sql()+tags_mappings_sql()+\
-    series_tags_mappings_sql()+hashes_sql()+list_sql()+series_list_map_sql()
 
-def global_db_convert(conn):
+STRUCTURE_SCRIPT_FUNCS: List[Callable[[], Tuple[str, List[str]]]]
+STRUCTURE_SCRIPT_FUNCS = [series_sql, chapters_sql, namespaces_sql, tags_sql, tags_mappings_sql,
+                          series_tags_mappings_sql, hashes_sql, list_sql, series_list_map_sql]
+STRUCTURE_SCRIPT = ''.join(f()[0] for f in STRUCTURE_SCRIPT_FUNCS)
+
+
+def global_db_convert(conn: sqlite3.dbapi2.Connection) -> sqlite3.dbapi2.Cursor:
     """
     Takes care of converting tables and columns.
     Don't use this method directly. Use the add_db_revisions instead.
     """
     log_i('Converting tables')
     c = conn.cursor()
-    series, series_cols = series_sql(True)
-    chapters, chapters_cols = chapters_sql(True)
-    namespaces, namespaces_cols = namespaces_sql(True)
-    tags, tags_cols = tags_sql(True)
-    tags_mappings, tags_mappings_cols = tags_mappings_sql(True)
-    series_tags_mappings, series_tags_mappings_cols = series_tags_mappings_sql(True)
-    hashes, hashes_cols = hashes_sql(True)
-    _list, list_cols = list_sql(True)
-    series_list_map, series_list_map_cols = series_list_map_sql(True)
-    
-    t_d = {}
-    t_d['series'] = series_cols
-    t_d['chapters'] = chapters_cols
-    t_d['namespaces'] = namespaces_cols
-    t_d['tags'] = tags_cols
-    t_d['tags_mappings'] = tags_mappings_cols
-    t_d['series_tags_mappings'] = series_tags_mappings_cols
-    t_d['hashes'] = hashes_cols
-    t_d['list'] = list_cols
-    t_d['series_list_map'] = series_list_map_cols
+    series, series_cols = series_sql()
+    chapters, chapters_cols = chapters_sql()
+    namespaces, namespaces_cols = namespaces_sql()
+    tags, tags_cols = tags_sql()
+    tags_mappings, tags_mappings_cols = tags_mappings_sql()
+    series_tags_mappings, series_tags_mappings_cols = series_tags_mappings_sql()
+    hashes, hashes_cols = hashes_sql()
+    _list, list_cols = list_sql()
+    series_list_map, series_list_map_cols = series_list_map_sql()
+
+    t_d = {
+        'series': series_cols,
+        'chapters': chapters_cols,
+        'namespaces': namespaces_cols,
+        'tags': tags_cols,
+        'tags_mappings': tags_mappings_cols,
+        'series_tags_mappings': series_tags_mappings_cols,
+        'hashes': hashes_cols,
+        'list': list_cols,
+        'series_list_map': series_list_map_cols
+    }
 
     log_d('Checking table structures')
     c.executescript(STRUCTURE_SCRIPT)
@@ -220,13 +219,14 @@ def global_db_convert(conn):
             try:
                 c.execute('ALTER TABLE {} ADD COLUMN {}'.format(table, col))
                 log_d('Added new column: {}'.format(col))
-            except:
+            except sqlite3.OperationalError:
                 log_d('Skipped column: {}'.format(col))
     conn.commit()
-    log_d('Commited DB changes')
+    log_d('Committed DB changes')
     return c
 
-def add_db_revisions(old_db):
+
+def add_db_revisions(old_db: Union[str, 'os.PathLike']) -> None:
     """
     Adds specific DB revisions items.
     Note: pass a path to db
@@ -244,17 +244,18 @@ def add_db_revisions(old_db):
     conn.close()
     return
 
-def create_db_path(db_path=db_constants.DB_PATH):
+
+def create_db_path(db_path: Union[str, 'os.PathLike'] = db_constants.DB_PATH):
     head = os.path.split(db_path)[0]
     os.makedirs(head, exist_ok=True)
     if not os.path.isfile(db_path):
-        with open(db_path, 'x') as f:
+        with open(db_path, 'x') as _f:
             pass
     return db_path
 
 
-def check_db_version(conn):
-    "Checks if DB version is allowed. Raises dialog if not"
+def check_db_version(conn: sqlite3.dbapi2.Connection) -> bool:
+    """Checks if DB version is allowed. Raises dialog if not."""
     vs = "SELECT version FROM version"
     c = conn.cursor()
     c.execute(vs)
@@ -265,18 +266,19 @@ def check_db_version(conn):
         msg = "Incompatible database"
         log_c(msg)
         log_d('Local database version: {}\nProgram database version:{}'.format(db_vs[0],
-                                                                         db_constants.CURRENT_DB_VERSION))
-        #ErrorQueue.put(msg)
+                                                                               db_constants.CURRENT_DB_VERSION))
+        # ErrorQueue.put(msg)
         return False
     return True
-    
 
-def init_db(path=db_constants.DB_PATH):
+
+def init_db(path: Union[str, 'os.PathLike'] = db_constants.DB_PATH) -> Optional[sqlite3.dbapi2.Connection]:
     """Initialises the DB. Returns a sqlite3 connection,
     which will be passed to the db thread.
     """
 
-    def db_layout(cursor):
+    # TODO: change saving version from float to string
+    def db_layout(cursor: sqlite3.dbapi2.Cursor) -> None:
         c = cursor
         # version
         c.execute("""
@@ -288,14 +290,14 @@ def init_db(path=db_constants.DB_PATH):
         log_d("Database Layout:\n\t{}".format(STRUCTURE_SCRIPT))
         c.executescript(STRUCTURE_SCRIPT)
 
-    def new_db(p, new=False):
-        conn = sqlite3.connect(p, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
+    def new_db(p: Union[str, 'os.PathLike'], new: bool = False) -> sqlite3.dbapi2.Connection:
+        connection = sqlite3.connect(p, check_same_thread=False)
+        connection.row_factory = sqlite3.Row
         if new:
-            c = conn.cursor()
+            c = connection.cursor()
             db_layout(c)
-            conn.commit()
-        return conn
+            connection.commit()
+        return connection
 
     if os.path.isfile(path):
         conn = new_db(path)
@@ -309,27 +311,28 @@ def init_db(path=db_constants.DB_PATH):
     conn.execute("PRAGMA foreign_keys = on")
     return conn
 
+
 class DBBase:
-    "The base DB class. _DB_CONN should be set at runtime on startup"
+    """The base DB class. _DB_CONN should be set at runtime on startup"""
     _DB_CONN = None
     _AUTO_COMMIT = True
-    _STATE = {'active':False}
+    _STATE = {'active': False}
 
     def __init__(self, **kwargs):
         pass
 
     @classmethod
-    def begin(cls):
-        "Useful when modifying for a large amount of data"
+    def begin(cls) -> None:
+        """Useful when modifying for a large amount of data"""
         if not cls._STATE['active']:
             cls._AUTO_COMMIT = False
             cls.execute(cls, "BEGIN TRANSACTION")
             cls._STATE['active'] = True
-        #print("STARTED DB OPTIMIZE")
+        # print("STARTED DB OPTIMIZE")
 
     @classmethod
-    def end(cls):
-        "Called to commit and end transaction"
+    def end(cls) -> None:
+        """Called to commit and end transaction"""
         if cls._STATE['active']:
             try:
                 cls.execute(cls, "COMMIT")
@@ -337,10 +340,10 @@ class DBBase:
                 pass
             cls._AUTO_COMMIT = True
             cls._STATE['active'] = False
-        #print("ENDED DB OPTIMIZE")
+        # print("ENDED DB OPTIMIZE")
 
     def execute(self, *args):
-        "Same as cursor.execute"
+        """Same as cursor.execute"""
         if not self._DB_CONN:
             raise db_constants.NoDatabaseConnection
         log_d('DB Query: {}'.format(args).encode(errors='ignore'))
@@ -349,13 +352,13 @@ class DBBase:
                 with self._DB_CONN:
                     return self._DB_CONN.execute(*args)
             except sqlite3.InterfaceError:
-                    return self._DB_CONN.execute(*args)
+                return self._DB_CONN.execute(*args)
 
         else:
             return self._DB_CONN.execute(*args)
-    
+
     def executemany(self, *args):
-        "Same as cursor.executemany"
+        """Same as cursor.executemany"""
         if not self._DB_CONN:
             raise db_constants.NoDatabaseConnection
         log_d('DB Query: {}'.format(args).encode(errors='ignore'))
@@ -376,6 +379,7 @@ class DBBase:
     @classmethod
     def close(cls):
         cls._DB_CONN.close()
+
 
 if __name__ == '__main__':
     raise RuntimeError("Unit tests not yet implemented")
