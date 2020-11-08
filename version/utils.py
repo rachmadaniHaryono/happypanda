@@ -35,7 +35,7 @@ from PIL import Image,ImageChops
 try:
     import app_constants
     from database import db_constants
-except:
+except ImportError:
     from . import app_constants
     from .database import db_constants
 
@@ -1208,7 +1208,7 @@ def PToQImageHelper(im):
     if hasattr(im, "toUtf8"):
         # FIXME - is this really the best way to do this?
         if str is bytes:
-            im = unicode(im.toUtf8(), "utf-8")
+            im = im.toUtf8().decode('utf-8')
         else:
             im = str(im.toUtf8(), "utf-8")
     if isinstance(im, (bytes, str)):
