@@ -16,7 +16,7 @@ from __future__ import annotations
 import datetime
 import os
 import enum
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Union, Optional, Dict, Literal
 
 import scandir
 import threading
@@ -312,14 +312,14 @@ class GalleryDB(DBBase):
 
     @staticmethod
     def clear_thumb_dir():
-        "Deletes everything in the thumbnail directory"
+        """Deletes everything in the thumbnail directory"""
         if os.path.exists(db_constants.THUMBNAIL_PATH):
             for thumbfile in scandir.scandir(db_constants.THUMBNAIL_PATH):
                 GalleryDB.clear_thumb(thumbfile.path)
 
     @staticmethod
     def rebuild_gallery(gallery, thumb=False):
-        "Rebuilds the galleries in DB"
+        """Rebuilds the galleries in DB"""
         try:
             log_i('Rebuilding {}'.format(gallery.title.encode(errors='ignore')))
             log_i("Rebuilding gallery {}".format(gallery.id))
@@ -355,69 +355,69 @@ class GalleryDB(DBBase):
                        tags=None, language=None, rating=None, status=None, pub_date=None, link=None,
                        times_read=None, last_read=None, series_path=None, chapters=None, _db_v=None,
                        hashes=None, exed=None, is_archive=None, path_in_archive=None, view=None, date_added=None):
-        "Modifies gallery with given gallery id"
+        """Modifies gallery with given gallery id"""
         assert isinstance(series_id, int)
         assert not isinstance(series_id, bool)
         executing = []
-        if title != None:
+        if title is not None:
             assert isinstance(title, str)
             executing.append(["UPDATE series SET title=? WHERE series_id=?", (title, series_id)])
-        if profile != None:
+        if profile is not None:
             assert isinstance(profile, str)
             executing.append(["UPDATE series SET profile=? WHERE series_id=?", (str.encode(profile), series_id)])
-        if artist != None:
+        if artist is not None:
             assert isinstance(artist, str)
             executing.append(["UPDATE series SET artist=? WHERE series_id=?", (artist, series_id)])
-        if info != None:
+        if info is not None:
             assert isinstance(info, str)
             executing.append(["UPDATE series SET info=? WHERE series_id=?", (info, series_id)])
-        if type != None:
+        if type is not None:
             assert isinstance(type, str)
             executing.append(["UPDATE series SET type=? WHERE series_id=?", (type, series_id)])
-        if fav != None:
+        if fav is not None:
             assert isinstance(fav, int)
             executing.append(["UPDATE series SET fav=? WHERE series_id=?", (fav, series_id)])
-        if language != None:
+        if language is not None:
             assert isinstance(language, str)
             executing.append(["UPDATE series SET language=? WHERE series_id=?", (language, series_id)])
-        if rating != None:
+        if rating is not None:
             assert isinstance(rating, int)
             executing.append(["UPDATE series SET rating=? WHERE series_id=?", (rating, series_id)])
-        if status != None:
+        if status is not None:
             assert isinstance(status, str)
             executing.append(["UPDATE series SET status=? WHERE series_id=?", (status, series_id)])
-        if pub_date != None:
+        if pub_date is not None:
             executing.append(["UPDATE series SET pub_date=? WHERE series_id=?", (pub_date, series_id)])
-        if link != None:
+        if link is not None:
             executing.append(["UPDATE series SET link=? WHERE series_id=?", (link, series_id)])
-        if times_read != None:
+        if times_read is not None:
             executing.append(["UPDATE series SET times_read=? WHERE series_id=?", (times_read, series_id)])
-        if last_read != None:
+        if last_read is not None:
             executing.append(["UPDATE series SET last_read=? WHERE series_id=?", (last_read, series_id)])
-        if series_path != None:
+        if series_path is not None:
             executing.append(
                 ["UPDATE series SET series_path=? WHERE series_id=?", (str.encode(series_path), series_id)])
-        if _db_v != None:
+        if _db_v is not None:
             executing.append(["UPDATE series SET db_v=? WHERE series_id=?", (_db_v, series_id)])
-        if exed != None:
+        if exed is not None:
             executing.append(["UPDATE series SET exed=? WHERE series_id=?", (exed, series_id)])
-        if is_archive != None:
+        if is_archive is not None:
             executing.append(["UPDATE series SET is_archive=? WHERE series_id=?", (is_archive, series_id)])
-        if path_in_archive != None:
+        if path_in_archive is not None:
             executing.append(["UPDATE series SET path_in_archive=? WHERE series_id=?", (path_in_archive, series_id)])
-        if view != None:
+        if view is not None:
             executing.append(["UPDATE series SET view=? WHERE series_id=?", (view, series_id)])
-        if date_added != None:
+        if date_added is not None:
             executing.append(["UPDATE series SET date_added=? WHERE series_id=?", (date_added, series_id)])
 
-        if tags != None:
+        if tags is not None:
             assert isinstance(tags, dict)
             TagDB.modify_tags(series_id, tags)
-        if chapters != None:
+        if chapters is not None:
             assert isinstance(chapters, ChaptersContainer)
             ChapterDB.update_chapter(chapters)
 
-        if hashes != None:
+        if hashes is not None:
             assert isinstance(hashes, Gallery)
             HashDB.rebuild_gallery_hashes(hashes)
 
@@ -425,7 +425,7 @@ class GalleryDB(DBBase):
             cls.execute(cls, *query)
 
     @classmethod
-    def get_all_gallery(cls, chapters=True, tags=True, hashes=True):
+    def get_all_gallery(cls, chapters: bool = True, tags: bool = True, hashes: bool = True):
         """
         Careful, might crash with very large libraries i think...
         Returns a list of all galleries (<Gallery> class) currently in DB
@@ -467,7 +467,7 @@ class GalleryDB(DBBase):
 
     @classmethod
     def get_gallery_by_id(cls, id):
-        "Returns gallery with given id"
+        """Returns gallery with given id"""
         assert isinstance(id, int), "Provided ID is invalid"
         cursor = cls.execute(cls, 'SELECT * FROM series WHERE series_id=?', (id,))
         row = cursor.fetchone()
@@ -481,7 +481,7 @@ class GalleryDB(DBBase):
 
     @classmethod
     def add_gallery(cls, object, test_mode=False):
-        "Receives an object of class gallery, and appends it to DB"
+        """Receives an object of class gallery, and appends it to DB"""
         "Adds gallery of <Gallery> class into database"
         assert isinstance(object, Gallery), "add_gallery method only accepts gallery items"
         log_i('Recevied gallery: {}'.format(object.path.encode(errors='ignore')))
@@ -508,7 +508,7 @@ class GalleryDB(DBBase):
 
     @classmethod
     def del_gallery(cls, list_of_gallery, local=False):
-        "Deletes all galleries in the list recursively."
+        """Deletes all galleries in the list recursively."""
         assert isinstance(list_of_gallery, list), "Please provide a valid list of galleries to delete"
         for gallery in list_of_gallery:
             if local:
@@ -791,12 +791,12 @@ class TagDB(DBBase):
         return tags
 
     @classmethod
-    def add_tags(cls, object):
-        "Adds the given dict_of_tags to the given series_id"
-        assert isinstance(object, Gallery), "Please provide a valid gallery of class gallery"
+    def add_tags(cls, obj):
+        """Adds the given dict_of_tags to the given series_id"""
+        assert isinstance(obj, Gallery), "Please provide a valid gallery of class gallery"
 
-        series_id = object.id
-        dict_of_tags = object.tags
+        series_id = obj.id
+        dict_of_tags = obj.tags
 
         def look_exists(tag_or_ns, what):
             """check if tag or namespace already exists in base
@@ -872,7 +872,7 @@ class TagDB(DBBase):
 
     @staticmethod
     def modify_tags(series_id, dict_of_tags):
-        "Modifies the given tags"
+        """Modifies the given tags"""
 
         # We first delete all mappings
         TagDB.del_gallery_mapping(series_id)
@@ -886,12 +886,12 @@ class TagDB(DBBase):
 
     @staticmethod
     def get_tag_gallery(tag):
-        "Returns all galleries with the given tag"
+        """Returns all galleries with the given tag"""
         pass
 
     @classmethod
     def get_ns_tags(cls):
-        "Returns a dict of all tags with namespace as key and list of tags as value"
+        """Returns a dict of all tags with namespace as key and list of tags as value"""
         cursor = cls.execute(cls, 'SELECT namespace_id, tag_id FROM tags_mappings')
         ns_tags = {}
         ns_id_history = {}  # to avoid unesseccary DB fetching
@@ -918,7 +918,7 @@ class TagDB(DBBase):
 
     @staticmethod
     def get_tags_from_namespace(namespace):
-        "Returns a dict with namespace as key and list of tags as value"
+        """Returns a dict with namespace as key and list of tags as value"""
         pass
 
     @staticmethod
@@ -954,7 +954,7 @@ class ListDB(DBBase):
 
     @classmethod
     def init_lists(cls):
-        "Creates and returns lists fetched from DB"
+        """Creates and returns lists fetched from DB"""
         lists = []
         c = cls.execute(cls, 'SELECT * FROM list')
         list_rows = c.fetchall()
@@ -978,7 +978,7 @@ class ListDB(DBBase):
 
     @classmethod
     def query_gallery(cls, gallery):
-        "Maps gallery to the correct lists"
+        """Maps gallery to the correct lists"""
 
         c = cls.execute(cls, 'SELECT list_id FROM series_list_map WHERE series_id=?', (gallery.id,))
         list_rows = [x['list_id'] for x in c.fetchall()]
@@ -999,7 +999,7 @@ class ListDB(DBBase):
 
     @classmethod
     def add_list(cls, gallery_list):
-        "Adds a list of GalleryList class to DB"
+        """Adds a list of GalleryList class to DB"""
         assert isinstance(gallery_list, GalleryList)
         if gallery_list._id:
             ListDB.modify_list(gallery_list)
@@ -1029,8 +1029,8 @@ class ListDB(DBBase):
 
     @classmethod
     def add_gallery_to_list(cls, gallery_or_id_or_list, gallery_list):
+        """Maps provided gallery or list of galleries or gallery id to list"""
         assert isinstance(gallery_list, GalleryList)
-        "Maps provided gallery or list of galleries or gallery id to list"
         g_ids = ListDB._g_id_or_list(gallery_or_id_or_list)
 
         values = [(gallery_list._id, x) for x in g_ids]
@@ -1038,7 +1038,7 @@ class ListDB(DBBase):
 
     @classmethod
     def remove_list(cls, gallery_list):
-        "Deletes list from DB"
+        """Deletes list from DB"""
         assert isinstance(gallery_list, GalleryList)
         if gallery_list._id:
             cls.execute(cls, 'DELETE FROM list WHERE list_id=?', (gallery_list._id,))
@@ -1049,8 +1049,8 @@ class ListDB(DBBase):
 
     @classmethod
     def remove_gallery_from_list(cls, gallery_or_id_or_list, gallery_list):
+        """Removes provided gallery or list of galleries or gallery id from list"""
         assert isinstance(gallery_list, GalleryList)
-        "Removes provided gallery or list of galleries or gallery id from list"
         if gallery_list._id:
             g_ids = ListDB._g_id_or_list(gallery_or_id_or_list)
 
@@ -1111,7 +1111,7 @@ class HashDB(DBBase):
 
     @classmethod
     def get_gallery_hashes(cls, gallery_id):
-        "Returns all hashes with the given gallery id in a list"
+        """Returns all hashes with the given gallery id in a list"""
         cursor = cls.execute(cls, 'SELECT hash FROM hashes WHERE series_id=?',
                              (gallery_id,))
         hashes = []
@@ -1387,7 +1387,7 @@ class GalleryList:
         self.add_gallery(list_of_galleries, _db)
 
     def add_gallery(self, gallery_or_list_of, _db=True, _check_filter=True):
-        "add_gallery <- adds a gallery of Gallery class to list"
+        """add_gallery <- adds a gallery of Gallery class to list"""
         assert isinstance(gallery_or_list_of, (Gallery, list))
         if isinstance(gallery_or_list_of, Gallery):
             gallery_or_list_of = [gallery_or_list_of]
@@ -1406,7 +1406,7 @@ class GalleryList:
             execute(ListDB.add_gallery_to_list, True, new_galleries, self)
 
     def remove_gallery(self, gallery_id_or_list_of):
-        "remove_gallery <- removes galleries matching the provided gallery id"
+        """remove_gallery <- removes galleries matching the provided gallery id"""
         if isinstance(gallery_id_or_list_of, int):
             gallery_id_or_list_of = [gallery_id_or_list_of]
         g_ids = gallery_id_or_list_of
@@ -1425,14 +1425,14 @@ class GalleryList:
         execute(ListDB.remove_gallery_from_list, True, g_ids_to_delete, self)
 
     def clear(self):
-        "removes all galleries from the list"
+        """removes all galleries from the list"""
         if self._galleries:
             execute(ListDB.remove_gallery_from_list, True, list(self._galleries), self)
         self._galleries.clear()
         self._ids_chache.clear()
 
     def galleries(self):
-        "returns a list with all galleries in list"
+        """returns a list with all galleries in list"""
         return list(self._galleries)
 
     def __contains__(self, g):
@@ -1516,7 +1516,36 @@ class Gallery:
     valid <- a bool indicating the validity of the gallery
 
     Takes ownership of ChaptersContainer
+
+    2020-11-08:
+    Originally this project did not have type hinting. Some type hinting might
+    be wrong as is being added after what is written above.
+    TODO: Correct any types that dont correspond, especially date date_added,
     """
+    id: Optional[Any]
+    title: Union[str, List[str]]
+    profile: Union[str, 'os.PathLike']
+    _path: Union[str, 'os.PathLike']
+    artist: str
+    chapters: Dict[int, Union[str, 'os.PathLike']]
+    chapters_size: int
+    info: str
+    fav: Literal[0, 1]
+    rating: float
+    type: str
+    language: str
+    status: Literal['unknown', 'completed', 'ongoing', '']
+    tags: List[str]
+    pub_date: Optional[datetime]
+    date_added: datetime
+    last_read: Any # DOnt know
+    times_read: int
+    hashes: List
+    exed: Any # Dont really know for now
+    valid: bool
+
+    _chapters: ChaptersContainer
+    file_type: str
 
     def __init__(self):
 
@@ -1530,7 +1559,7 @@ class Gallery:
         self._chapters = ChaptersContainer(self)
         self.info = ""
         self.fav = 0
-        self.rating = 0
+        self.rating = 0.0
         self.type = ""
         self.link = ""
         self.language = ""
@@ -1556,11 +1585,11 @@ class Gallery:
         self.qtime = QTime()  # used by views to record addition
 
     @property
-    def path(self):
+    def path(self) -> Union[str, 'os.PathLike']:
         return self._path
 
     @path.setter
-    def path(self, n_p):
+    def path(self, n_p: Union[str, 'os.PathLike']):
         self._path = n_p
         _, ext = os.path.splitext(n_p)
         if ext:
@@ -1574,7 +1603,7 @@ class Gallery:
         if not self.status:
             self.status = app_constants.G_DEF_STATUS.capitalize()
 
-    def reset_profile(self):
+    def reset_profile(self) -> None:
         self._profile_load_status.clear()
         self._profile_qimage.clear()
 
@@ -1603,7 +1632,7 @@ class Gallery:
         return img
 
     def set_profile(self, future):
-        "set with profile with future object"
+        """set with profile with future object"""
         self.profile = future.result()
         if self.id != None:
             execute(GalleryDB.modify_gallery, True, self.id, profile=self.profile, priority=0)
@@ -1618,24 +1647,24 @@ class Gallery:
         chp_cont.set_parent(self)
         self._chapters = chp_cont
 
-    def merge(galleries):
-        "Merge galleries into this galleries, adding them as chapters"
+    def merge(self, galleries):
+        """Merge galleries into this galleries, adding them as chapters"""
         pass
 
     def gen_hashes(self):
-        "Generate hashes while inserting them into DB"
+        """Generate hashes while inserting them into DB"""
         if not self.hashes:
-            hash = HashDB.gen_gallery_hashes(self)
-            if hash:
-                self.hashes = hash
+            hsh = HashDB.gen_gallery_hashes(self)
+            if hsh:
+                self.hashes = hsh
                 return True
             else:
                 return False
         else:
             return True
 
-    def validate(self):
-        "Validates gallery, returns status"
+    def validate(self) -> bool:
+        """Validates gallery, returns status"""
         # TODO: Extend this
         validity = []
         status = False
@@ -1738,7 +1767,7 @@ class Gallery:
         return self.chapters.__contains__(key)
 
     def contains(self, key, args=[]):
-        "Check if gallery contains keyword"
+        """Check if gallery contains keyword"""
         is_exclude = False if key[0] == '-' else True
         key = key[1:] if not is_exclude else key
         default = False if is_exclude else True
