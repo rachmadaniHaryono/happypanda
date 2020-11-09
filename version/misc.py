@@ -1215,8 +1215,8 @@ class GalleryMenu(QMenu):
     def set_rating(self, x):
 
         def save_rating(g):
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery,
-                              True, g.id, rating=g.rating)
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('rating',))
+            gallerydb.execute(modifier.execute, True)
 
         if self.selected:
             [(setattr(g, "rating", x), save_rating(g)) for g in [idx.data(Qt.UserRole + 1) for idx in self.selected]]
@@ -1254,8 +1254,8 @@ class GalleryMenu(QMenu):
         self.view.gallery_model.removeRows(self.view.gallery_model.rowCount() - rows, rows)
         self.parent_widget.default_manga_view.add_gallery(galleries)
         for g in galleries:
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery,
-                              True, g.id, view=g.view)
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('view',))
+            gallerydb.execute(modifier.execute, True)
         self.view.sort_model.refresh()
         self.view.clearSelection()
 
@@ -1265,20 +1265,24 @@ class GalleryMenu(QMenu):
             for idx in self.selected:
                 g = idx.data(Qt.UserRole + 1)
                 g.exed = exed
-                gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, g.id, {'exed': exed})
+                modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('exed',))
+                gallerydb.execute(modifier.execute, True)
         else:
             self.gallery.exed = exed
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, self.gallery.id, {'exed': exed})
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(self.gallery, only_include=('exed',))
+            gallerydb.execute(modifier.execute, True)
 
     def reset_read_count(self):
         if self.selected:
             for idx in self.selected:
                 g = idx.data(Qt.UserRole + 1)
                 g.times_read = 0
-                gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, g.id, {'times_read': 0})
+                modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('times_read',))
+                gallerydb.execute(modifier.execute, True)
         else:
             self.gallery.times_read = 0
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, self.gallery.id, {'times_read': 0})
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(self.gallery, only_include=('times_read',))
+            gallerydb.execute(modifier.execute, True)
 
     def add_to_list(self, g_list):
         galleries = []
