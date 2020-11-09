@@ -17,7 +17,7 @@ import logging
 import math
 import pickle
 import random
-from typing import ClassVar, Any, Union, Tuple, List
+from typing import ClassVar, Any, Union, Tuple, List, Iterable
 
 from PyQt5.QtCore import (Qt, QModelIndex, QVariant,
                           QSize, QRect, pyqtSignal, pyqtBoundSignal, QTimer, QPointF, QSortFilterProxyModel,
@@ -1632,7 +1632,8 @@ class MangaViews:
         self._delete_proxy_model = other_model
         self.gallery_model.rowsAboutToBeRemoved.connect(self._delegate_delete, Qt.DirectConnection)
 
-    def add_gallery(self, gallery, db=False, record_time=False) -> None:
+    def add_gallery(self, gallery: Union[gallerydb.Gallery, Iterable[gallerydb.Gallery]],
+                    db=False, record_time=False) -> None:
         if isinstance(gallery, (list, tuple)):
             for g in gallery:
                 g.view = self.view_type
@@ -1673,20 +1674,22 @@ class MangaViews:
         if db_optimize:
             gallerydb.execute(gallerydb.GalleryDB.begin, True)
         for gallery in list_of_gallery:
-            kwdict = {'title': gallery.title,
-                      'profile': gallery.profile,
-                      'artist': gallery.artist,
-                      'info': gallery.info,
-                      'type': gallery.type,
-                      'language': gallery.language,
-                      'rating': gallery.rating,
-                      'status': gallery.status,
-                      'pub_date': gallery.pub_date,
-                      'tags': gallery.tags,
-                      'link': gallery.link,
-                      'series_path': gallery.path,
-                      'chapters': gallery.chapters,
-                      'exed': gallery.exed}
+            kwdict = {
+                'title': gallery.title,
+                'profile': gallery.profile,
+                'artist': gallery.artist,
+                'info': gallery.info,
+                'type': gallery.type,
+                'language': gallery.language,
+                'rating': gallery.rating,
+                'status': gallery.status,
+                'pub_date': gallery.pub_date,
+                'tags': gallery.tags,
+                'link': gallery.link,
+                'series_path': gallery.path,
+                'chapters': gallery.chapters,
+                'exed': gallery.exed
+            }
 
             gallerydb.execute(gallerydb.GalleryDB.modify_gallery,
                               True, gallery.id, **kwdict)

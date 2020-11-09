@@ -16,6 +16,7 @@ import logging
 import os
 import sys
 import traceback
+from typing import List
 
 import scandir
 from PyQt5.QtCore import (Qt, QSize, pyqtSignal, QThread, QTimer,
@@ -1194,12 +1195,14 @@ class AppWindow(QMainWindow):
                 super().__init__()
 
             def checkSimple(self, model):
-                galleries = model._data
+                galleries: List[gallerydb.Gallery] = model._data
 
                 duplicates = []
+                g: gallerydb.Gallery
                 for n, g in enumerate(galleries, 1):
                     notifbar.add_text('Checking gallery {}'.format(n))
                     log_d('Checking gallery {}'.format(g.title.encode(errors="ignore")))
+                    y: gallerydb.Gallery
                     for y in galleries:
                         title = g.title.strip().lower() == y.title.strip().lower()
                         path = os.path.normcase(g.path) == os.path.normcase(y.path)
