@@ -263,11 +263,11 @@ def default_exec(obj: Gallery):
     return executing
 
 
-def only_once(fn) -> Callable[[Any, ...], GalleryModification]:
+def only_once(fn) -> Callable[[Any, ...], GalleryModifier]:
     f_name = fn.__name__
 
     @functools.wraps(fn)
-    def m(self: GalleryModification, val: Any) -> GalleryModification:
+    def m(self: GalleryModifier, val: Any) -> GalleryModifier:
         if f_name in self._mem \
                 and self._mem[f_name] == val:
             return self
@@ -279,12 +279,12 @@ def only_once(fn) -> Callable[[Any, ...], GalleryModification]:
     return m
 
 
-def update_series(fn) -> Callable[[Any, ...], GalleryModification]:
+def update_series(fn) -> Callable[[Any, ...], GalleryModifier]:
     f_name = fn.__name__
     fn = only_once(fn)
 
     @functools.wraps(fn)
-    def m(self: GalleryModification, val) -> GalleryModification:
+    def m(self: GalleryModifier, val) -> GalleryModifier:
         retval = fn(self, val)
         args = self.executing[f_name]
         if len(args) == 2:  # means that it changed
@@ -296,9 +296,9 @@ def update_series(fn) -> Callable[[Any, ...], GalleryModification]:
 
 
 # needed for type hinting set_* methods to return
-# GalleryModification which is done with decorator magic
+# GalleryModifier which is done with decorator magic
 # noinspection PyTypeChecker
-class GalleryModification:
+class GalleryModifier:
     """
     Builder class meant to easily modify a gallery given its id.
 
@@ -316,102 +316,107 @@ class GalleryModification:
         self.id = id
         self._mem = {}
         self.executing = {}
+        self._done = False
 
     @update_series
-    def set_title(self, title: str) -> GalleryModification:
+    def set_title(self, title: str) -> GalleryModifier:
         return 'title', title
 
     @update_series
-    def set_profile(self, profile: str) -> GalleryModification:
+    def set_profile(self, profile: str) -> GalleryModifier:
         return 'profile', profile
 
     @update_series
-    def set_artist(self, artist: str) -> GalleryModification:
+    def set_artist(self, artist: str) -> GalleryModifier:
         return 'artist', artist
 
     @update_series
-    def set_info(self, info: str) -> GalleryModification:
+    def set_info(self, info: str) -> GalleryModifier:
         return 'info', info
 
     @update_series
-    def set_type(self, gal_type: str) -> GalleryModification:
+    def set_type(self, gal_type: str) -> GalleryModifier:
         return 'type', gal_type
 
     @update_series
-    def set_fav(self, fav: int) -> GalleryModification:
+    def set_fav(self, fav: int) -> GalleryModifier:
         return 'fav', fav
 
     @update_series
-    def set_language(self, language: str) -> GalleryModification:
+    def set_language(self, language: str) -> GalleryModifier:
         return 'language', language
 
     @update_series
-    def set_rating(self, rating: int) -> GalleryModification:
+    def set_rating(self, rating: int) -> GalleryModifier:
         return 'rating', rating
 
     @update_series
-    def set_status(self, status: str) -> GalleryModification:
+    def set_status(self, status: str) -> GalleryModifier:
         return 'status', status
 
     @update_series
-    def set_pub_date(self, pub_date: datetime) -> GalleryModification:
+    def set_pub_date(self, pub_date: datetime) -> GalleryModifier:
         return 'pub_date', pub_date
 
     @update_series
-    def set_link(self, link: str) -> GalleryModification:
+    def set_link(self, link: str) -> GalleryModifier:
         return 'link', link
 
     @update_series
-    def set_times_read(self, times_read: int) -> GalleryModification:
+    def set_times_read(self, times_read: int) -> GalleryModifier:
         return 'times_read', times_read
 
     @update_series
-    def set_last_read(self, last_read) -> GalleryModification:
+    def set_last_read(self, last_read) -> GalleryModifier:
         return 'last_read', last_read
 
     @update_series
-    def set_series_path(self, series_path: str) -> GalleryModification:
+    def set_series_path(self, series_path: str) -> GalleryModifier:
         return 'series_path', series_path
 
     @update_series
-    def set_db_v(self, db_v) -> GalleryModification:
+    def set_db_v(self, db_v) -> GalleryModifier:
         return 'db_v', db_v
 
     @update_series
-    def set_exed(self, exed) -> GalleryModification:
+    def set_exed(self, exed) -> GalleryModifier:
         return 'exed', exed
 
     @update_series
-    def set_is_archive(self, is_archive) -> GalleryModification:
+    def set_is_archive(self, is_archive) -> GalleryModifier:
         return 'is_archive', is_archive
 
     @update_series
-    def set_path_in_archive(self, path_in_archive) -> GalleryModification:
+    def set_path_in_archive(self, path_in_archive) -> GalleryModifier:
         return 'path_in_archive', path_in_archive
 
     @update_series
-    def set_view(self, view) -> GalleryModification:
+    def set_view(self, view) -> GalleryModifier:
         return 'view', view
 
     @update_series
-    def set_date_added(self, date_added) -> GalleryModification:
+    def set_date_added(self, date_added) -> GalleryModifier:
         return 'date_added', date_added
 
     @only_once
-    def set_tags(self, tags: Dict) -> GalleryModification:
+    def set_tags(self, tags: Dict) -> GalleryModifier:
         return self.MODIFY_TAGS, tags
 
     @only_once
-    def set_chapters(self, chapters: ChaptersContainer) -> GalleryModification:
+    def set_chapters(self, chapters: ChaptersContainer) -> GalleryModifier:
         return self.UPDATE_CHAPTERS, chapters
 
     # hashes type hint based on GalleryDB.rebuild_gallery
     # type check, TODO: i suspect that might not be the correct type
     @only_once
-    def set_hashes(self, hashes: Gallery) -> GalleryModification:
+    def set_hashes(self, hashes: Gallery) -> GalleryModifier:
         return self.REBUILD_HASHES, hashes
 
-    def execute(self, executor: GalleryDB) -> None:
+    def execute(self) -> None:
+        if self._done:
+            raise RuntimeError("GalleryModifier with id {} was already done.".format(self.id))
+        self._done = True
+
         buffer = []
         values = []
         # 2020-11-09: i dont really know if you need the delayed execution
@@ -439,34 +444,42 @@ class GalleryModification:
         if buffer:
             values.append(self.id)
             stmt = 'UPDATE series SET {} WHERE series_id=? ;'.format(', '.join(buffer))
-            executor.execute(stmt, tuple(values))
+            GalleryDB.execute(stmt, tuple(values))
 
         for proc in procs:
             proc()
 
     @classmethod
-    def from_gallery(cls, gallery: Gallery) -> GalleryModification:
-        return (
-            cls(gallery.id)
-                .set_title(gallery.title)
-                .set_artist(gallery.artist)
-                .set_info(gallery.info)
-                .set_type(gallery.type)
-                .set_fav(gallery.fav)
-                .set_tags(gallery.tags)
-                .set_language(gallery.language)
-                .set_rating(gallery.rating)
-                .set_status(gallery.status)
-                .set_pub_date(gallery.pub_date)
-                .set_link(gallery.link)
-                .set_times_read(gallery.times_read)
-                .set_last_read(gallery.last_read)
-                .set_exed(gallery.exed)
-                .set_is_archive(gallery.is_archive)
-                .set_path_in_archive(gallery.path_in_archive)
-                .set_view(gallery.view)
-        )
+    def from_gallery(cls, gallery: Gallery, only_include: Optional[Iterable[str]] = None) -> GalleryModifier:
+        """
+        Returns a GalleryModifier object with all its field set to the corresponding values from gallery.
+        Pass only_include an iterable of strings to only copy those fields while excluding the rest.
+        """
+        # Problem, were Gallery to be changed or have a mismatched between the name of the gallery attribute
+        # and its corresponding set_* method in GalleryModifier, this method should be rewritten
+        # Also refactoring does not work with the way this is set up
+        # TODO: find a way to do this cleaner
+        # I thought of this after... ANOTHER CLASS, that acts a Builder on top, which accepts a Gallery object
+        # and has like, inherit_* methods on top of the set ones... so a subclass of GalleryModifier
+        default = [
+            'title', 'artist', 'info', 'type', 'fav', 'tags', 'language', 'rating', 'status', 'pub_date', 'link',
+            'times_read', 'last_read', 'exed', 'is_archive', 'path_in_archive', 'view', 'profile', 'date_added',
+            'chapters', 'hashes'
+        ]
+        if only_include:
+            if not all(x in default for x in only_include):
+                raise ValueError(
+                    "invalid sequence of attributes, {}. Can not build GalleryModifier from gallery."
+                    .format([x for x in only_include if x not in default])
+                )
+        else:
+            only_include = default
 
+        attrs = only_include
+        obj = cls(gallery.id)
+        for attr in attrs:
+            getattr(obj, 'set_' + attr)(getattr(gallery, attr))
+        return obj
 
 class GalleryDB(DBBase):
     """
@@ -497,8 +510,7 @@ class GalleryDB(DBBase):
             if gallery.profile:
                 GalleryDB.clear_thumb(gallery.profile)
             gallery.profile = Executors.generate_thumbnail(gallery, blocking=True)
-            GalleryDB.modify_gallery(gallery.id,
-                                     profile=gallery.profile)
+            GalleryDB.new_gallery_modifier_based_on(gallery, only_include=('profile',)).execute()
         except:
             log.exception("Failed rebuilding thumbnail")
             return False
@@ -533,31 +545,47 @@ class GalleryDB(DBBase):
             log_i('Rebuilding {}'.format(gallery.title.encode(errors='ignore')))
             log_i("Rebuilding gallery {}".format(gallery.id))
             HashDB.del_gallery_hashes(gallery.id)
-            GalleryDB.modify_gallery(gallery.id,
-                                     title=gallery.title,
-                                     artist=gallery.artist,
-                                     info=gallery.info,
-                                     type=gallery.type,
-                                     fav=gallery.fav,
-                                     tags=gallery.tags,
-                                     language=gallery.language,
-                                     rating=gallery.rating,
-                                     status=gallery.status,
-                                     pub_date=gallery.pub_date,
-                                     link=gallery.link,
-                                     times_read=gallery.times_read,
-                                     last_read=gallery.last_read,
-                                     _db_v=db_constants.CURRENT_DB_VERSION,
-                                     exed=gallery.exed,
-                                     is_archive=gallery.is_archive,
-                                     path_in_archive=gallery.path_in_archive,
-                                     view=gallery.view)
+
+            attr_include = [
+                'title', 'artist', 'info', 'type', 'fav', 'tags', 'language', 'rating', 'status',
+                'pub_date', 'link', 'times_read', 'last_read', 'exed', 'is_archive', 'path_in_archive', 'view'
+            ]
+            # @formatter: off
+            (
+                GalleryModifier
+                .from_gallery(gallery, only_include=attr_include)
+                .set_db_v(db_constants.CURRENT_DB_VERSION)
+                .execute()
+            )
+            # @formatter: on
             if thumb:
                 GalleryDB.rebuild_thumb(gallery)
         except:
             log.exception('Failed rebuilding')
             return False
         return True
+
+    @classmethod
+    def new_gallery_modifier_based_on(cls, gallery: Gallery, only_include: Optional[Iterable[str]] = None) -> GalleryModifier:
+        """
+        Returns a GalleryModifier object with all its field set to the corresponding values from gallery.
+        Pass only_include an iterable of strings to only copy those fields while excluding the rest.
+
+        Equivalent to `GalleryModifier.from_gallery`.
+        """
+        return GalleryModifier.from_gallery(gallery, only_include=only_include)
+
+    @classmethod
+    def new_gallery_modifier(cls, gallery_or_id: Union[Gallery, int]) -> GalleryModifier:
+        """
+        Returns a GalleryModifier object, initialized with the passed id or gallery's id.
+        """
+        if isinstance(gallery_or_id, Gallery):
+            return GalleryModifier(gallery_or_id.id)
+        elif isinstance(gallery_or_id, int):
+            return GalleryModifier(gallery_or_id)
+
+        raise TypeError("expected GalleryModifier or int, got {}.".format(gallery_or_id))
 
     @classmethod
     def modify_gallery(cls, series_id, title=None, profile=None, artist=None, info=None, type=None, fav=None,
@@ -1750,7 +1778,7 @@ class Gallery:
     date_added: datetime
     last_read: Any  # DOnt know
     times_read: int
-    hashes: List
+    hashes: List[bytes]
     exed: Any  # Dont really know for now
     valid: bool
 
@@ -1844,8 +1872,9 @@ class Gallery:
     def set_profile(self, future):
         """set with profile with future object"""
         self.profile = future.result()
-        if self.id != None:
-            execute(GalleryDB.modify_gallery, True, self.id, profile=self.profile, priority=0)
+        if self.id is not None:
+            modifier = GalleryDB.new_gallery_modifier(self.id).set_profile(self.profile)
+            execute(modifier.execute, True, priority=0)
 
     @property
     def chapters(self) -> ChaptersContainer:
@@ -2188,8 +2217,8 @@ class Chapter:
             execute(utils.open_chapter, True, self.path)
         self.gallery.times_read += 1
         self.gallery.last_read = datetime.datetime.now().replace(microsecond=0)
-        execute(GalleryDB.modify_gallery, True, self.gallery.id, times_read=self.gallery.times_read,
-                last_read=self.gallery.last_read)
+        modifier = GalleryDB.new_gallery_modifier_based_on(self.gallery, only_include=('times_read', 'last_read'))
+        execute(modifier.execute, True)
 
 
 class ChaptersContainer:
