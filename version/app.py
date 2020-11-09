@@ -12,32 +12,22 @@
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
 
-import sys
 import logging
 import os
-import threading
-import re
-import requests
-import scandir
-import random
+import sys
 import traceback
 
-from PyQt5.QtCore import (Qt, QSize, pyqtSignal, QThread, QEvent, QTimer,
-                          QObject, QPoint, QPropertyAnimation)
-from PyQt5.QtGui import (QPixmap, QIcon, QMoveEvent, QCursor,
-                         QKeySequence)
-from PyQt5.QtWidgets import (QMainWindow, QListView,
-                             QHBoxLayout, QFrame, QWidget, QVBoxLayout,
-                             QLabel, QStackedLayout, QToolBar, QMenuBar,
-                             QSizePolicy, QMenu, QAction, QLineEdit,
-                             QSplitter, QMessageBox, QFileDialog,
-                             QDesktopWidget, QPushButton, QCompleter,
-                             QListWidget, QListWidgetItem, QToolTip,
-                             QProgressBar, QToolButton, QSystemTrayIcon,
+import scandir
+from PyQt5.QtCore import (Qt, QSize, pyqtSignal, QThread, QTimer,
+                          QObject, pyqtBoundSignal)
+from PyQt5.QtGui import (QIcon, QKeySequence)
+from PyQt5.QtWidgets import (QMainWindow, QHBoxLayout, QWidget, QVBoxLayout,
+                             QLabel, QToolBar, QSizePolicy, QMenu, QAction, QLineEdit,
+                             QMessageBox, QFileDialog,
+                             QCompleter,
+                             QToolButton, QSystemTrayIcon,
                              QShortcut, QGraphicsBlurEffect, QTableWidget,
-                             QTableWidgetItem, QActionGroup)
-
-from executors import Executors
+                             QTableWidgetItem)
 
 try:
     import app_constants
@@ -53,6 +43,7 @@ try:
     import utils
     import misc_db
     import database
+    from executors import Executors
 except ImportError:
     from . import app_constants
     from . import misc
@@ -67,6 +58,7 @@ except ImportError:
     from . import utils
     from . import misc_db
     from . import database
+    from .executors import Executors
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -77,14 +69,14 @@ log_c = log.critical
 
 
 class AppWindow(QMainWindow):
-    "The application's main window"
+    """The application's main window"""
 
-    move_listener = pyqtSignal()
-    login_check_invoker = pyqtSignal()
-    db_startup_invoker = pyqtSignal(list)
-    duplicate_check_invoker = pyqtSignal(gallery.GalleryModel)
-    admin_db_method_invoker = pyqtSignal(object)
-    db_activity_checker = pyqtSignal()
+    move_listener: pyqtBoundSignal = pyqtSignal()
+    login_check_invoker: pyqtBoundSignal = pyqtSignal()
+    db_startup_invoker: pyqtBoundSignal = pyqtSignal(list)
+    duplicate_check_invoker: pyqtBoundSignal = pyqtSignal(gallery.GalleryModel)
+    admin_db_method_invoker: pyqtBoundSignal = pyqtSignal(object)
+    db_activity_checker: pyqtBoundSignal = pyqtSignal()
     graphics_blur = QGraphicsBlurEffect()
 
     def __init__(self, disable_excepthook=False):
@@ -308,7 +300,7 @@ class AppWindow(QMainWindow):
 
     def _check_update(self):
         class upd_chk(QObject):
-            UPDATE_CHECK = pyqtSignal(str)
+            UPDATE_CHECK: pyqtBoundSignal = pyqtSignal(str)
 
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
@@ -504,7 +496,7 @@ class AppWindow(QMainWindow):
         # self.manga_list_view.gallery_model.rowsRemoved.connect(self.gallery_delete_spinner.before_hide)
 
     def search(self, srch_string):
-        "Args should be Search Enums"
+        """Args should be Search Enums"""
         self.search_bar.setText(srch_string)
         self.search_backward.setVisible(True)
         args = []
@@ -521,7 +513,7 @@ class AppWindow(QMainWindow):
             self.search_bar.setCursorPosition(old_cursor_pos)
 
     def switch_display(self):
-        "Switches between fav and catalog display"
+        """Switches between fav and catalog display"""
         if self.current_manga_view.fav_is_current():
             self.tab_manager.library_btn.click()
         else:
@@ -857,7 +849,7 @@ class AppWindow(QMainWindow):
     # TODO: Improve this so that it adds to the gallery dialog,
     # so user can edit data before inserting (make it a choice)
     def populate(self, mixed=None):
-        "Populates the database with gallery from local drive'"
+        """Populates the database with gallery from local drive'"""
 
         if mixed:
             gallery_view = misc.GalleryListView(self, True)
@@ -896,7 +888,7 @@ class AppWindow(QMainWindow):
             msg_box.show()
 
     def gallery_populate(self, path, validate=False):
-        "Scans the given path for gallery to add into the DB"
+        """Scans the given path for gallery to add into the DB"""
         if len(path) > 0:
             data_thread = QThread(self)
             data_thread.setObjectName('General gallery populate')
@@ -918,7 +910,7 @@ class AppWindow(QMainWindow):
                                                   "<font color='red'>Nothing was added. Check happypanda_log for details..</font>")
 
             def skipped_gs(s_list):
-                "Skipped galleries"
+                """Skipped galleries"""
                 msg_box = QMessageBox(self)
                 msg_box.setIcon(QMessageBox.Question)
                 msg_box.setText('Do you want to view skipped paths?')
@@ -981,7 +973,7 @@ class AppWindow(QMainWindow):
             log_i('Scanning for new galleries...')
             try:
                 class ScanDir(QObject):
-                    finished = pyqtSignal()
+                    finished: pyqtBoundSignal = pyqtSignal()
                     fetch_inst = fetch.Fetch(self)
 
                     def __init__(self, addition_view, addition_tab, parent=None):
@@ -1147,7 +1139,7 @@ class AppWindow(QMainWindow):
         # check if there is db activity
         if not gallerydb.method_queue.empty():
             class DBActivityChecker(QObject):
-                FINISHED = pyqtSignal()
+                FINISHED: pyqtBoundSignal = pyqtSignal()
 
                 def __init__(self, **kwargs):
                     super().__init__(**kwargs)
@@ -1195,8 +1187,8 @@ class AppWindow(QMainWindow):
         dup_tab.view.set_delete_proxy(self.default_manga_view.gallery_model)
 
         class DuplicateCheck(QObject):
-            found_duplicates = pyqtSignal(tuple)
-            finished = pyqtSignal()
+            found_duplicates: pyqtBoundSignal = pyqtSignal(tuple)
+            finished: pyqtBoundSignal = pyqtSignal()
 
             def __init__(self):
                 super().__init__()
