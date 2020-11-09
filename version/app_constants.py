@@ -22,6 +22,7 @@ from PyQt5.QtGui import QIcon
 
 try:
     import settings
+    import gallerydb
     from database import db_constants
 except ImportError:
     from . import settings, gallerydb
