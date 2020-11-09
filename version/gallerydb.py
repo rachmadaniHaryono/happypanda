@@ -28,7 +28,7 @@ from dateutil import parser as dateparser
 
 try:
     from utils import (today, ArchiveFile, generate_img_hash, delete_path,
-                       ARCHIVE_FILES, get_gallery_img, IMG_FILES)
+                       ARCHIVE_FILES, get_gallery_img, IMG_FILES, b_search)
     from database import db_constants
     from database import db
     from database.db import DBBase
@@ -38,7 +38,7 @@ try:
     import utils
 except ImportError:
     from .utils import (today, ArchiveFile, generate_img_hash, delete_path,
-                        ARCHIVE_FILES, get_gallery_img, IMG_FILES)
+                        ARCHIVE_FILES, get_gallery_img, IMG_FILES, b_search)
     from .database import db_constants
     from .database import db
     from .database.db import DBBase
@@ -562,20 +562,8 @@ class GalleryDB(DBBase):
         else:
             filter_list = galleries
 
-        def binary_search(key):
-            low = 0
-            high = len(filter_list) - 1
-            while high >= low:
-                mid = low + (high - low) // 2
-                if filter_list[mid] < key:
-                    low = mid + 1
-                elif filter_list[mid] > key:
-                    high = mid - 1
-                else:
-                    return True
-            return False
-
-        return binary_search(os.path.normcase(name))
+        search = b_search(filter_list, os.path.normcase(name))
+        return search
 
 
 class ChapterDB(DBBase):
