@@ -15,6 +15,7 @@
 import enum
 import os
 import sys
+from typing import Set
 
 import qtawesome as qta
 from PyQt5.QtGui import QIcon
@@ -23,7 +24,7 @@ try:
     import settings
     from database import db_constants
 except ImportError:
-    from . import settings
+    from . import settings, gallerydb
     from .database import db_constants
 
 # Version number
@@ -372,7 +373,7 @@ TOOLTIP_DATE_ADDED = get(True, 'Visual', 'tooltip date added', bool)
 
 GALLERY_ADDITION_DATA = []
 GALLERY_DATA = []  # contains the most up to date gallery data
-GALLERY_LISTS = set()  # contains the most up to dat gallery lists
+GALLERY_LISTS: Set[gallerydb.GalleryList] = set()  # contains the most up to dat gallery lists
 
 
 # Exceptions
