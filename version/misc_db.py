@@ -9,6 +9,8 @@
 # GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import annotations
+
 import logging
 import pickle
 from typing import Optional
@@ -20,7 +22,7 @@ from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QWidget,
                              QVBoxLayout, QTabWidget, QMenu, QApplication,
                              QListWidget, QHBoxLayout, QPushButton, QStackedLayout,
                              QFrame, QSizePolicy, QListView, QFormLayout, QLineEdit,
-                             QStyledItemDelegate, QCheckBox, QButtonGroup, QPlainTextEdit, QListWidgetItem)
+                             QStyledItemDelegate, QCheckBox, QButtonGroup, QPlainTextEdit)
 
 try:
     import gallerydb
@@ -118,7 +120,7 @@ class ToolbarTabManager(QObject):
                         act_to_remove = act
                         break
                 if act_to_remove:
-                    self._actions.remove(act)
+                    self._actions.remove(act_to_remove)
 
 
 class NoTooltipModel(QIdentityProxyModel):
@@ -136,7 +138,7 @@ class NoTooltipModel(QIdentityProxyModel):
 
 
 class UniqueInfoModel(QSortFilterProxyModel):
-    def __init__(self, gallerymodel, role, parent=None):
+    def __init__(self, gallerymodel, role, parent: Optional[GalleryArtistsList] = None):
         super().__init__(parent)
         self.setSourceModel(NoTooltipModel(gallerymodel, parent))
         self._unique = set()
@@ -266,9 +268,10 @@ class TagsTreeView(QTreeWidget):
                 txt = "{}:{}".format(ns, tag)
                 self.clipboard.setText(txt)
             else:
-                item = s_items[0]
-                self.clipboard.setText(item.text(0))
+                we_item = s_items[0]
+                self.clipboard.setText(we_item.text(0))
 
+        menu = None
         if s_items:
             menu = QMenu(self)
             if not selected:
@@ -285,7 +288,7 @@ class TagsTreeView(QTreeWidget):
                 create_list_filter_act.triggered.connect(lambda: self.create_list(s_items))
             handled = True
 
-        if handled:
+        if handled and menu:
             menu.exec_(event.globalPos())
             event.accept()
             del menu
@@ -455,7 +458,7 @@ class GalleryLists(QListWidget):
         new_item.setIcon(self._g_list_icon)
         self.sortItems()
 
-    def create_new_list(self, name=None, gallery_list: Optional[gallerydb.GalleryList]=None):
+    def create_new_list(self, name=None, gallery_list: Optional[gallerydb.GalleryList] = None):
         new_item = misc.CustomListItem()
         self._in_proccess_item = new_item
         new_item.setFlags(new_item.flags() | Qt.ItemIsEditable)
@@ -645,7 +648,7 @@ class DBOverview(QWidget):
     """
     
     """
-    about_to_close = pyqtSignal()
+    about_to_close: pyqtBoundSignal = pyqtSignal()
 
     def __init__(self, parent, window=False):
         if window:
