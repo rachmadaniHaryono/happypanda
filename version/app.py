@@ -39,19 +39,34 @@ from PyQt5.QtWidgets import (QMainWindow, QListView,
 
 from executors import Executors
 
-import app_constants
-import misc
-import gallery
-import io_misc
-import settingsdialog
-import gallerydialog
-import fetch
-import gallerydb
-import settings
-import pewnet
-import utils
-import misc_db
-import database
+try:
+    import app_constants
+    import misc
+    import gallery
+    import io_misc
+    import settingsdialog
+    import gallerydialog
+    import fetch
+    import gallerydb
+    import settings
+    import pewnet
+    import utils
+    import misc_db
+    import database
+except ImportError:
+    from . import app_constants
+    from . import misc
+    from . import gallery
+    from . import io_misc
+    from . import settingsdialog
+    from . import gallerydialog
+    from . import fetch
+    from . import gallerydb
+    from . import settings
+    from . import pewnet
+    from . import utils
+    from . import misc_db
+    from . import database
 
 log = logging.getLogger(__name__)
 log_i = log.info
