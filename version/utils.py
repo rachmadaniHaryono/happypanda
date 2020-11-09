@@ -11,6 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
+from __future__ import annotations
 
 import datetime
 import os
@@ -22,7 +23,8 @@ import hashlib
 import shutil
 import uuid
 import re
-from typing import ClassVar, Union, List
+import re as regex
+from typing import ClassVar, Union, List, Dict, AnyStr, io, Optional
 
 import webbrowser
 import scandir
@@ -36,9 +38,11 @@ from PyQt5.QtGui import QImage, qRgba
 from PIL import Image, ImageChops
 
 try:
+    import gallerydb
     import app_constants
     from database import db_constants
 except ImportError:
+    from . import gallerydb
     from . import app_constants
     from .database import db_constants
 
@@ -61,6 +65,8 @@ if not app_constants.unrar_tool_path:
 
 
 class GMetafile:
+    files: List['io.TextIO']
+
     def __init__(self, path=None, archive=''):
         self.metadata = {
             "title": '',
@@ -77,11 +83,11 @@ class GMetafile:
         if path is None:
             return
         if archive:
-            zip = ArchiveFile(archive)
-            c = zip.dir_contents(path)
+            f_zip = ArchiveFile(archive)
+            c = f_zip.dir_contents(path)
             for x in c:
                 if x.endswith(app_constants.GALLERY_METAFILE_KEYWORDS):
-                    self.files.append(open(zip.extract(x), encoding='utf-8'))
+                    self.files.append(open(f_zip.extract(x), encoding='utf-8'))
         else:
             for p in scandir.scandir(path):
                 if p.name in app_constants.GALLERY_METAFILE_KEYWORDS:
@@ -91,7 +97,11 @@ class GMetafile:
         else:
             log_d('No metafile found...')
 
-    def _eze(self, fp):
+    def _eze(self, fp: 'io.TextIO'):
+        """
+        2020-11-09: TODO: find what site metadata this is
+        Possibly panda chaika moe metadata
+        """
         if not fp.name.endswith('.json'):
             return
         j = json.load(fp, encoding='utf-8')
@@ -118,8 +128,8 @@ class GMetafile:
             self.metadata['link'] = 'http://' + l['site'] + '.org/g/' + str(l['gid']) + '/' + l['token']
             return True
 
-    def _hdoujindler(self, fp):
-        "HDoujin Downloader"
+    def _hdoujindler(self, fp: 'io.TextIO'):
+        """HDoujin Downloader"""
         if fp.name.endswith('info.txt'):
             log_i('Detected metafile: HDoujin text')
             lines = fp.readlines()
@@ -191,24 +201,30 @@ class GMetafile:
     def update(self, other):
         self.metadata.update((x, y) for x, y in other.metadata.items() if y)
 
-    def apply_gallery(self, gallery):
+    def set_gallery_attr(self, gallery: gallerydb.Gallery, metadata_key: str,
+                         gallery_attr: Optional[str] = None) -> None:
+
+        if not gallery_attr:
+            gallery_attr = metadata_key
+
+        if not hasattr(gallery, gallery_attr):
+            raise ValueError(
+                "Gallery object does not have an attribute '{}' for its value to be set with metadata key '{}'"
+                .format(gallery_attr, metadata_key)
+            )
+
+        if metadata_key in self.metadata:
+            val = self.metadata[metadata_key]
+            if not val:
+                log_d("No value for metadata key %s", metadata_key)
+            else:
+                setattr(gallery, gallery_attr, val)
+
+    def apply_gallery(self, gallery: gallerydb.Gallery):
         log_i('Applying metafile to gallery')
-        if self.metadata['title']:
-            gallery.title = self.metadata['title']
-        if self.metadata['artist']:
-            gallery.artist = self.metadata['artist']
-        if self.metadata['type']:
-            gallery.type = self.metadata['type']
-        if self.metadata['tags']:
-            gallery.tags = self.metadata['tags']
-        if self.metadata['language']:
-            gallery.language = self.metadata['language']
-        if self.metadata['pub_date']:
-            gallery.pub_date = self.metadata['pub_date']
-        if self.metadata['link']:
-            gallery.link = self.metadata['link']
-        if self.metadata['info']:
-            gallery.info = self.metadata['info']
+        for attr in ['title', 'artist', 'type', 'tags', 'pub_date', 'link', 'info']:
+            self.set_gallery_attr(gallery, attr)
+
         return gallery
 
 
@@ -499,7 +515,7 @@ class ArchiveFile:
                     and x.count('/') == 1 + dir_name.count('/')]
         return []
 
-    def extract(self, file_to_ext, path=None):
+    def extract(self, file_to_ext, path=None) -> Union[str, 'os.PathLike']:
         """
         Extracts one file from archive to given path
         Creates a temp_dir if path is not specified
@@ -512,6 +528,7 @@ class ArchiveFile:
         if not file_to_ext:
             return self.extract_all(path)
         else:
+            temp_p = ''
             if self.type == self.zip:
                 membs = []
                 for name in self.namelist():
@@ -538,7 +555,7 @@ class ArchiveFile:
         self.archive.extractall(path)
         return path
 
-    def open(self, file_to_open: str, fp=False) -> Union['AnyStr', 'IO[bytes]']:
+    def open(self, file_to_open: str, fp=False) -> Union['AnyStr', 'io.IO[bytes]']:
         """
         Returns bytes. If fp set to true, returns file-like object.
         """
@@ -558,16 +575,16 @@ def check_archive(archive_path):
     if there is no directories
     """
     try:
-        zip = ArchiveFile(archive_path)
+        f_zip = ArchiveFile(archive_path)
     except app_constants.CreateArchiveFail:
         return []
-    if not zip:
+    if not f_zip:
         return []
     galleries = []
-    zip_dirs = zip.dir_list()
+    zip_dirs = f_zip.dir_list()
 
     def gallery_eval(d):
-        con = zip.dir_contents(d)
+        con = f_zip.dir_contents(d)
         if con:
             gallery_probability = len(con)
             for n in con:
@@ -585,11 +602,11 @@ def check_archive(archive_path):
             r = gallery_eval(d)
             if r:
                 galleries.append(r)
-        zip.close()
+        f_zip.close()
     else:  # all pages are in top folder
         if isinstance(gallery_eval(''), str):
             galleries.append('')
-        zip.close()
+        f_zip.close()
 
     return galleries
 
@@ -671,14 +688,14 @@ def open_chapter(chapterpath, archive=None):
         elif send_image_t in custom_args:
             send_folder = False
 
-    def find_f_img_folder():
+    def find_f_img_folder() -> Union[str, 'os.PathLike']:
         filepath = os.path.join(temp_p, [x for x in sorted([y.name for y in scandir.scandir(temp_p)]) \
                                          if x.lower().endswith(IMG_FILES) and not x.startswith('.')][
             0])  # Find first page
         return temp_p if send_folder else filepath
 
-    def find_f_img_archive(extract=True):
-        zip = ArchiveFile(temp_p)
+    def find_f_img_archive(extract=True) -> Union[str, 'os.PathLike']:
+        f_zip = ArchiveFile(temp_p)
         if extract:
             app_constants.NOTIF_BAR.add_text('Extracting...')
             t_p = os.path.join('temp', str(uuid.uuid4()))
@@ -695,28 +712,28 @@ def open_chapter(chapterpath, archive=None):
                     else:
                         t_p = zip2.extract('', t_p)
                 else:
-                    t_p = zip.extract(chapterpath, t_p)
+                    t_p = f_zip.extract(chapterpath, t_p)
             else:
-                zip.extract_all(t_p)  # Compatibility reasons..  TODO: REMOVE IN BETA
+                f_zip.extract_all(t_p)  # Compatibility reasons..  TODO: REMOVE IN BETA
             if send_folder:
-                filepath = t_p
+                fp = t_p
             else:
-                filepath = os.path.join(t_p, [x for x in sorted([y.name for y in scandir.scandir(t_p)]) \
-                                              if x.lower().endswith(IMG_FILES) and not x.startswith('.')][
+                fp = os.path.join(t_p, [x for x in sorted([y.name for y in scandir.scandir(t_p)]) \
+                                        if x.lower().endswith(IMG_FILES) and not x.startswith('.')][
                     0])  # Find first page
-                filepath = os.path.abspath(filepath)
+                fp = os.path.abspath(fp)
         else:
             if is_archive or chapterpath.endswith(ARCHIVE_FILES):
-                con = zip.dir_contents('')
+                con = f_zip.dir_contents('')
                 f_img = [x for x in sorted(con) if x.lower().endswith(IMG_FILES) and not x.startswith('.')]
                 if not f_img:
                     log_w('Extracting archive.. There are no images in the top-folder. ({})'.format(archive))
                     return find_f_img_archive()
-                filepath = os.path.normpath(archive)
+                fp = os.path.normpath(archive)
             else:
                 app_constants.NOTIF_BAR.add_text("Fatal error: Unsupported gallery!")
                 raise ValueError("Unsupported gallery version")
-        return filepath
+        return fp
 
     try:
         try:  # folder
@@ -777,7 +794,8 @@ def open_chapter(chapterpath, archive=None):
         log_e('Could not open chapter {}'.format(os.path.split(chapterpath)[1]))
 
 
-def get_gallery_img(gallery_or_path, chap_number=0):
+def get_gallery_img(gallery_or_path: Union[gallerydb.Gallery, str, 'os.PathLike'], chap_number: int = 0) \
+        -> Union[str, 'os.PathLike', None]:
     """
     Returns a path to image in gallery chapter
     """
@@ -796,7 +814,7 @@ def get_gallery_img(gallery_or_path, chap_number=0):
         name = os.path.split(path)[0]
     is_archive = True if archive or name.endswith(ARCHIVE_FILES) else False
     real_path = archive if archive else path
-    img_path = None
+    img_path: Union[str, 'os.PathLike', None] = None
     if is_archive:
         try:
             log_i('Getting image from archive')
@@ -826,9 +844,10 @@ def get_gallery_img(gallery_or_path, chap_number=0):
         return os.path.abspath(img_path)
     else:
         log_e("Could not get gallery image")
+        return None
 
 
-def tag_to_string(gallery_tag, simple=False):
+def tag_to_string(gallery_tag: Dict, simple: bool = False) -> str:
     """
     Takes gallery tags and converts it to string, returns string
     if simple is set to True, returns a CSV string, else a dict-like string
@@ -877,7 +896,7 @@ def tag_to_string(gallery_tag, simple=False):
     return string
 
 
-def tag_to_dict(string, ns_capitalize=True):
+def tag_to_dict(string: str, ns_capitalize=True) -> Dict:
     """Receives a string of tags and converts it to a dict of tags"""
     namespace_tags = {'default': []}
     level = 0  # so we know if we are in a list
@@ -960,9 +979,6 @@ def tag_to_dict(string, ns_capitalize=True):
     return namespace_tags
 
 
-import re as regex
-
-
 def title_parser(title):
     """Receives a title to parse. Returns dict with 'title', 'artist' and language"""
     log_d("Parsing title: {}".format(title))
@@ -981,7 +997,7 @@ def title_parser(title):
 
     parsed_title = {'title': "", 'artist': "", 'language': ""}
     try:
-        a = regex.findall('((?<=\[) *[^\]]+( +\S+)* *(?=\]))', title)
+        a = regex.findall(r'((?<=\[) *[^\]]+( +\S+)* *(?=\]))', title)
         assert len(a) != 0
         try:
             artist = a[0][0].strip()
@@ -1017,7 +1033,7 @@ def title_parser(title):
     return parsed_title
 
 
-def open_web_link(url):
+def open_web_link(url) -> None:
     if not url:
         return
     try:
@@ -1101,8 +1117,10 @@ def regex_search(a, b, override_case=False, args: List = None):
     return False
 
 
-def search_term(a, b, override_case=False, args=[]):
+def search_term(a, b, override_case=False, args: Optional[List] = None):
     """Searches for a in b"""
+    if args is None:
+        args = []
     if a and b:
         if override_case or app_constants.Search.Case not in args:
             b = b.lower()
@@ -1223,7 +1241,7 @@ def PToQImageHelper(im):
         """(Internal) Turns an RGB color into a Qt compatible color integer."""
         # use qRgb to pack the colors, and then turn the resulting long
         # into a negative integer with the same bitpattern.
-        return (qRgba(r, g, b, a) & 0xffffffff)
+        return qRgba(r, g, b, a) & 0xffffffff
 
     def align8to32(bytes, width, mode):
         """
@@ -1267,21 +1285,21 @@ def PToQImageHelper(im):
         im = Image.open(im)
 
     if im.mode == "1":
-        format = QImage.Format_Mono
+        img_format = QImage.Format_Mono
     elif im.mode == "L":
-        format = QImage.Format_Indexed8
+        img_format = QImage.Format_Indexed8
         colortable = []
         for i in range(256):
             colortable.append(rgb(i, i, i))
     elif im.mode == "P":
-        format = QImage.Format_Indexed8
+        img_format = QImage.Format_Indexed8
         colortable = []
         palette = im.getpalette()
         for i in range(0, len(palette), 3):
             colortable.append(rgb(*palette[i:i + 3]))
     elif im.mode == "RGB":
         data = im.tobytes("raw", "BGRX")
-        format = QImage.Format_RGB32
+        img_format = QImage.Format_RGB32
     elif im.mode == "RGBA":
         try:
             data = im.tobytes("raw", "BGRA")
@@ -1289,14 +1307,14 @@ def PToQImageHelper(im):
             # workaround for earlier versions
             r, g, b, a = im.split()
             im = Image.merge("RGBA", (b, g, r, a))
-        format = QImage.Format_ARGB32
+        img_format = QImage.Format_ARGB32
     else:
         raise ValueError("unsupported image mode %r" % im.mode)
 
     # must keep a reference, or Qt will crash!
     __data = data or align8to32(im.tobytes(), im.size[0], im.mode)
     return {
-        'data': __data, 'im': im, 'format': format, 'colortable': colortable
+        'data': __data, 'im': im, 'format': img_format, 'colortable': colortable
     }
 
 
