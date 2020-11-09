@@ -285,7 +285,7 @@ class GalleryDB(DBBase):
         raise Exception("GalleryDB should not be instantiated")
 
     @staticmethod
-    def rebuild_thumb(gallery):
+    def rebuild_thumb(gallery: Gallery) -> bool:
         """Rebuilds gallery thumbnail"""
         try:
             log_i('Recreating thumb {}'.format(gallery.title.encode(errors='ignore')))
@@ -300,7 +300,7 @@ class GalleryDB(DBBase):
         return True
 
     @staticmethod
-    def clear_thumb(path):
+    def clear_thumb(path: Union[str, 'os.PathLike']) -> None:
         """Deletes a thumbnail"""
         try:
             if os.path.samefile(path, app_constants.NO_IMAGE_PATH):
@@ -309,21 +309,20 @@ class GalleryDB(DBBase):
             pass
 
         try:
-            os.unlink(path)
-        except FileNotFoundError:
-            pass
+            if os.path.isfile(path):
+                os.unlink(path)
         except:
             log.exception('Failed to delete thumb {}'.format(os.path.split(path)[1].encode(errors='ignore')))
 
     @staticmethod
-    def clear_thumb_dir():
+    def clear_thumb_dir() -> None:
         """Deletes everything in the thumbnail directory"""
         if os.path.exists(db_constants.THUMBNAIL_PATH):
             for thumbfile in scandir.scandir(db_constants.THUMBNAIL_PATH):
                 GalleryDB.clear_thumb(thumbfile.path)
 
     @staticmethod
-    def rebuild_gallery(gallery, thumb=False):
+    def rebuild_gallery(gallery: Gallery, thumb=False) -> bool:
         """Rebuilds the galleries in DB"""
         try:
             log_i('Rebuilding {}'.format(gallery.title.encode(errors='ignore')))
