@@ -21,7 +21,7 @@ import os
 import queue
 import threading
 import uuid
-from typing import Any, Callable, List, Union, Optional, Dict, Literal, ClassVar, Tuple, Set
+from typing import Any, Callable, List, Union, Optional, Dict, Literal, ClassVar, Tuple, Set, Iterable
 
 import scandir
 from PyQt5.QtCore import QObject, pyqtSignal, QTime, pyqtBoundSignal
@@ -1318,7 +1318,7 @@ class HashDB(DBBase):
         return hashes
 
     @classmethod
-    def get_gallery_hash(cls, gallery_id: int, chapter: int, page: Optional[int] = None) -> List[bytes]:
+    def get_gallery_hash(cls, gallery_id: int, chapter: int, page: Optional[int] = None) -> Optional[List[bytes]]:
         """
         returns hash of chapter. If page is specified, returns hash of chapter page
         """
@@ -1346,7 +1346,7 @@ class HashDB(DBBase):
 
     @classmethod
     def gen_gallery_hash(cls, gallery: Gallery, chapter: int, page: Union[int, str, List, None] = None, color_img=False,
-                         _name=None):
+                         _name=None) -> Union[Dict[Union[int, str], Union[bytes, str, 'os.PathLike']], Iterable[bytes]]:
         """
         Generate hash for a specific chapter.
         Set page to only generate specific page
@@ -1359,7 +1359,9 @@ class HashDB(DBBase):
         if page is not None:
             assert isinstance(page, (int, str, list))
         skip_gen = False
-        if gallery.id:
+        chap_id = None
+        hashes = {}
+        if gallery.id is not None:
             chap_id = ChapterDB.get_chapter_id(gallery.id, chapter)
 
             c = cls.execute('SELECT hash, page FROM hashes WHERE series_id=? AND chapter_id=?',
@@ -1534,7 +1536,9 @@ class HashDB(DBBase):
     @classmethod
     def gen_gallery_hashes(cls, gallery: Gallery) -> List[bytes]:
         """Generates hashes for gallery's first chapter and inserts them to DB"""
-        return HashDB.gen_gallery_hash(gallery, 0)
+        # noinspection PyTypeChecker
+        gallery_hash: List[bytes] = HashDB.gen_gallery_hash(gallery, 0)
+        return gallery_hash
 
     @staticmethod
     def rebuild_gallery_hashes(gallery: Gallery) -> List[bytes]:
@@ -2208,7 +2212,7 @@ class ChaptersContainer:
             gallery.chapters = self
 
     def set_parent(self, gallery: Optional[Gallery]) -> None:
-        assert isinstance(gallery, (Gallery, None))
+        assert isinstance(gallery, Gallery) or gallery is None
         self.parent = gallery
         for n in self._data:
             chap = self._data[n]
