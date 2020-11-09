@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import datetime
+import functools
 import io
 import logging
 import os
@@ -260,6 +261,181 @@ def default_exec(obj: Gallery):
                      'view': object_or_none(obj.view)
                  }]
     return executing
+
+
+def only_once(fn):
+    f_name = fn.__name__
+
+    @functools.wraps(fn)
+    def m(self, val):
+        if f_name in self._mem \
+                and self._mem[f_name] == val:
+            return self
+        retval = fn(self, val)
+        self._mem[f_name] = val
+        self.executing[f_name] = retval
+        return self
+
+    return m
+
+
+def update_series(fn):
+    f_name = fn.__name__
+    fn = only_once(fn)
+
+    @functools.wraps(fn)
+    def m(self, val):
+        retval = fn(self, val)
+        args = self.executing[f_name]
+        if len(args) == 2:  # means that it changed
+            db_name, value = args
+            self.executing[f_name] = (self.UPDATE_SERIES, db_name, value)
+        return retval
+
+    return m
+
+
+class GalleryModification:
+    """
+    Builder class meant to easily modify a gallery given its id.
+
+    NOTE: Meant to replace GalleryDB.modify_gallery in certain uses.
+    """
+    # Cases
+    UPDATE_SERIES: ClassVar[int] = 0
+    MODIFY_TAGS: ClassVar[int] = 1
+    UPDATE_CHAPTERS: ClassVar[int] = 2
+    REBUILD_HASHES: ClassVar[int] = 3
+
+    id: int
+
+    def __init__(self, id: int):
+        self.id = id
+        self._mem = {}
+        self.executing = {}
+
+    @update_series
+    def set_title(self, title: str):
+        return 'title', title
+
+    @update_series
+    def set_profile(self, profile: str):
+        return 'profile', profile
+
+    @update_series
+    def set_artist(self, artist: str):
+        return 'artist', artist
+
+    @update_series
+    def set_info(self, info: str):
+        return 'info', info
+
+    @update_series
+    def set_type(self, gal_type: str):
+        return 'type', gal_type
+
+    @update_series
+    def set_fav(self, fav: int):
+        return 'fav', fav
+
+    @update_series
+    def set_language(self, language: str):
+        return 'language', language
+
+    @update_series
+    def set_rating(self, rating: int):
+        return 'rating', rating
+
+    @update_series
+    def set_status(self, status: str):
+        return 'status', status
+
+    @update_series
+    def set_pub_date(self, pub_date: datetime):
+        return 'pub_date', pub_date
+
+    @update_series
+    def set_link(self, link: str):
+        return 'link', link
+
+    @update_series
+    def set_times_read(self, times_read: int):
+        return 'times_read', times_read
+
+    @update_series
+    def set_series_path(self, series_path: str):
+        return 'series_path', series_path
+
+    @update_series
+    def set_db_v(self, db_v):
+        return 'db_v', db_v
+
+    @update_series
+    def set_exed(self, exed):
+        return 'exed', exed
+
+    @update_series
+    def set_is_archive(self, is_archive):
+        return 'is_archive', is_archive
+
+    @update_series
+    def set_path_in_archive(self, path_in_archive):
+        return 'path_in_archive', path_in_archive
+
+    @update_series
+    def set_view(self, view):
+        return 'view', view
+
+    @update_series
+    def set_date_added(self, date_added):
+        return 'date_added', date_added
+
+    @only_once
+    def set_tags(self, tags: Dict):
+        return self.MODIFY_TAGS, tags
+
+    @only_once
+    def set_chapters(self, chapters: ChaptersContainer):
+        return self.UPDATE_CHAPTERS, chapters
+
+    # hashes type hint based on GalleryDB.rebuild_gallery
+    # type check, TODO: i suspect that might not be the correct type
+    @only_once
+    def set_hashes(self, hashes: Gallery):
+        return self.REBUILD_HASHES, hashes
+
+    def execute(self, executor):
+        buffer = []
+        values = []
+        # 2020-11-09: i dont really know if you need the delayed execution
+        # of the not-UPDATE_SERIES cases, but it appeared in that order
+        # in the GalleryDB.modify_gallery
+        procs = []
+        for query in self.executing.values():
+            case, *args = query
+            if case == self.UPDATE_SERIES:
+                db_name, val = args
+                buffer.append('{}=?'.format(db_name))
+                values.append(val)
+            elif case == self.MODIFY_TAGS:
+                tags = args[0]
+                procs.append(lambda: TagDB.modify_tags(self.id, tags))
+            elif case == self.UPDATE_CHAPTERS:
+                chapters = args[0]
+                procs.append(lambda: ChapterDB.update_chapter(chapters))
+            elif case == self.REBUILD_HASHES:
+                hashes = args[0]
+                procs.append(lambda: HashDB.rebuild_gallery_hashes(hashes))
+            else:
+                raise ValueError('Unknown Case {}, args: {}.'.format(case, args))
+
+        if buffer:
+            values.append(self.id)
+            stmt = 'UPDATE series SET {} WHERE series_id=? ;'.format(', '.join(buffer))
+            executor.execute(executor, stmt, tuple(values))
+
+        for proc in procs:
+            proc()
 
 
 class GalleryDB(DBBase):
@@ -1532,11 +1708,13 @@ class Gallery:
     chapters: Dict[int, Union[str, 'os.PathLike']]
     chapters_size: int
     info: str
-    fav: Literal[0, 1]
+    FAV_HINT: ClassVar = Literal[0, 1]
+    fav: FAV_HINT
     rating: float
     type: str
     language: str
-    status: Literal['unknown', 'completed', 'ongoing', '']
+    STATUS_HINT: ClassVar = Literal['unknown', 'completed', 'ongoing', '']
+    status: STATUS_HINT
     tags: Dict[str, Any]
     pub_date: Optional[datetime]
     date_added: datetime
