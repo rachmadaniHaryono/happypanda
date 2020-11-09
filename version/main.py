@@ -11,14 +11,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
+import argparse
+import logging
+import logging.handlers
+import os
+import platform
+import scandir
 import sqlite3
-import sys, logging, logging.handlers, os, argparse, platform, scandir
+import sys
 import traceback
 from typing import Optional
 
-from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QFile, Qt
-from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtWidgets import QApplication
 
 try:
     from database import db, db_constants
@@ -247,7 +252,6 @@ def start(test=False):
         msg_box.setDefaultButton(QMessageBox.Yes)
         if msg_box.exec() == QMessageBox.Yes:
             utils.backup_database()
-            import threading
             db_p = db_constants.DB_PATH
             db.add_db_revisions(db_p)
             conn = db.init_db()
