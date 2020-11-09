@@ -24,7 +24,7 @@ import shutil
 import uuid
 import re
 import re as regex
-from typing import ClassVar, Union, List, Dict, AnyStr, io, Optional
+from typing import ClassVar, Union, List, Dict, AnyStr, io, Optional, TYPE_CHECKING
 
 import webbrowser
 import scandir
@@ -38,13 +38,15 @@ from PyQt5.QtGui import QImage, qRgba
 from PIL import Image, ImageChops
 
 try:
-    import gallerydb
     import app_constants
     from database import db_constants
+    if TYPE_CHECKING:
+        import gallerydb
 except ImportError:
-    from . import gallerydb
     from . import app_constants
     from .database import db_constants
+    if TYPE_CHECKING:
+        from . import gallerydb
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -65,7 +67,7 @@ if not app_constants.unrar_tool_path:
 
 
 class GMetafile:
-    files: List['io.TextIO']
+    files: List[io.TextIO]
 
     def __init__(self, path=None, archive=''):
         self.metadata = {
@@ -97,7 +99,7 @@ class GMetafile:
         else:
             log_d('No metafile found...')
 
-    def _eze(self, fp: 'io.TextIO'):
+    def _eze(self, fp: io.TextIO):
         """
         2020-11-09: TODO: find what site metadata this is
         Possibly panda chaika moe metadata
@@ -128,7 +130,7 @@ class GMetafile:
             self.metadata['link'] = 'http://' + l['site'] + '.org/g/' + str(l['gid']) + '/' + l['token']
             return True
 
-    def _hdoujindler(self, fp: 'io.TextIO'):
+    def _hdoujindler(self, fp: io.TextIO):
         """HDoujin Downloader"""
         if fp.name.endswith('info.txt'):
             log_i('Detected metafile: HDoujin text')

@@ -12,21 +12,27 @@
 
 """Contains constants to be used by several modules"""
 
+from __future__ import annotations
+
 import enum
 import os
 import sys
-from typing import Set
+from typing import Set, TYPE_CHECKING
 
 import qtawesome as qta
 from PyQt5.QtGui import QIcon
 
 try:
     import settings
-    import gallerydb
     from database import db_constants
+    if TYPE_CHECKING:
+        import gallerydb
 except ImportError:
-    from . import settings, gallerydb
+    from . import settings
     from .database import db_constants
+
+    if TYPE_CHECKING:
+        from . import gallerydb
 
 # Version number
 vs = '1.1'
