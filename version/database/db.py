@@ -15,6 +15,7 @@
 import logging
 import os
 import sqlite3
+from sqlite3 import Connection
 from typing import Tuple, List, Callable, Union, Optional
 
 from . import db_constants
@@ -314,19 +315,16 @@ def init_db(path: Union[str, 'os.PathLike'] = db_constants.DB_PATH) -> Optional[
 
 class DBBase:
     """The base DB class. _DB_CONN should be set at runtime on startup"""
-    _DB_CONN = None
+    _DB_CONN: Optional[Connection] = None
     _AUTO_COMMIT = True
     _STATE = {'active': False}
-
-    def __init__(self, **kwargs):
-        pass
 
     @classmethod
     def begin(cls) -> None:
         """Useful when modifying for a large amount of data"""
         if not cls._STATE['active']:
             cls._AUTO_COMMIT = False
-            cls.execute(cls, "BEGIN TRANSACTION")
+            cls.execute("BEGIN TRANSACTION")
             cls._STATE['active'] = True
         # print("STARTED DB OPTIMIZE")
 
@@ -335,49 +333,52 @@ class DBBase:
         """Called to commit and end transaction"""
         if cls._STATE['active']:
             try:
-                cls.execute(cls, "COMMIT")
+                cls.execute("COMMIT")
             except sqlite3.OperationalError:
                 pass
             cls._AUTO_COMMIT = True
             cls._STATE['active'] = False
         # print("ENDED DB OPTIMIZE")
 
-    def execute(self, *args):
+    @classmethod
+    def execute(cls, *args):
         """Same as cursor.execute"""
-        if not self._DB_CONN:
+        if not cls._DB_CONN:
             raise db_constants.NoDatabaseConnection
         log_d('DB Query: {}'.format(args).encode(errors='ignore'))
-        if self._AUTO_COMMIT:
+        if cls._AUTO_COMMIT:
             try:
-                with self._DB_CONN:
-                    return self._DB_CONN.execute(*args)
+                with cls._DB_CONN:
+                    return cls._DB_CONN.execute(*args)
             except sqlite3.InterfaceError:
-                return self._DB_CONN.execute(*args)
+                return cls._DB_CONN.execute(*args)
 
         else:
-            return self._DB_CONN.execute(*args)
-
-    def executemany(self, *args):
-        """Same as cursor.executemany"""
-        if not self._DB_CONN:
-            raise db_constants.NoDatabaseConnection
-        log_d('DB Query: {}'.format(args).encode(errors='ignore'))
-        if self._AUTO_COMMIT:
-            with self._DB_CONN:
-                return self._DB_CONN.executemany(*args)
-        else:
-            c = self._DB_CONN.executemany(*args)
-            return c
-
-    def commit(self):
-        self._DB_CONN.commit()
+            return cls._DB_CONN.execute(*args)
 
     @classmethod
-    def analyze(cls):
+    def executemany(cls, *args):
+        """Same as cursor.executemany"""
+        if not cls._DB_CONN:
+            raise db_constants.NoDatabaseConnection
+        log_d('DB Query: {}'.format(args).encode(errors='ignore'))
+        if cls._AUTO_COMMIT:
+            with cls._DB_CONN:
+                return cls._DB_CONN.executemany(*args)
+        else:
+            c = cls._DB_CONN.executemany(*args)
+            return c
+
+    @classmethod
+    def commit(cls) -> None:
+        cls._DB_CONN.commit()
+
+    @classmethod
+    def analyze(cls) -> None:
         cls._DB_CONN.execute('ANALYZE')
 
     @classmethod
-    def close(cls):
+    def close(cls) -> None:
         cls._DB_CONN.close()
 
 

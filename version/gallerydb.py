@@ -432,7 +432,7 @@ class GalleryModification:
         if buffer:
             values.append(self.id)
             stmt = 'UPDATE series SET {} WHERE series_id=? ;'.format(', '.join(buffer))
-            executor.execute(executor, stmt, tuple(values))
+            executor.execute(stmt, tuple(values))
 
         for proc in procs:
             proc()
@@ -457,7 +457,6 @@ class GalleryDB(DBBase):
     """
 
     def __init__(self):
-        super().__init__()
         raise Exception("GalleryDB should not be instantiated")
 
     @staticmethod
@@ -602,7 +601,7 @@ class GalleryDB(DBBase):
             HashDB.rebuild_gallery_hashes(hashes)
 
         for query in executing:
-            cls.execute(cls, *query)
+            cls.execute(*query)
 
     @classmethod
     def get_all_gallery(cls, chapters: bool = True, tags: bool = True, hashes: bool = True):
@@ -610,7 +609,7 @@ class GalleryDB(DBBase):
         Careful, might crash with very large libraries i think...
         Returns a list of all galleries (<Gallery> class) currently in DB
         """
-        cursor = cls.execute(cls, 'SELECT * FROM series')
+        cursor = cls.execute('SELECT * FROM series')
         all_gallery = cursor.fetchall()
         return GalleryDB.gen_galleries(all_gallery, chapters, tags, hashes)
 
@@ -635,7 +634,7 @@ class GalleryDB(DBBase):
     def get_gallery_by_path(cls, path):
         """Returns gallery with given path"""
         assert isinstance(path, str), "Provided path is invalid"
-        cursor = cls.execute(cls, 'SELECT * FROM series WHERE series_path=?', (str.encode(path),))
+        cursor = cls.execute('SELECT * FROM series WHERE series_path=?', (str.encode(path),))
         row = cursor.fetchone()
         try:
             gallery = Gallery()
@@ -649,7 +648,7 @@ class GalleryDB(DBBase):
     def get_gallery_by_id(cls, id):
         """Returns gallery with given id"""
         assert isinstance(id, int), "Provided ID is invalid"
-        cursor = cls.execute(cls, 'SELECT * FROM series WHERE series_id=?', (id,))
+        cursor = cls.execute('SELECT * FROM series WHERE series_id=?', (id,))
         row = cursor.fetchone()
         gallery = Gallery()
         try:
@@ -668,7 +667,7 @@ class GalleryDB(DBBase):
         # TODO: implement mass gallery adding!  User execute_many method for
         # effeciency!
 
-        cursor = cls.execute(cls, *default_exec(gallery))
+        cursor = cls.execute(*default_exec(gallery))
         series_id = cursor.lastrowid
         gallery.id = series_id
         if not gallery.profile:
@@ -682,7 +681,7 @@ class GalleryDB(DBBase):
         """
         Returns the amount of galleries in db.
         """
-        cursor = cls.execute(cls, "SELECT count(*) AS 'size' FROM series")
+        cursor = cls.execute("SELECT count(*) AS 'size' FROM series")
         return cursor.fetchone()['size']
 
     @classmethod
@@ -712,7 +711,7 @@ class GalleryDB(DBBase):
                     continue
 
             GalleryDB.clear_thumb(gallery.profile)
-            cls.execute(cls, 'DELETE FROM series WHERE series_id=?', (gallery.id,))
+            cls.execute('DELETE FROM series WHERE series_id=?', (gallery.id,))
             gallery.id = None
             log_i('Successfully deleted: {}'.format(gallery.title.encode('utf-8', 'ignore')))
             app_constants.NOTIF_BAR.add_text('Successfully deleted: {}'.format(gallery.title))
@@ -756,7 +755,6 @@ class ChapterDB(DBBase):
     """
 
     def __init__(self):
-        super().__init__()
         raise Exception("ChapterDB should not be instantiated")
 
     @classmethod
@@ -783,8 +781,7 @@ class ChapterDB(DBBase):
             executing.append(
                 (chap.title, str.encode(new_path), chap.pages, chap.in_archive, chap.gallery.id, chap.number,))
 
-        cls.executemany(cls,
-                        "UPDATE chapters SET chapter_title=?, chapter_path=?, pages=?, in_archive=? WHERE series_id=? AND chapter_number=?",
+        cls.executemany("UPDATE chapters SET chapter_title=?, chapter_path=?, pages=?, in_archive=? WHERE series_id=? AND chapter_number=?",
                         executing)
 
     @classmethod
@@ -797,7 +794,7 @@ class ChapterDB(DBBase):
             executing.append(default_chap_exec(gallery_object, chap, True))
         if not executing:
             raise Exception
-        cls.executemany(cls, 'INSERT INTO chapters VALUES(NULL, ?, ?, ?, ?, ?, ?)', executing)
+        cls.executemany('INSERT INTO chapters VALUES(NULL, ?, ?, ?, ?, ?, ?)', executing)
 
     @classmethod
     def add_chapters_raw(cls, series_id, chapters_container: ChaptersContainer):
@@ -811,7 +808,7 @@ class ChapterDB(DBBase):
             else:
                 ChapterDB.update_chapter(chapters_container, [chap.number])
 
-        cls.executemany(cls, 'INSERT INTO chapters VALUES(NULL, ?, ?, ?, ?, ?, ?)', executing)
+        cls.executemany('INSERT INTO chapters VALUES(NULL, ?, ?, ?, ?, ?, ?)', executing)
 
     @classmethod
     def get_chapters_for_gallery(cls, series_id):
@@ -819,7 +816,7 @@ class ChapterDB(DBBase):
         Returns a ChaptersContainer of chapters matching the received series_id
         """
         assert isinstance(series_id, int), "Please provide a valid gallery ID"
-        cursor = cls.execute(cls, 'SELECT * FROM chapters WHERE series_id=?', (series_id,))
+        cursor = cls.execute('SELECT * FROM chapters WHERE series_id=?', (series_id,))
         rows = cursor.fetchall()
         chapters = ChaptersContainer()
 
@@ -834,7 +831,7 @@ class ChapterDB(DBBase):
         return None for no match
         """
         assert isinstance(chap_numb, int), "Please provide a valid chapter number"
-        cursor = cls.execute(cls, 'SELECT * FROM chapters WHERE series_id=? AND chapter_number=?',
+        cursor = cls.execute('SELECT * FROM chapters WHERE series_id=? AND chapter_number=?',
                              (series_id, chap_numb,))
         try:
             rows = cursor.fetchall()
@@ -851,7 +848,7 @@ class ChapterDB(DBBase):
         """Returns id of the chapter number"""
         assert isinstance(series_id, int) and isinstance(chapter_number, int), \
             "Passed args must be of int not {} and {}".format(type(series_id), type(chapter_number))
-        cursor = cls.execute(cls, 'SELECT chapter_id FROM chapters WHERE series_id=? AND chapter_number=?',
+        cursor = cls.execute('SELECT chapter_id FROM chapters WHERE series_id=? AND chapter_number=?',
                              (series_id, chapter_number,))
         try:
             row = cursor.fetchone()
@@ -873,14 +870,14 @@ class ChapterDB(DBBase):
     def del_all_chapters(cls, series_id):
         """Deletes all chapters with the given series_id"""
         assert isinstance(series_id, int), "Please provide a valid gallery ID"
-        cls.execute(cls, 'DELETE FROM chapters WHERE series_id=?', (series_id,))
+        cls.execute('DELETE FROM chapters WHERE series_id=?', (series_id,))
 
     @classmethod
     def del_chapter(cls, series_id, chap_number):
         """Deletes chapter with the given number from gallery"""
         assert isinstance(series_id, int), "Please provide a valid gallery ID"
         assert isinstance(chap_number, int), "Please provide a valid chapter number"
-        cls.execute(cls, 'DELETE FROM chapters WHERE series_id=? AND chapter_number=?',
+        cls.execute('DELETE FROM chapters WHERE series_id=? AND chapter_number=?',
                     (series_id, chap_number,))
 
 
@@ -904,7 +901,6 @@ class TagDB(DBBase):
     """
 
     def __init__(self):
-        super().__init__()
         raise Exception("TagsDB should not be instantiated")
 
     @staticmethod
@@ -918,14 +914,14 @@ class TagDB(DBBase):
         assert isinstance(series_id, int), "Please provide a valid gallery id"
 
         # delete all mappings related to the given series_id
-        cls.execute(cls, 'DELETE FROM series_tags_map WHERE series_id=?', [series_id])
+        cls.execute('DELETE FROM series_tags_map WHERE series_id=?', [series_id])
 
     @classmethod
     def get_gallery_tags(cls, series_id):
         """Returns all tags and namespaces found for the given series_id"""
         if not isinstance(series_id, int):
             return {}
-        cursor = cls.execute(cls, 'SELECT tags_mappings_id FROM series_tags_map WHERE series_id=?',
+        cursor = cls.execute('SELECT tags_mappings_id FROM series_tags_map WHERE series_id=?',
                              (series_id,))
         tags = {}
         result = cursor.fetchall()
@@ -934,11 +930,11 @@ class TagDB(DBBase):
                 if not tag_map_row:
                     continue
                 # get tag and namespace
-                c = cls.execute(cls, 'SELECT namespace_id, tag_id FROM tags_mappings WHERE tags_mappings_id=?',
+                c = cls.execute('SELECT namespace_id, tag_id FROM tags_mappings WHERE tags_mappings_id=?',
                                 (tag_map_row['tags_mappings_id'],))
                 for row in c.fetchall():  # iterate all rows
                     # get namespace
-                    c = cls.execute(cls, 'SELECT namespace FROM namespaces WHERE namespace_id=?',
+                    c = cls.execute('SELECT namespace FROM namespaces WHERE namespace_id=?',
                                     (row['namespace_id'],))
                     try:
                         namespace = c.fetchone()['namespace']
@@ -946,7 +942,7 @@ class TagDB(DBBase):
                         continue
 
                     # get tag
-                    c = cls.execute(cls, 'SELECT tag FROM tags WHERE tag_id=?', (row['tag_id'],))
+                    c = cls.execute('SELECT tag FROM tags WHERE tag_id=?', (row['tag_id'],))
                     try:
                         tag = c.fetchone()['tag']
                     except TypeError:
@@ -973,7 +969,7 @@ class TagDB(DBBase):
         def look_exists(tag_or_ns, what):
             """check if tag or namespace already exists in base
             returns id, else returns None"""
-            c = cls.execute(cls, 'SELECT {}_id FROM {}s WHERE {} = ?'.format(what, what, what),
+            c = cls.execute('SELECT {}_id FROM {}s WHERE {} = ?'.format(what, what, what),
                             (tag_or_ns,))
             try:  # exists
                 return c.fetchone()['{}_id'.format(what)]
@@ -992,7 +988,7 @@ class TagDB(DBBase):
                 if not namespace_id:
                     raise ValueError
             except ValueError:
-                c = cls.execute(cls, 'INSERT INTO namespaces(namespace) VALUES(?)', (namespace,))
+                c = cls.execute('INSERT INTO namespaces(namespace) VALUES(?)', (namespace,))
                 namespace_id = c.lastrowid
 
             tags_id_list = []
@@ -1002,14 +998,14 @@ class TagDB(DBBase):
                     if not tag_id:
                         raise ValueError
                 except ValueError:
-                    c = cls.execute(cls, 'INSERT INTO tags(tag) VALUES(?)', (tag,))
+                    c = cls.execute('INSERT INTO tags(tag) VALUES(?)', (tag,))
                     tag_id = c.lastrowid
 
                 tags_id_list.append(tag_id)
 
             def look_exist_tag_map(tag_id):
                 """Checks DB if the tag_id already exists with the namespace_id, returns id else None"""
-                c = cls.execute(cls, 'SELECT tags_mappings_id FROM tags_mappings WHERE namespace_id=? AND tag_id=?',
+                c = cls.execute('SELECT tags_mappings_id FROM tags_mappings WHERE namespace_id=? AND tag_id=?',
                                 (namespace_id, tag_id,))
                 try:  # exists
                     return c.fetchone()['tags_mappings_id']
@@ -1028,7 +1024,7 @@ class TagDB(DBBase):
                     else:
                         raise TypeError
                 except TypeError:
-                    c = cls.execute(cls, 'INSERT INTO tags_mappings(namespace_id, tag_id) VALUES(?, ?)',
+                    c = cls.execute('INSERT INTO tags_mappings(namespace_id, tag_id) VALUES(?, ?)',
                                     (namespace_id, tag_id,))
                     # add the tags_mappings_id to our list
                     tags_mappings_id_list.append(c.lastrowid)
@@ -1039,7 +1035,7 @@ class TagDB(DBBase):
             executing.append((series_id, tags_map,))
             # cls.execute(cls, 'INSERT INTO series_tags_map(series_id, tags_mappings_id)
             # VALUES(?, ?)', (series_id, tags_map,))
-        cls.executemany(cls, 'INSERT OR IGNORE INTO series_tags_map(series_id, tags_mappings_id) VALUES(?, ?)',
+        cls.executemany('INSERT OR IGNORE INTO series_tags_map(series_id, tags_mappings_id) VALUES(?, ?)',
                         executing)
 
     @staticmethod
@@ -1064,20 +1060,20 @@ class TagDB(DBBase):
     @classmethod
     def get_ns_tags(cls):
         """Returns a dict of all tags with namespace as key and list of tags as value"""
-        cursor = cls.execute(cls, 'SELECT namespace_id, tag_id FROM tags_mappings')
+        cursor = cls.execute('SELECT namespace_id, tag_id FROM tags_mappings')
         ns_tags = {}
         ns_id_history = {}  # to avoid unesseccary DB fetching
         for t in cursor.fetchall():
             try:
                 # get namespace
                 if not t['namespace_id'] in ns_id_history:
-                    c = cls.execute(cls, 'SELECT namespace FROM namespaces WHERE namespace_id=?', (t['namespace_id'],))
+                    c = cls.execute('SELECT namespace FROM namespaces WHERE namespace_id=?', (t['namespace_id'],))
                     ns = c.fetchone()['namespace']
                     ns_id_history[t['namespace_id']] = ns
                 else:
                     ns = ns_id_history[t['namespace_id']]
                 # get tag
-                c = cls.execute(cls, 'SELECT tag FROM tags WHERE tag_id=?', (t['tag_id'],))
+                c = cls.execute('SELECT tag FROM tags WHERE tag_id=?', (t['tag_id'],))
                 tag = c.fetchone()['tag']
                 # put in dict
                 if ns in ns_tags:
@@ -1106,7 +1102,7 @@ class TagDB(DBBase):
         """
         Returns all tags in database in a list
         """
-        cursor = cls.execute(cls, 'SELECT tag FROM tags')
+        cursor = cls.execute('SELECT tag FROM tags')
         tags = [t['tag'] for t in cursor.fetchall()]
         return tags
 
@@ -1115,7 +1111,7 @@ class TagDB(DBBase):
         """
         Returns all namespaces in database in a list
         """
-        cursor = cls.execute(cls, 'SELECT namespace FROM namespaces')
+        cursor = cls.execute('SELECT namespace FROM namespaces')
         ns = [n['namespace'] for n in cursor.fetchall()]
         return ns
 
@@ -1128,7 +1124,7 @@ class ListDB(DBBase):
     def init_lists(cls):
         """Creates and returns lists fetched from DB"""
         lists = []
-        c = cls.execute(cls, 'SELECT * FROM list')
+        c = cls.execute('SELECT * FROM list')
         list_rows = c.fetchall()
         for l_row in list_rows:
             l = GalleryList(l_row['list_name'], filter=l_row['list_filter'], id=l_row['list_id'])
@@ -1152,7 +1148,7 @@ class ListDB(DBBase):
     def query_gallery(cls, gallery):
         """Maps gallery to the correct lists"""
 
-        c = cls.execute(cls, 'SELECT list_id FROM series_list_map WHERE series_id=?', (gallery.id,))
+        c = cls.execute('SELECT list_id FROM series_list_map WHERE series_id=?', (gallery.id,))
         list_rows = [x['list_id'] for x in c.fetchall()]
         for l in app_constants.GALLERY_LISTS:
             if l._id in list_rows:
@@ -1162,8 +1158,7 @@ class ListDB(DBBase):
     def modify_list(cls, gallery_list):
         assert isinstance(gallery_list, GalleryList)
         if gallery_list._id:
-            cls.execute(cls,
-                        """UPDATE list SET list_name=?, list_filter=?, profile=?,
+            cls.execute("""UPDATE list SET list_name=?, list_filter=?, profile=?,
                type=?, enforce=?, regex=?, l_case=?, strict=? WHERE list_id=?""",
                         (gallery_list.name, gallery_list.filter, str.encode(gallery_list.profile),
                          gallery_list.type, int(gallery_list.enforce), int(gallery_list.regex), int(gallery_list.case),
@@ -1176,7 +1171,7 @@ class ListDB(DBBase):
         if gallery_list._id:
             ListDB.modify_list(gallery_list)
         else:
-            c = cls.execute(cls, """INSERT INTO list(list_name, list_filter, profile, type,
+            c = cls.execute("""INSERT INTO list(list_name, list_filter, profile, type,
                             enforce, regex, l_case, strict) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
                             (
                                 gallery_list.name, gallery_list.filter, str.encode(gallery_list.profile),
@@ -1206,14 +1201,14 @@ class ListDB(DBBase):
         g_ids = ListDB._g_id_or_list(gallery_or_id_or_list)
 
         values = [(gallery_list._id, x) for x in g_ids]
-        cls.executemany(cls, 'INSERT OR IGNORE INTO series_list_map(list_id, series_id) VALUES(?, ?)', values)
+        cls.executemany('INSERT OR IGNORE INTO series_list_map(list_id, series_id) VALUES(?, ?)', values)
 
     @classmethod
     def remove_list(cls, gallery_list):
         """Deletes list from DB"""
         assert isinstance(gallery_list, GalleryList)
         if gallery_list._id:
-            cls.execute(cls, 'DELETE FROM list WHERE list_id=?', (gallery_list._id,))
+            cls.execute('DELETE FROM list WHERE list_id=?', (gallery_list._id,))
         try:
             app_constants.GALLERY_LISTS.remove(gallery_list)
         except KeyError:
@@ -1227,7 +1222,7 @@ class ListDB(DBBase):
             g_ids = ListDB._g_id_or_list(gallery_or_id_or_list)
 
             values = [(gallery_list._id, x) for x in g_ids]
-            cls.executemany(cls, 'DELETE FROM series_list_map WHERE list_id=? AND series_id=?', values)
+            cls.executemany('DELETE FROM series_list_map WHERE list_id=? AND series_id=?', values)
 
 
 class HashDB(DBBase):
@@ -1247,7 +1242,7 @@ class HashDB(DBBase):
         gallery_ids = {}
         hash_status = []
         for hash in hashes:
-            r = cls.execute(cls, 'SELECT series_id FROM hashes WHERE hash=?', (hash,))
+            r = cls.execute('SELECT series_id FROM hashes WHERE hash=?', (hash,))
             try:
                 g_ids = r.fetchall()
                 for r in g_ids:
@@ -1284,7 +1279,7 @@ class HashDB(DBBase):
     @classmethod
     def get_gallery_hashes(cls, gallery_id):
         """Returns all hashes with the given gallery id in a list"""
-        cursor = cls.execute(cls, 'SELECT hash FROM hashes WHERE series_id=?',
+        cursor = cls.execute('SELECT hash FROM hashes WHERE series_id=?',
                              (gallery_id,))
         hashes = []
         try:
@@ -1313,7 +1308,7 @@ class HashDB(DBBase):
             exceuting = ["SELECT hash FROM hashes WHERE series_id=? AND chapter_id=?",
                          (gallery_id, chap_id)]
         hashes = []
-        c = cls.execute(cls, *exceuting)
+        c = cls.execute(*exceuting)
         for h in c.fetchall():
             try:
                 hashes.append(h['hash'])
@@ -1339,7 +1334,7 @@ class HashDB(DBBase):
         if gallery.id:
             chap_id = ChapterDB.get_chapter_id(gallery.id, chapter)
 
-            c = cls.execute(cls, 'SELECT hash, page FROM hashes WHERE series_id=? AND chapter_id=?',
+            c = cls.execute('SELECT hash, page FROM hashes WHERE series_id=? AND chapter_id=?',
                             (gallery.id, chap_id,))
             hashes = {}
             for r in c.fetchall():
@@ -1377,7 +1372,7 @@ class HashDB(DBBase):
             def look_exists(page):
                 """check if hash already exists in database
                 returns hash, else returns None"""
-                c = cls.execute(cls, 'SELECT hash FROM hashes WHERE page=? AND chapter_id=?',
+                c = cls.execute('SELECT hash FROM hashes WHERE page=? AND chapter_id=?',
                                 (page, chap_id,))
                 try:  # exists
                     return c.fetchone()['hash']
@@ -1495,7 +1490,7 @@ class HashDB(DBBase):
                         hashes[i] = generate_img_hash(pages[i])
 
             if executing:
-                cls.executemany(cls, 'INSERT INTO hashes(hash, series_id, chapter_id, page) VALUES(?, ?, ?, ?)',
+                cls.executemany('INSERT INTO hashes(hash, series_id, chapter_id, page) VALUES(?, ?, ?, ?)',
                                 executing)
 
         if page == 'mid':
@@ -1528,7 +1523,7 @@ class HashDB(DBBase):
     @classmethod
     def del_gallery_hashes(cls, gallery_id):
         """Deletes all hashes linked to the given gallery id"""
-        cls.execute(cls, 'DELETE FROM hashes WHERE series_id=?', (gallery_id,))
+        cls.execute('DELETE FROM hashes WHERE series_id=?', (gallery_id,))
 
 
 class GalleryList:
@@ -2317,7 +2312,7 @@ class AdminDB(QObject):
         n_galleries = []
         # get all chapters
         log_i("Getting chapters...")
-        chap_rows = DBBase().execute("SELECT * FROM chapters").fetchall()
+        chap_rows = DBBase.execute("SELECT * FROM chapters").fetchall()
         data_count = len(chap_rows) * 2
         self.DATA_COUNT.emit(data_count)
         for n, chap_row in enumerate(chap_rows, -1):
@@ -2452,7 +2447,7 @@ class DatabaseStartup(QObject):
     START: pyqtBoundSignal = pyqtSignal()
     DONE: pyqtBoundSignal = pyqtSignal()
     PROGRESS: pyqtBoundSignal = pyqtSignal(str)
-    _DB = DBBase()
+    _DB = DBBase
 
     def __init__(self):
         super().__init__()
