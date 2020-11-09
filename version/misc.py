@@ -11,18 +11,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
 # """
+from __future__ import annotations
 import functools
 import logging
 import math
 import os
 import threading
 import time
+from typing import ClassVar
 
 import scandir
 from PyQt5.QtCore import (Qt, QPoint, pyqtSignal, QTimer, QSize, QRect, QFileInfo,
                           QRectF,
                           QPropertyAnimation, QByteArray,
-                          QPointF, QSizeF)
+                          QPointF, QSizeF, pyqtBoundSignal)
 from PyQt5.QtGui import (QTextCursor, QIcon, QMouseEvent, QFont,
                          QPainter, QBrush,
                          QColor, QPen, QPixmap, QPaintEvent, QFontMetrics,
@@ -70,7 +72,7 @@ log_c = log.critical
 
 
 def text_layout(text, width, font, font_metrics, alignment=Qt.AlignCenter):
-    "Lays out wrapped text"
+    """Lays out wrapped text"""
     text_option = QTextOption(alignment)
     text_option.setUseDesignMetrics(True)
     text_option.setWrapMode(QTextOption.WordWrap)
@@ -105,7 +107,7 @@ def centerWidget(widget, parent_widget=None):
 
 
 def clearLayout(layout):
-    if layout != None:
+    if layout is not None:
         while layout.count():
             child = layout.takeAt(0)
             if child.widget() is not None:
@@ -120,9 +122,10 @@ def create_animation(parent, prop):
 
 
 class ArrowHandle(QWidget):
-    "Arrow Handle"
-    IN, OUT = range(2)
-    CLICKED = pyqtSignal(int)
+    """Arrow Handle"""
+    IN: ClassVar[int] = 0
+    OUT: ClassVar[int] = 1
+    CLICKED: pyqtBoundSignal = pyqtSignal(int)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -173,7 +176,7 @@ class ArrowHandle(QWidget):
 
 
 class Line(QFrame):
-    "'v' for vertical line or 'h' for horizontail line, color is hex string"
+    """'v' for vertical line or 'h' for horizontail line, color is hex string"""
 
     def __init__(self, orentiation, parent=None):
         super().__init__(parent)
@@ -231,12 +234,12 @@ class BaseMoveWidget(QWidget):
             self.move(new_size)
             return
         if self.parent_widget:
-            self.move(self.parent_widget.window().frameGeometry().center() - \
-                      self.window().rect().center())
+            self.move(self.parent_widget.window().frameGeometry().center()
+                      - self.window().rect().center())
 
 
 class SortMenu(QMenu):
-    new_sort = pyqtSignal(str)
+    new_sort: pyqtBoundSignal = pyqtSignal(str)
 
     def __init__(self, app_inst, parent=None, toolbutton=None):
         super().__init__(parent)
@@ -329,8 +332,8 @@ class SortMenu(QMenu):
 
 
 class ToolbarButton(QPushButton):
-    select = pyqtSignal(object)
-    close_tab = pyqtSignal(object)
+    select: pyqtBoundSignal = pyqtSignal(object)
+    close_tab: pyqtBoundSignal = pyqtSignal(object)
 
     def __init__(self, parent=None, txt=''):
         super().__init__(parent)
@@ -380,7 +383,7 @@ class ArrowWindow(TransparentWidget):
 
     @arrow_size.setter
     def arrow_size(self, w_h_tuple):
-        "a tuple of width and height"
+        """a tuple of width and height"""
         if not isinstance(w_h_tuple, (tuple, list)) or len(w_h_tuple) != 2:
             return
 
@@ -858,13 +861,14 @@ class Spinner(TransparentWidget):
     """
     Spinner widget
     """
-    activated = pyqtSignal()
-    deactivated = pyqtSignal()
-    about_to_show, about_to_hide = range(2)
+    activated: pyqtBoundSignal = pyqtSignal()
+    deactivated: pyqtBoundSignal = pyqtSignal()
+    about_to_show: ClassVar[int] = 0
+    about_to_hide: ClassVar[int] = 1
     _OFFSET_X_TOPRIGHT = [0]
 
     def __init__(self, parent, position='topright'):
-        "Position can be: 'center', 'topright' or QPoint"
+        """Position can be: 'center', 'topright' or QPoint"""
         super().__init__(parent, flags=Qt.Window | Qt.FramelessWindowHint, move_listener=False)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.fps = 21
@@ -920,7 +924,7 @@ class Spinner(TransparentWidget):
         self.update()
 
     def _set_position(self, new_pos):
-        "'center', 'topright' or QPoint"
+        """'center', 'topright' or QPoint"""
         p = self.parent_widget
 
         # topleft
@@ -1029,8 +1033,8 @@ class Spinner(TransparentWidget):
 
 
 class GalleryMenu(QMenu):
-    delete_galleries = pyqtSignal(bool)
-    edit_gallery = pyqtSignal(object, object)
+    delete_galleries: pyqtBoundSignal = pyqtSignal(bool)
+    edit_gallery: pyqtBoundSignal = pyqtSignal(object, object)
 
     def __init__(self, view, index, sort_model, app_window, selected_indexes=None):
         super().__init__(app_window)
@@ -1397,7 +1401,7 @@ class ClickedLabel(QLabel):
     """
     A QLabel which emits clicked signal on click
     """
-    clicked = pyqtSignal(str)
+    clicked: pyqtBoundSignal = pyqtSignal(str)
 
     def __init__(self, s="", **kwargs):
         super().__init__(s, **kwargs)
@@ -1532,7 +1536,7 @@ class BasePopup(TransparentWidget):
 
 
 class AppBubble(BasePopup):
-    "For application notifications"
+    """For application notifications"""
 
     def __init__(self, parent):
         super().__init__(parent, flags=Qt.Window | Qt.FramelessWindowHint, blur=False)
@@ -1551,7 +1555,7 @@ class AppBubble(BasePopup):
         self.adjustSize()
 
     def update_text(self, title, txt='', duration=20):
-        "Duration in seconds!"
+        """Duration in seconds!"""
         if self.hide_timer.isActive():
             self.hide_timer.stop()
         self.title.setText('<h3>{}</h3>'.format(title))
@@ -1576,8 +1580,9 @@ class AppBubble(BasePopup):
 
 class AppDialog(BasePopup):
     # modes
-    PROGRESS, MESSAGE = range(2)
-    closing_down = pyqtSignal()
+    PROGRESS: ClassVar[int] = 0
+    MESSAGE: ClassVar[int] = 1
+    closing_down: pyqtBoundSignal = pyqtSignal()
 
     def __init__(self, parent, mode=PROGRESS):
         self.mode = mode
@@ -1596,7 +1601,7 @@ class AppDialog(BasePopup):
             self.info_lbl.setWordWrap(True)
 
             class progress(QProgressBar):
-                reached_maximum = pyqtSignal()
+                reached_maximum: pyqtBoundSignal = pyqtSignal()
 
                 def __init__(self, parent=None):
                     super().__init__(parent)
@@ -1649,11 +1654,11 @@ class NotificationOverlay(QWidget):
     """
     A notifaction bar
     """
-    clicked = pyqtSignal()
-    _show_signal = pyqtSignal()
-    _hide_signal = pyqtSignal()
-    _unset_cursor = pyqtSignal()
-    _set_cursor = pyqtSignal(object)
+    clicked: pyqtBoundSignal = pyqtSignal()
+    _show_signal: pyqtBoundSignal = pyqtSignal()
+    _hide_signal: pyqtBoundSignal = pyqtSignal()
+    _unset_cursor: pyqtBoundSignal = pyqtSignal()
+    _set_cursor: pyqtBoundSignal = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1735,7 +1740,7 @@ class GalleryShowcaseWidget(QWidget):
     Pass a gallery or set a gallery via -> set_gallery
     """
 
-    double_clicked = pyqtSignal(gallerydb.Gallery)
+    double_clicked: pyqtBoundSignal = pyqtSignal(gallerydb.Gallery)
 
     def __init__(self, gallery=None, parent=None, menu=None):
         super().__init__(parent)
@@ -1825,7 +1830,7 @@ class SingleGalleryChoices(BasePopup):
     Pass a gallery and a list of tuple/list where the first index is a string in each
     if text is passed, the text will be shown alongside gallery, else gallery be centered
     """
-    USER_CHOICE = pyqtSignal(object)
+    USER_CHOICE: pyqtBoundSignal = pyqtSignal(object)
 
     def __init__(self, gallery, tuple_first_idx, text=None, parent=None):
         super().__init__(parent, flags=Qt.Dialog | Qt.FramelessWindowHint)
@@ -1876,7 +1881,7 @@ class SingleGalleryChoices(BasePopup):
 
 
 class BaseUserChoice(QDialog):
-    USER_CHOICE = pyqtSignal(object)
+    USER_CHOICE: pyqtBoundSignal = pyqtSignal(object)
 
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
@@ -2019,14 +2024,14 @@ class FileIcon:
             file = ""
             if gallery.path.endswith(tuple(ARCHIVE_FILES)):
                 try:
-                    zip = ArchiveFile(gallery.path)
+                    f_zip = ArchiveFile(gallery.path)
                 except utils.app_constants.CreateArchiveFail:
                     return False
-                for name in zip.namelist():
+                for name in f_zip.namelist():
                     if name.lower().endswith(tuple(IMG_FILES)):
                         folder = os.path.join(app_constants.temp_dir,
                                               '{}{}'.format(name, n))
-                        zip.extract(name, folder)
+                        f_zip.extract(name, folder)
                         file = os.path.join(folder, name)
                         break
             else:
@@ -2170,31 +2175,31 @@ class FlowLayout(QLayout):
         size += QSize(2 * margin, 2 * margin)
         return size
 
-    def doLayout(self, rect, testOnly):
+    def doLayout(self, rect, test_only):
         x = rect.x()
         y = rect.y()
-        lineHeight = 0
+        line_height = 0
 
         for item in self.itemList:
             wid = item.widget()
-            spaceX = self.spacing() + wid.style().layoutSpacing(QSizePolicy.PushButton, QSizePolicy.PushButton,
-                                                                Qt.Horizontal)
+            space_x = self.spacing() + wid.style().layoutSpacing(QSizePolicy.PushButton, QSizePolicy.PushButton,
+                                                                 Qt.Horizontal)
             spaceY = self.spacing() + wid.style().layoutSpacing(QSizePolicy.PushButton, QSizePolicy.PushButton,
                                                                 Qt.Vertical)
-            nextX = x + item.sizeHint().width() + spaceX
-            if nextX - spaceX > rect.right() and lineHeight > 0:
+            next_x = x + item.sizeHint().width() + space_x
+            if next_x - space_x > rect.right() and line_height > 0:
                 x = rect.x()
-                y = y + lineHeight + spaceY
-                nextX = x + item.sizeHint().width() + spaceX
-                lineHeight = 0
+                y = y + line_height + spaceY
+                next_x = x + item.sizeHint().width() + space_x
+                line_height = 0
 
-            if not testOnly:
+            if not test_only:
                 item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
 
-            x = nextX
-            lineHeight = max(lineHeight, item.sizeHint().height())
+            x = next_x
+            line_height = max(line_height, item.sizeHint().height())
 
-        return y + lineHeight - rect.y()
+        return y + line_height - rect.y()
 
 
 class LineEdit(QLineEdit):
@@ -2211,7 +2216,7 @@ class LineEdit(QLineEdit):
         else:
             super().mousePressEvent(event)
 
-    def contextMenuEvent(self, QContextMenuEvent):
+    def contextMenuEvent(self, q_context_menu_event):
         pass
 
     def sizeHint(self):
@@ -2257,7 +2262,7 @@ class PathLineEdit(QLineEdit):
 
 
 class ChapterAddWidget(QWidget):
-    CHAPTERS = pyqtSignal(gallerydb.ChaptersContainer)
+    CHAPTERS: pyqtBoundSignal = pyqtSignal(gallerydb.ChaptersContainer)
 
     def __init__(self, gallery, parent=None):
         super().__init__(parent)
@@ -2386,7 +2391,7 @@ class CustomTableItem(QTableWidgetItem):
 
 
 class GalleryListView(QWidget):
-    SERIES = pyqtSignal(list)
+    SERIES: pyqtBoundSignal = pyqtSignal(list)
 
     def __init__(self, parent=None, modal=False):
         super().__init__(parent)
@@ -2556,7 +2561,7 @@ class Loading(BasePopup):
         # self.setAttribute(Qt.WA_DeleteOnClose)
         # self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
-    def mousePressEvent(self, QMouseEvent):
+    def mousePressEvent(self, q_mouse_event: QMouseEvent):
         pass
 
     def setText(self, string):
@@ -2619,20 +2624,20 @@ class CompleterTextEdit(QTextEdit):
                 # Let the completer do default behavior.
                 return
 
-        isShortcut = e.modifiers() == Qt.ControlModifier and e.key() == Qt.Key_E
-        if self._completer is None or not isShortcut:
+        is_shortcut = e.modifiers() == Qt.ControlModifier and e.key() == Qt.Key_E
+        if self._completer is None or not is_shortcut:
             # Do not process the shortcut when we have a completer.
             super().keyPressEvent(e)
 
-        ctrlOrShift = e.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier)
-        if self._completer is None or (ctrlOrShift and len(e.text()) == 0):
+        ctrl_or_shift = e.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier)
+        if self._completer is None or (ctrl_or_shift and len(e.text()) == 0):
             return
 
         eow = "~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-="
-        hasModifier = (e.modifiers() != Qt.NoModifier) and not ctrlOrShift
+        has_modifier = (e.modifiers() != Qt.NoModifier) and not ctrl_or_shift
         completionPrefix = self.textUnderCursor()
 
-        if not isShortcut and (hasModifier or len(e.text()) == 0 or len(completionPrefix) < 3 or e.text()[-1] in eow):
+        if not is_shortcut and (has_modifier or len(e.text()) == 0 or len(completionPrefix) < 3 or e.text()[-1] in eow):
             self._completer.popup().hide()
             return
 
@@ -2668,7 +2673,7 @@ class GCompleter(QCompleter):
 
 
 class ChapterListItem(QFrame):
-    move_pos = pyqtSignal(int, object)
+    move_pos: pyqtBoundSignal = pyqtSignal(int, object)
 
     def __init__(self, chapter, parent=None):
         super().__init__(parent)
