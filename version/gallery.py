@@ -1270,13 +1270,19 @@ class MangaView(QListView):
         if gallery.fav == 1:
             gallery.fav = 0
             # self.model().replaceRows([gallery], index.row(), 1, index)
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, gallery.id, {'fav': 0})
+            modifier = gallerydb.GalleryDB.new_gallery_modifier(gallery).set_fav(0)
+            gallerydb.execute(modifier.execute, True)
             self.gallery_model.CUSTOM_STATUS_MSG.emit("Unfavorited")
         else:
             gallery.fav = 1
             gallery.rating = 5
             # self.model().replaceRows([gallery], index.row(), 1, index)
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery, True, gallery.id, {'fav': 1, 'rating': 5})
+            modifier = (
+                gallerydb.GalleryDB.new_gallery_modifier(gallery)
+                .set_fav(1)
+                .set_rating(5)
+            )
+            gallerydb.execute(modifier.execute, True)
             self.gallery_model.CUSTOM_STATUS_MSG.emit("Favorited")
 
     def del_chapter(self, index, chap_numb):
@@ -1673,26 +1679,14 @@ class MangaViews:
         log_d('Replacing {} galleries'.format(len(list_of_gallery)))
         if db_optimize:
             gallerydb.execute(gallerydb.GalleryDB.begin, True)
-        for gallery in list_of_gallery:
-            kwdict = {
-                'title': gallery.title,
-                'profile': gallery.profile,
-                'artist': gallery.artist,
-                'info': gallery.info,
-                'type': gallery.type,
-                'language': gallery.language,
-                'rating': gallery.rating,
-                'status': gallery.status,
-                'pub_date': gallery.pub_date,
-                'tags': gallery.tags,
-                'link': gallery.link,
-                'series_path': gallery.path,
-                'chapters': gallery.chapters,
-                'exed': gallery.exed
-            }
 
-            gallerydb.execute(gallerydb.GalleryDB.modify_gallery,
-                              True, gallery.id, **kwdict)
+        only_attr = (
+            'title', 'profile', 'artist', 'info', 'type', 'language', 'rating', 'status',
+            'pub_date', 'tags', 'link', 'series_path', 'chapters', 'exed'
+        )
+        for gallery in list_of_gallery:
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(gallery, only_include=only_attr)
+            gallerydb.execute(modifier.execute, True)
         if db_optimize:
             gallerydb.execute(gallerydb.GalleryDB.end, True)
 
