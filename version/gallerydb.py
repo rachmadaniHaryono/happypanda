@@ -448,23 +448,23 @@ class GalleryModification:
     def from_gallery(cls, gallery: Gallery) -> GalleryModification:
         return (
             cls(gallery.id)
-            .set_title(gallery.title)
-            .set_artist(gallery.artist)
-            .set_info(gallery.info)
-            .set_type(gallery.type)
-            .set_fav(gallery.fav)
-            .set_tags(gallery.tags)
-            .set_language(gallery.language)
-            .set_rating(gallery.rating)
-            .set_status(gallery.status)
-            .set_pub_date(gallery.pub_date)
-            .set_link(gallery.link)
-            .set_times_read(gallery.times_read)
-            .set_last_read(gallery.last_read)
-            .set_exed(gallery.exed)
-            .set_is_archive(gallery.is_archive)
-            .set_path_in_archive(gallery.path_in_archive)
-            .set_view(gallery.view)
+                .set_title(gallery.title)
+                .set_artist(gallery.artist)
+                .set_info(gallery.info)
+                .set_type(gallery.type)
+                .set_fav(gallery.fav)
+                .set_tags(gallery.tags)
+                .set_language(gallery.language)
+                .set_rating(gallery.rating)
+                .set_status(gallery.status)
+                .set_pub_date(gallery.pub_date)
+                .set_link(gallery.link)
+                .set_times_read(gallery.times_read)
+                .set_last_read(gallery.last_read)
+                .set_exed(gallery.exed)
+                .set_is_archive(gallery.is_archive)
+                .set_path_in_archive(gallery.path_in_archive)
+                .set_view(gallery.view)
         )
 
 
@@ -1186,20 +1186,20 @@ class ListDB(DBBase):
                 l.add_gallery(gallery, False, _check_filter=False)
 
     @classmethod
-    def modify_list(cls, gallery_list):
+    def modify_list(cls, gallery_list: GalleryList):
         assert isinstance(gallery_list, GalleryList)
-        if gallery_list._id:
+        if gallery_list.id:
             cls.execute("""UPDATE list SET list_name=?, list_filter=?, profile=?,
                type=?, enforce=?, regex=?, l_case=?, strict=? WHERE list_id=?""",
                         (gallery_list.name, gallery_list.filter, str.encode(gallery_list.profile),
                          gallery_list.type, int(gallery_list.enforce), int(gallery_list.regex), int(gallery_list.case),
-                         int(gallery_list.strict), gallery_list._id))
+                         int(gallery_list.strict), gallery_list.id))
 
     @classmethod
-    def add_list(cls, gallery_list):
+    def add_list(cls, gallery_list: GalleryList):
         """Adds a list of GalleryList class to DB"""
         assert isinstance(gallery_list, GalleryList)
-        if gallery_list._id:
+        if gallery_list.id:
             ListDB.modify_list(gallery_list)
         else:
             c = cls.execute("""INSERT INTO list(list_name, list_filter, profile, type,
@@ -1214,45 +1214,42 @@ class ListDB(DBBase):
         ListDB.add_gallery_to_list(gallery_list.galleries(), gallery_list)
 
     @classmethod
-    def _g_id_or_list(cls, gallery_or_id_or_list):
+    def _g_id_or_list(cls, gallery_or_id_or_list: Union[Gallery, int, List[Gallery], List[int]]) -> List[int]:
         """Returns gallery ids"""
         if isinstance(gallery_or_id_or_list, (Gallery, int)):
             gallery_or_id_or_list = [gallery_or_id_or_list]
 
-        if isinstance(gallery_or_id_or_list, list):
-            if gallery_or_id_or_list:
-                if isinstance(gallery_or_id_or_list[0], Gallery):
-                    gallery_or_id_or_list = [g.id for g in gallery_or_id_or_list]
-        return gallery_or_id_or_list
+        return [g.id if isinstance(g, Gallery) else g for g in gallery_or_id_or_list]
 
     @classmethod
-    def add_gallery_to_list(cls, gallery_or_id_or_list, gallery_list):
+    def add_gallery_to_list(cls, gallery_or_id_or_list: Union[Gallery, int, List[Gallery], List[int]],
+                            gallery_list: GalleryList) -> None:
         """Maps provided gallery or list of galleries or gallery id to list"""
         assert isinstance(gallery_list, GalleryList)
-        g_ids = ListDB._g_id_or_list(gallery_or_id_or_list)
+        g_ids = cls._g_id_or_list(gallery_or_id_or_list)
 
-        values = [(gallery_list._id, x) for x in g_ids]
+        values = [(gallery_list.id, x) for x in g_ids]
         cls.executemany('INSERT OR IGNORE INTO series_list_map(list_id, series_id) VALUES(?, ?)', values)
 
     @classmethod
     def remove_list(cls, gallery_list):
         """Deletes list from DB"""
         assert isinstance(gallery_list, GalleryList)
-        if gallery_list._id:
-            cls.execute('DELETE FROM list WHERE list_id=?', (gallery_list._id,))
+        if gallery_list.id:
+            cls.execute('DELETE FROM list WHERE list_id=?', (gallery_list.id,))
         try:
             app_constants.GALLERY_LISTS.remove(gallery_list)
         except KeyError:
             pass
 
     @classmethod
-    def remove_gallery_from_list(cls, gallery_or_id_or_list, gallery_list):
+    def remove_gallery_from_list(cls, gallery_or_id_or_list: Union[Gallery, int, List[int]], gallery_list: GalleryList):
         """Removes provided gallery or list of galleries or gallery id from list"""
         assert isinstance(gallery_list, GalleryList)
-        if gallery_list._id:
+        if gallery_list.id:
             g_ids = ListDB._g_id_or_list(gallery_or_id_or_list)
 
-            values = [(gallery_list._id, x) for x in g_ids]
+            values = [(gallery_list.id, x) for x in g_ids]
             cls.executemany('DELETE FROM series_list_map WHERE list_id=? AND series_id=?', values)
 
 
@@ -1308,7 +1305,7 @@ class HashDB(DBBase):
         return None
 
     @classmethod
-    def get_gallery_hashes(cls, gallery_id):
+    def get_gallery_hashes(cls, gallery_id: int) -> List[bytes]:
         """Returns all hashes with the given gallery id in a list"""
         cursor = cls.execute('SELECT hash FROM hashes WHERE series_id=?',
                              (gallery_id,))
@@ -1321,7 +1318,7 @@ class HashDB(DBBase):
         return hashes
 
     @classmethod
-    def get_gallery_hash(cls, gallery_id, chapter, page=None):
+    def get_gallery_hash(cls, gallery_id: int, chapter: int, page: Optional[int] = None) -> List[bytes]:
         """
         returns hash of chapter. If page is specified, returns hash of chapter page
         """
@@ -1468,48 +1465,46 @@ class HashDB(DBBase):
                             hashes[i] = generate_img_hash(f)
 
             except NotADirectoryError:
-                temp_dir = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
+                _temp_dir = os.path.join(app_constants.temp_dir, str(uuid.uuid4()))
                 is_archive = gallery.is_archive
                 try:
                     if is_archive:
-                        zip = ArchiveFile(gallery.path)
+                        f_zip = ArchiveFile(gallery.path)
                     else:
-                        zip = ArchiveFile(chap.path)
+                        f_zip = ArchiveFile(chap.path)
                 except app_constants.CreateArchiveFail:
                     log_e('Could not generate hash: CreateZipFail')
                     return {}
 
                 pages = {}
-                if page != None:
-                    p = 0
-                    con = sorted(zip.dir_contents(chap.path))
+                if page is not None:
+                    con = sorted(f_zip.dir_contents(chap.path))
                     if color_img:
                         # if first img is colored, then return hash of that
-                        f_bytes = io.BytesIO(zip.open(con[0], False))
+                        f_bytes = io.BytesIO(f_zip.open(con[0], False))
                         if not utils.image_greyscale(f_bytes):
-                            return {'color': zip.extract(con[0])}
+                            return {'color': f_zip.extract(con[0])}
                         f_bytes.close()
                     if page == 'mid':
                         p = len(con) // 2
                         img = con[p]
-                        pages = {p: zip.open(img, True)}
+                        pages = {p: f_zip.open(img, True)}
                     elif isinstance(page, list):
                         for x in page:
-                            pages[x] = zip.open(con[x], True)
+                            pages[x] = f_zip.open(con[x], True)
                     else:
                         p = page
                         img = con[p]
-                        pages = {p: zip.open(img, True)}
-
+                        pages = {p: f_zip.open(img, True)}
 
                 else:
-                    imgs = sorted(zip.dir_contents(chap.path))
+                    imgs = sorted(f_zip.dir_contents(chap.path))
                     for n, img in enumerate(imgs):
-                        pages[n] = zip.open(img, True)
-                zip.close()
+                        pages[n] = f_zip.open(img, True)
+                f_zip.close()
 
                 hashes = {}
-                if gallery.id != None:
+                if gallery.id is not None:
                     for p in pages:
                         h = look_exists(p)
                         if not h:
@@ -1529,7 +1524,7 @@ class HashDB(DBBase):
         else:
             r_hash = hashes
 
-        if _name != None:
+        if _name is not None:
             try:
                 r_hash[_name] = r_hash[page]
             except KeyError:
@@ -1537,12 +1532,12 @@ class HashDB(DBBase):
         return r_hash
 
     @classmethod
-    def gen_gallery_hashes(cls, gallery):
+    def gen_gallery_hashes(cls, gallery: Gallery) -> List[bytes]:
         """Generates hashes for gallery's first chapter and inserts them to DB"""
         return HashDB.gen_gallery_hash(gallery, 0)
 
     @staticmethod
-    def rebuild_gallery_hashes(gallery):
+    def rebuild_gallery_hashes(gallery: Gallery) -> List[bytes]:
         """Inserts hashes into DB only if it doesnt already exist"""
         assert isinstance(gallery, Gallery)
         hashes = HashDB.get_gallery_hashes(gallery.id)
@@ -1572,6 +1567,7 @@ class GalleryList:
     COLLECTION: ClassVar[int] = 1
 
     _galleries: Set[Gallery]
+    _id: Optional[int]
 
     def __init__(self, name, list_of_galleries: List[Gallery] = None, filter=None, id=None, _db=True):
         if list_of_galleries is None:
@@ -1589,6 +1585,10 @@ class GalleryList:
         self._ids_chache = []
         self._scanning = False
         self.add_gallery(list_of_galleries, _db)
+
+    @property
+    def id(self):
+        return self._id
 
     def add_gallery(self, gallery_or_list_of: Union[List[Gallery], Gallery], _db=True, _check_filter=True):
         """add_gallery <- adds a gallery of Gallery class to list"""
@@ -1891,11 +1891,13 @@ class Gallery:
         """
         return []
 
-    def _keyword_search(self, ns, tag, args=[]):
+    def _keyword_search(self, ns, tag, args: Optional[List] = None):
+        if args is None:
+            args = []
         term = ''
         lt, gt = range(2)
 
-        def _search(term):
+        def _search(term) -> bool:
             if app_constants.Search.Regex in args:
                 if utils.regex_search(tag, term, args):
                     return True
@@ -1972,8 +1974,10 @@ class Gallery:
         assert isinstance(key, Chapter), "Can only check for chapters in gallery"
         return self.chapters.__contains__(key)
 
-    def contains(self, key, args=[]):
+    def contains(self, key, args: Optional[List] = None) -> bool:
         """Check if gallery contains keyword"""
+        if args is None:
+            args = []
         is_exclude = False if key[0] == '-' else True
         key = key[1:] if not is_exclude else key
         default = False if is_exclude else True
@@ -2194,7 +2198,7 @@ class ChaptersContainer:
     """
 
     parent: Optional[Gallery]
-    _data: Dict
+    _data: Dict[int, Chapter]
 
     def __init__(self, gallery: Optional[Gallery] = None):
         self.parent = None
@@ -2226,7 +2230,7 @@ class ChaptersContainer:
             # TODO: implement this
             pass
 
-    def create_chapter(self, number: Optional[int] = None):
+    def create_chapter(self, number: Optional[int] = None) -> Chapter:
         """
         Creates Chapter class with the next chapter number or passed number arg and adds to container
         The chapter will be returned
@@ -2276,17 +2280,23 @@ class ChaptersContainer:
     def get_all_chapters(self):
         return list(self._data.values())
 
-    def count(self):
+    def count(self) -> int:
         return len(self)
 
-    def pop(self, key, default=None):
+    def pop(self, key, default: Any = None) -> Union[Chapter, Any]:
         return self._data.pop(key, default)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
     def __getitem__(self, key):
-        return self._data[key]
+        if not isinstance(key, int):
+            raise TypeError("a subscript for ChapterContainer should be int, got {}.".format(key))
+
+        if key in self._data:
+            return self._data[key]
+
+        raise KeyError("key {} not found in ChapterContainer.".format(key))
 
     def __setitem__(self, key, value):
         assert isinstance(key, int), "Key must be a chapter number"
@@ -2300,7 +2310,7 @@ class ChaptersContainer:
         del self._data[key]
 
     def __iter__(self):
-        return iter([self[c] for c in sorted(self._data.keys())])
+        return iter(self[c] for c in sorted(self._data.keys()))
 
     def __bool__(self):
         return bool(self._data)
@@ -2314,9 +2324,12 @@ class ChaptersContainer:
         return s
 
     def __contains__(self, key):
-        if key.gallery == self.parent and key in [self.data[c] for c in self._data]:
-            return True
-        return False
+        if isinstance(key, Chapter):
+            if key.gallery == self.parent and key in self._data.values():
+                return True
+            return False
+
+        raise TypeError("expected type: 'Chapter', got key {} with type {}.".format(key, key.__class__))
 
 
 class AdminDB(QObject):
