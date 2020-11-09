@@ -263,11 +263,11 @@ def default_exec(obj: Gallery):
     return executing
 
 
-def only_once(fn):
+def only_once(fn) -> Callable[[Any, ...], GalleryModification]:
     f_name = fn.__name__
 
     @functools.wraps(fn)
-    def m(self, val):
+    def m(self: GalleryModification, val: Any) -> GalleryModification:
         if f_name in self._mem \
                 and self._mem[f_name] == val:
             return self
@@ -279,12 +279,12 @@ def only_once(fn):
     return m
 
 
-def update_series(fn):
+def update_series(fn) -> Callable[[Any, ...], GalleryModification]:
     f_name = fn.__name__
     fn = only_once(fn)
 
     @functools.wraps(fn)
-    def m(self, val):
+    def m(self: GalleryModification, val) -> GalleryModification:
         retval = fn(self, val)
         args = self.executing[f_name]
         if len(args) == 2:  # means that it changed
@@ -295,6 +295,9 @@ def update_series(fn):
     return m
 
 
+# needed for type hinting set_* methods to return
+# GalleryModification which is done with decorator magic
+# noinspection PyTypeChecker
 class GalleryModification:
     """
     Builder class meant to easily modify a gallery given its id.
@@ -315,96 +318,100 @@ class GalleryModification:
         self.executing = {}
 
     @update_series
-    def set_title(self, title: str):
+    def set_title(self, title: str) -> GalleryModification:
         return 'title', title
 
     @update_series
-    def set_profile(self, profile: str):
+    def set_profile(self, profile: str) -> GalleryModification:
         return 'profile', profile
 
     @update_series
-    def set_artist(self, artist: str):
+    def set_artist(self, artist: str) -> GalleryModification:
         return 'artist', artist
 
     @update_series
-    def set_info(self, info: str):
+    def set_info(self, info: str) -> GalleryModification:
         return 'info', info
 
     @update_series
-    def set_type(self, gal_type: str):
+    def set_type(self, gal_type: str) -> GalleryModification:
         return 'type', gal_type
 
     @update_series
-    def set_fav(self, fav: int):
+    def set_fav(self, fav: int) -> GalleryModification:
         return 'fav', fav
 
     @update_series
-    def set_language(self, language: str):
+    def set_language(self, language: str) -> GalleryModification:
         return 'language', language
 
     @update_series
-    def set_rating(self, rating: int):
+    def set_rating(self, rating: int) -> GalleryModification:
         return 'rating', rating
 
     @update_series
-    def set_status(self, status: str):
+    def set_status(self, status: str) -> GalleryModification:
         return 'status', status
 
     @update_series
-    def set_pub_date(self, pub_date: datetime):
+    def set_pub_date(self, pub_date: datetime) -> GalleryModification:
         return 'pub_date', pub_date
 
     @update_series
-    def set_link(self, link: str):
+    def set_link(self, link: str) -> GalleryModification:
         return 'link', link
 
     @update_series
-    def set_times_read(self, times_read: int):
+    def set_times_read(self, times_read: int) -> GalleryModification:
         return 'times_read', times_read
 
     @update_series
-    def set_series_path(self, series_path: str):
+    def set_last_read(self, last_read) -> GalleryModification:
+        return 'last_read', last_read
+
+    @update_series
+    def set_series_path(self, series_path: str) -> GalleryModification:
         return 'series_path', series_path
 
     @update_series
-    def set_db_v(self, db_v):
+    def set_db_v(self, db_v) -> GalleryModification:
         return 'db_v', db_v
 
     @update_series
-    def set_exed(self, exed):
+    def set_exed(self, exed) -> GalleryModification:
         return 'exed', exed
 
     @update_series
-    def set_is_archive(self, is_archive):
+    def set_is_archive(self, is_archive) -> GalleryModification:
         return 'is_archive', is_archive
 
     @update_series
-    def set_path_in_archive(self, path_in_archive):
+    def set_path_in_archive(self, path_in_archive) -> GalleryModification:
         return 'path_in_archive', path_in_archive
 
     @update_series
-    def set_view(self, view):
+    def set_view(self, view) -> GalleryModification:
         return 'view', view
 
     @update_series
-    def set_date_added(self, date_added):
+    def set_date_added(self, date_added) -> GalleryModification:
         return 'date_added', date_added
 
     @only_once
-    def set_tags(self, tags: Dict):
+    def set_tags(self, tags: Dict) -> GalleryModification:
         return self.MODIFY_TAGS, tags
 
     @only_once
-    def set_chapters(self, chapters: ChaptersContainer):
+    def set_chapters(self, chapters: ChaptersContainer) -> GalleryModification:
         return self.UPDATE_CHAPTERS, chapters
 
     # hashes type hint based on GalleryDB.rebuild_gallery
     # type check, TODO: i suspect that might not be the correct type
     @only_once
-    def set_hashes(self, hashes: Gallery):
+    def set_hashes(self, hashes: Gallery) -> GalleryModification:
         return self.REBUILD_HASHES, hashes
 
-    def execute(self, executor):
+    def execute(self, executor: GalleryDB) -> None:
         buffer = []
         values = []
         # 2020-11-09: i dont really know if you need the delayed execution
@@ -436,6 +443,29 @@ class GalleryModification:
 
         for proc in procs:
             proc()
+
+    @classmethod
+    def from_gallery(cls, gallery: Gallery) -> GalleryModification:
+        return (
+            cls(gallery.id)
+            .set_title(gallery.title)
+            .set_artist(gallery.artist)
+            .set_info(gallery.info)
+            .set_type(gallery.type)
+            .set_fav(gallery.fav)
+            .set_tags(gallery.tags)
+            .set_language(gallery.language)
+            .set_rating(gallery.rating)
+            .set_status(gallery.status)
+            .set_pub_date(gallery.pub_date)
+            .set_link(gallery.link)
+            .set_times_read(gallery.times_read)
+            .set_last_read(gallery.last_read)
+            .set_exed(gallery.exed)
+            .set_is_archive(gallery.is_archive)
+            .set_path_in_archive(gallery.path_in_archive)
+            .set_view(gallery.view)
+        )
 
 
 class GalleryDB(DBBase):
@@ -781,8 +811,9 @@ class ChapterDB(DBBase):
             executing.append(
                 (chap.title, str.encode(new_path), chap.pages, chap.in_archive, chap.gallery.id, chap.number,))
 
-        cls.executemany("UPDATE chapters SET chapter_title=?, chapter_path=?, pages=?, in_archive=? WHERE series_id=? AND chapter_number=?",
-                        executing)
+        cls.executemany(
+            "UPDATE chapters SET chapter_title=?, chapter_path=?, pages=?, in_archive=? WHERE series_id=? AND chapter_number=?",
+            executing)
 
     @classmethod
     def add_chapters(cls, gallery_object):
