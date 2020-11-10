@@ -455,12 +455,6 @@ class GalleryModifier:
         Returns a GalleryModifier object with all its field set to the corresponding values from gallery.
         Pass only_include an iterable of strings to only copy those fields while excluding the rest.
         """
-        # Problem, were Gallery to be changed or have a mismatched between the name of the gallery attribute
-        # and its corresponding set_* method in GalleryModifier, this method should be rewritten
-        # Also refactoring does not work with the way this is set up
-        # TODO: find a way to do this cleaner
-        # I thought of this after... ANOTHER CLASS, that acts a Builder on top, which accepts a Gallery object
-        # and has like, inherit_* methods on top of the set ones... so a subclass of GalleryModifier
         default = [
             'title', 'artist', 'info', 'type', 'fav', 'tags', 'language', 'rating', 'status', 'pub_date', 'link',
             'times_read', 'last_read', 'exed', 'is_archive', 'path_in_archive', 'view', 'profile', 'date_added',
@@ -470,7 +464,7 @@ class GalleryModifier:
             if not all(x in default for x in only_include):
                 raise ValueError(
                     "invalid sequence of attributes, {}. Can not build GalleryModifier from gallery."
-                    .format([x for x in only_include if x not in default])
+                        .format([x for x in only_include if x not in default])
                 )
         else:
             only_include = default
@@ -480,6 +474,109 @@ class GalleryModifier:
         for attr in attrs:
             getattr(obj, 'set_' + attr)(getattr(gallery, attr))
         return obj
+
+# TODO: Changed uses of GalleryModifier.from_gallery and GalleryDB.new_gallery_modifier_based_on with this subclass.
+class GalleryInheritedModifier(GalleryModifier):
+    gallery: Gallery
+
+    def __init__(self, gallery: Gallery):
+        super().__init__(gallery.id)
+        self.gallery = gallery
+
+    def inherit_title(self) -> GalleryInheritedModifier:
+        return self.set_title(self.gallery.title)
+
+    def inherit_profile(self) -> GalleryInheritedModifier:
+        return self.set_profile(self.gallery.profile)
+
+    def inherit_artist(self) -> GalleryInheritedModifier:
+        return self.set_artist(self.gallery.artist)
+
+    def inherit_info(self) -> GalleryInheritedModifier:
+        return self.set_info(self.gallery.info)
+
+    def inherit_type(self) -> GalleryInheritedModifier:
+        return self.set_type(self.gallery.type)
+
+    def inherit_fav(self) -> GalleryInheritedModifier:
+        return self.set_fav(self.gallery.fav)
+
+    def inherit_language(self) -> GalleryInheritedModifier:
+        return self.set_language(self.gallery.language)
+
+    def inherit_rating(self) -> GalleryInheritedModifier:
+        return self.set_rating(self.gallery.rating)
+
+    def inherit_status(self) -> GalleryInheritedModifier:
+        return self.set_status(self.gallery.status)
+
+    def inherit_pub_date(self) -> GalleryInheritedModifier:
+        return self.set_pub_date(self.gallery.pub_date)
+
+    def inherit_link(self) -> GalleryInheritedModifier:
+        return self.set_link(self.gallery.link)
+
+    def inherit_times_read(self) -> GalleryInheritedModifier:
+        return self.set_times_read(self.gallery.times_read)
+
+    def inherit_last_read(self) -> GalleryInheritedModifier:
+        return self.set_last_read(self.gallery.last_read)
+
+    def inherit_exed(self) -> GalleryInheritedModifier:
+        return self.set_exed(self.gallery.exed)
+
+    def inherit_is_archive(self) -> GalleryInheritedModifier:
+        return self.set_is_archive(self.gallery.is_archive)
+
+    def inherit_path_in_archive(self) -> GalleryInheritedModifier:
+        return self.set_path_in_archive(self.gallery.path_in_archive)
+
+    def inherit_view(self) -> GalleryInheritedModifier:
+        return self.set_view(self.gallery.view)
+
+    def inherit_date_added(self) -> GalleryInheritedModifier:
+        return self.set_date_added(self.gallery.date_added)
+
+    def inherit_tags(self) -> GalleryInheritedModifier:
+        return self.set_tags(self.gallery.tags)
+
+    def inherit_chapters(self) -> GalleryInheritedModifier:
+        return self.set_chapters(self.gallery.chapters)
+
+    def inherit_hashes(self) -> GalleryInheritedModifier:
+        return self.set_hashes(self.gallery)
+
+    def inherit_series_path(self) -> GalleryInheritedModifier:
+        return self.set_series_path(self.gallery.path)
+
+    # @formatter: off
+    def inherit_all(self) -> GalleryInheritedModifier:
+        return (
+            self
+            .inherit_title()
+            .inherit_profile()
+            .inherit_artist()
+            .inherit_info()
+            .inherit_type()
+            .inherit_fav()
+            .inherit_language()
+            .inherit_rating()
+            .inherit_status()
+            .inherit_pub_date()
+            .inherit_link()
+            .inherit_times_read()
+            .inherit_last_read()
+            .inherit_exed()
+            .inherit_is_archive()
+            .inherit_path_in_archive()
+            .inherit_view()
+            .inherit_date_added()
+            .inherit_tags()
+            .inherit_chapters()
+            .inherit_hashes()
+        )
+    # @formatter: on
+
 
 class GalleryDB(DBBase):
     """
@@ -553,9 +650,9 @@ class GalleryDB(DBBase):
             # @formatter: off
             (
                 GalleryModifier
-                .from_gallery(gallery, only_include=attr_include)
-                .set_db_v(db_constants.CURRENT_DB_VERSION)
-                .execute()
+                    .from_gallery(gallery, only_include=attr_include)
+                    .set_db_v(db_constants.CURRENT_DB_VERSION)
+                    .execute()
             )
             # @formatter: on
             if thumb:
@@ -566,14 +663,14 @@ class GalleryDB(DBBase):
         return True
 
     @classmethod
-    def new_gallery_modifier_based_on(cls, gallery: Gallery, only_include: Optional[Iterable[str]] = None) -> GalleryModifier:
+    def new_gallery_modifier_based_on(cls, gallery: Gallery) -> GalleryInheritedModifier:
         """
         Returns a GalleryModifier object with all its field set to the corresponding values from gallery.
         Pass only_include an iterable of strings to only copy those fields while excluding the rest.
 
-        Equivalent to `GalleryModifier.from_gallery`.
+        Equivalent to calling gallery in `GalleryInheritedModifier`.
         """
-        return GalleryModifier.from_gallery(gallery, only_include=only_include)
+        return GalleryInheritedModifier(gallery)
 
     @classmethod
     def new_gallery_modifier(cls, gallery_or_id: Union[Gallery, int]) -> GalleryModifier:
