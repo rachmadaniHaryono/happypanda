@@ -1845,7 +1845,7 @@ class Gallery:
     profile <- path to thumbnail
     path <- path to gallery
     artist <- str
-    chapters <- {<number>:<path>}
+    chapters <- {<number>:<path>} # probably lying, likely is ChaptersContainer
     chapter_size <- int of number of chapters
     info <- str
     fav <- int (1 for true 0 for false)
