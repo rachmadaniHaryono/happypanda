@@ -23,24 +23,14 @@ from typing import Optional, Union, TYPE_CHECKING
 import scandir
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal  # need this for interaction with main thread
 
-try:
-    from gallerydb import Gallery, GalleryDB, HashDB, execute
-    import app_constants
-    import pewnet
-    import settings
-    import utils
+from .gallerydb import Gallery, GalleryDB, HashDB, execute
+from . import app_constants
+from . import pewnet
+from . import settings
+from . import utils
 
-    if TYPE_CHECKING:
-        import app
-except ImportError:
-    from .gallerydb import Gallery, GalleryDB, HashDB, execute
-    from . import app_constants
-    from . import pewnet
-    from . import settings
-    from . import utils
-
-    if TYPE_CHECKING:
-        from . import app
+if TYPE_CHECKING:
+    from . import app
 
 """This file contains functions to fetch gallery data"""
 

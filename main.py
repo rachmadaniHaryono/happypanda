@@ -25,18 +25,11 @@ from typing import Optional
 from PyQt5.QtCore import QFile, Qt
 from PyQt5.QtWidgets import QApplication
 
-try:
-    from database import db, db_constants
-    import app
-    import app_constants
-    import gallerydb
-    import utils
-except ImportError:
-    from .database import db, db_constants
-    from . import app
-    from . import app_constants
-    from . import gallerydb
-    from . import utils
+from version.database import db, db_constants
+from version import app
+from version import app_constants
+from version import gallerydb
+from version import utils
 
 
 # IMPORTANT STUFF

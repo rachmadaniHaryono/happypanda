@@ -30,36 +30,20 @@ from PyQt5.QtWidgets import (QMainWindow, QHBoxLayout, QWidget, QVBoxLayout,
                              QShortcut, QGraphicsBlurEffect, QTableWidget,
                              QTableWidgetItem)
 
-try:
-    import app_constants
-    import misc
-    import gallery
-    import io_misc
-    import settingsdialog
-    import gallerydialog
-    import fetch
-    import gallerydb
-    import settings
-    import pewnet
-    import utils
-    import misc_db
-    import database
-    from executors import Executors
-except ImportError:
-    from . import app_constants
-    from . import misc
-    from . import gallery
-    from . import io_misc
-    from . import settingsdialog
-    from . import gallerydialog
-    from . import fetch
-    from . import gallerydb
-    from . import settings
-    from . import pewnet
-    from . import utils
-    from . import misc_db
-    from . import database
-    from .executors import Executors
+from . import app_constants
+from . import misc
+from . import gallery
+from . import io_misc
+from . import settingsdialog
+from . import gallerydialog
+from . import fetch
+from . import gallerydb
+from . import settings
+from . import pewnet
+from . import utils
+from . import misc_db
+from . import database
+from .executors import Executors
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -403,8 +387,8 @@ class AppWindow(QMainWindow):
                                 gallery.CommonView.scroll_to_index(self.app_instance.get_current_view(), index)
 
                     g_popup = io_misc.GalleryPopup((
-                                                   'Fecthing metadata for these galleries failed.' + ' Check happypanda.log for details.',
-                                                   galleries), self, menu=GalleryContextMenu)
+                        'Fecthing metadata for these galleries failed.' + ' Check happypanda.log for details.',
+                        galleries), self, menu=GalleryContextMenu)
                     errors = {g[0].id: g[1] for g in status}
                     for g_item in g_popup.get_all_items():
                         g_item.extra_text.setText("<font color='red'>{}</font>".format(errors[g_item.gallery.id]))

@@ -29,22 +29,14 @@ from PyQt5.QtGui import (QPixmap, QBrush, QColor, QPainter,
 from PyQt5.QtWidgets import (QListView, QStyledItemDelegate, QStyle,
                              QWidget, QHeaderView, QTableView, QMessageBox, QScroller, QStackedLayout)
 
-try:
-    from executors import Executors
-    import gallerydb
-    import app_constants
-    import misc
-    import gallerydialog
-    import io_misc
-    import utils
-except ImportError:
-    from .executors import Executors
-    from . import gallerydb
-    from . import app_constants
-    from . import misc
-    from . import gallerydialog
-    from . import io_misc
-    from . import utils
+
+from .executors import Executors
+from . import gallerydb
+from . import app_constants
+from . import misc
+from . import gallerydialog
+from . import io_misc
+from . import utils
 
 log = logging.getLogger(__name__)
 log_i = log.info
