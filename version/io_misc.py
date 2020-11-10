@@ -13,14 +13,24 @@ from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QPlainTextEdit,
                              QShortcut, QMenu, qApp)
 
-import app_constants
-import misc
-import gallerydb
-import utils
-import pewnet
-import settings
-import fetch
-from asm_manager import AsmManager
+try:
+    import app_constants
+    import misc
+    import gallerydb
+    import utils
+    import pewnet
+    import settings
+    import fetch
+    from asm_manager import AsmManager
+except ImportError:
+    from . import app_constants
+    from . import misc
+    from . import gallerydb
+    from . import utils
+    from . import pewnet
+    from . import settings
+    from . import fetch
+    from .asm_manager import AsmManager
 
 log = logging.getLogger(__name__)
 log_i = log.info

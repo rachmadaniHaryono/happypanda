@@ -1,13 +1,22 @@
 """asmhentai module."""
 import logging
 from pprint import pformat
+from typing import ClassVar
 
-from app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
-from pewnet import (
-    DLManager as DLManagerObject,
-    Downloader as DownloaderObject,
-    HenItem,
-)
+try:
+    from app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
+    from pewnet import (
+        DLManager as DLManagerObject,
+        Downloader as DownloaderObject,
+        HenItem,
+    )
+except ImportError:
+    from .app_constants import DOWNLOAD_TYPE_OTHER, VALID_GALLERY_CATEGORY
+    from .pewnet import (
+        DLManager as DLManagerObject,
+        Downloader as DownloaderObject,
+        HenItem,
+    )
 
 log = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger for module."""
@@ -30,7 +39,7 @@ class AsmManager(DLManagerObject):
         url (str): Base url for manager.
     """
 
-    url = 'http://asmhentai.com/'
+    url: ClassVar[str] = 'http://asmhentai.com/'
 
     @staticmethod
     def _find_tags(browser):
@@ -69,11 +78,12 @@ class AsmManager(DLManagerObject):
         """
         self.ensure_browser_on_url(url=g_url)
         html_soup = self._browser
-        res = {}
-        res['title'] = html_soup.select('.info h1')[0].text
-        res['title_jpn'] = html_soup.select('.info h2')[0].text
-        res['filecount'] = html_soup.select('.pages')[0].text.split('Pages:')[1].strip()
-        res['tags'] = self._find_tags(browser=self._browser)
+        res = {
+            'title': html_soup.select('.info h1')[0].text,
+            'title_jpn': html_soup.select('.info h2')[0].text,
+            'filecount': html_soup.select('.pages')[0].text.split('Pages:')[1].strip(),
+            'tags': self._find_tags(browser=self._browser)
+        }
         if any('Category:' in x for x in res['tags']):
             res['category'] = [tag.split(':')[1] for tag in res['tags'] if 'Category:' in tag][0]
         return res

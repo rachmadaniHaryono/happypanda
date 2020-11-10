@@ -1,8 +1,11 @@
 
-Work on this program has been halted in favor of its successor `HappyPanda X <https://github.com/happypandax/server>`__ (bugs and such won't be fixed).
-===========
+I don't promise anything, I picked this up because I like the program.
+Right now I'm trying to type hint the codebase while refactoring, there
+will be messy commits because I have no idea how to contribute properly.
 
-   Follow me on twitter to keep up to date with HPX:
+Using PyCharm and Python 3.8.
+
+   Follow original creator on twitter to keep up to date with HPX:
 
    .. image:: https://img.shields.io/twitter/follow/pewspew.svg?style=social&label=Follow
      :target: https://twitter.com/twiddly_
@@ -32,13 +35,13 @@ Features
 
 Screenshots
 ===========
-.. image:: https://github.com/Pewpews/happypanda/raw/master/misc/screenshot1.png
+.. image:: https://github.com/rabaarabaa/happypanda/raw/master/misc/screenshot1.png
     :width: 100%
     :align: center
-.. image:: https://github.com/Pewpews/happypanda/raw/master/misc/screenshot2.png
+.. image:: https://github.com/rabaarabaa/happypanda/raw/master/misc/screenshot2.png
     :width: 100%
     :align: center
-.. image:: https://github.com/Pewpews/happypanda/raw/master/misc/screenshot3.png
+.. image:: https://github.com/rabaarabaa/happypanda/raw/master/misc/screenshot3.png
     :width: 100%
     :align: center
 
@@ -49,14 +52,14 @@ Windows
 ^^^^^^^
 
 #. Download the archive from
-   `releases <https://github.com/Pewpews/happypanda/releases>`__
+   `releases <https://github.com/rabaarabaa/happypanda/releases>`__
 #. Extract the archive to its own folder
 #. Find Happypanda.exe and double click on it!
 
 Mac and Linux
 ^^^^^^^^^^^^^
 
-Install from PYPI or see `INSTALL.md <https://github.com/Pewpews/happypanda/blob/master/INSTALL.md>`__
+Install from PYPI or see `INSTALL.md <https://github.com/Pewpews/rabaarabaa/blob/master/INSTALL.md>`__
 
 PYPI
 ^^^^^^^^^^^^^
@@ -79,7 +82,7 @@ Updating
 ========
 
 | Overwrite your previous installation.
-| More info in the `wiki <https://github.com/Pewpews/happypanda/wiki>`__
+| More info in the `wiki <https://github.com/rabaarabaa/happypanda/wiki>`__
 
 
 PYPI
@@ -92,7 +95,7 @@ Misc.
 
 For general documentation (how to add galleries and usage of the
 search), check the
-`wiki <https://github.com/Pewpews/happypanda/wiki>`__.
+`wiki <https://github.com/rabaarabaa/happypanda/wiki>`__.
 
 People wanting to import galleries from the Pururin database torrent
 should find `this <https://github.com/Exedge/Convertor>`__ useful.
@@ -117,4 +120,4 @@ Dependencies
 Contributing
 ============
 
-Please refer to ``HappypandaX`` instead.
+You may make a pull request I guess...

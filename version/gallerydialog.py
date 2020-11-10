@@ -8,13 +8,22 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QDesktopWidget, QGroupBox,
                              QCheckBox, QSizePolicy, QSpinBox)
 from PyQt5.QtCore import (pyqtSignal, Qt, QPoint, QDate, QThread, QTimer)
 
-import app_constants
-import utils
-import gallerydb
-import fetch
-import misc
-import database
-import settings
+try:
+    import app_constants
+    import utils
+    import gallerydb
+    import fetch
+    import misc
+    import database
+    import settings
+except ImportError:
+    from . import app_constants
+    from . import utils
+    from . import gallerydb
+    from . import fetch
+    from . import misc
+    from . import database
+    from . import settings
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -414,11 +423,11 @@ class GalleryDialog(QWidget):
 
     def check(self):
         if not self._multiple_galleries:
-            if len(self.title_edit.text()) is 0:
+            if len(self.title_edit.text()) == 0:
                 self.title_edit.setFocus()
                 self.title_edit.setStyleSheet("border-style:outset;border-width:2px;border-color:red;")
                 return False
-            elif len(self.author_edit.text()) is 0:
+            elif len(self.author_edit.text()) == 0:
                 self.author_edit.setText("Unknown")
 
             if len(self.path_lbl.text()) == 0 or self.path_lbl.text() == 'No path specified':
