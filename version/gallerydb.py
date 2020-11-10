@@ -300,7 +300,7 @@ def update_series(fn) -> Callable[[Any, ...], GalleryModifier]:
 # noinspection PyTypeChecker
 class GalleryModifier:
     """
-    Builder class meant to easily modify a gallery given its id.
+    Builder class meant to easily modify a gallery in the db given its id.
 
     NOTE: Meant to replace GalleryDB.modify_gallery in certain uses.
     """
@@ -475,8 +475,23 @@ class GalleryModifier:
             getattr(obj, 'set_' + attr)(getattr(gallery, attr))
         return obj
 
+
 # TODO: Changed uses of GalleryModifier.from_gallery and GalleryDB.new_gallery_modifier_based_on with this subclass.
 class GalleryInheritedModifier(GalleryModifier):
+    """
+    Given the gallery passed to its constructor it allows to set default values for the fields easily for further
+    edition, by allowing to `inherit` fields from said gallery.
+
+    ## Usage:
+    modifier = (
+        GalleryInheritedModifier(gallery)
+        .inherit_title() # same as calling .set_title(gallery.title)
+        .inherit_tags()  # same as calling .set_tags(gallery.tags)
+    ).execute()
+
+    And so on... Although it handles some nuances, where the name of the attribute is not the same in the Gallery object
+    and the Gallery schema in the db.
+    """
     gallery: Gallery
 
     def __init__(self, gallery: Gallery):
@@ -553,27 +568,27 @@ class GalleryInheritedModifier(GalleryModifier):
     def inherit_all(self) -> GalleryInheritedModifier:
         return (
             self
-            .inherit_title()
-            .inherit_profile()
-            .inherit_artist()
-            .inherit_info()
-            .inherit_type()
-            .inherit_fav()
-            .inherit_language()
-            .inherit_rating()
-            .inherit_status()
-            .inherit_pub_date()
-            .inherit_link()
-            .inherit_times_read()
-            .inherit_last_read()
-            .inherit_exed()
-            .inherit_is_archive()
-            .inherit_path_in_archive()
-            .inherit_view()
-            .inherit_date_added()
-            .inherit_tags()
-            .inherit_chapters()
-            .inherit_hashes()
+                .inherit_title()
+                .inherit_profile()
+                .inherit_artist()
+                .inherit_info()
+                .inherit_type()
+                .inherit_fav()
+                .inherit_language()
+                .inherit_rating()
+                .inherit_status()
+                .inherit_pub_date()
+                .inherit_link()
+                .inherit_times_read()
+                .inherit_last_read()
+                .inherit_exed()
+                .inherit_is_archive()
+                .inherit_path_in_archive()
+                .inherit_view()
+                .inherit_date_added()
+                .inherit_tags()
+                .inherit_chapters()
+                .inherit_hashes()
         )
     # @formatter: on
 
@@ -607,7 +622,7 @@ class GalleryDB(DBBase):
             if gallery.profile:
                 GalleryDB.clear_thumb(gallery.profile)
             gallery.profile = Executors.generate_thumbnail(gallery, blocking=True)
-            GalleryDB.new_gallery_modifier_based_on(gallery, only_include=('profile',)).execute()
+            GalleryDB.new_gallery_modifier_based_on(gallery).inherit_profile().execute()
         except:
             log.exception("Failed rebuilding thumbnail")
             return False
@@ -666,7 +681,6 @@ class GalleryDB(DBBase):
     def new_gallery_modifier_based_on(cls, gallery: Gallery) -> GalleryInheritedModifier:
         """
         Returns a GalleryModifier object with all its field set to the corresponding values from gallery.
-        Pass only_include an iterable of strings to only copy those fields while excluding the rest.
 
         Equivalent to calling gallery in `GalleryInheritedModifier`.
         """
@@ -2314,7 +2328,7 @@ class Chapter:
             execute(utils.open_chapter, True, self.path)
         self.gallery.times_read += 1
         self.gallery.last_read = datetime.datetime.now().replace(microsecond=0)
-        modifier = GalleryDB.new_gallery_modifier_based_on(self.gallery, only_include=('times_read', 'last_read'))
+        modifier = GalleryDB.new_gallery_modifier_based_on(self.gallery).inherit_times_read().inherit_last_read()
         execute(modifier.execute, True)
 
 

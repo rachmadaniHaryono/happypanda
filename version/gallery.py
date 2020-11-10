@@ -1685,7 +1685,25 @@ class MangaViews:
             'pub_date', 'tags', 'link', 'series_path', 'chapters', 'exed'
         )
         for gallery in list_of_gallery:
-            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(gallery, only_include=only_attr)
+            # @formatter: off
+            modifier = (
+                gallerydb.GalleryDB.new_gallery_modifier_based_on(gallery)
+                .inherit_title()
+                .inherit_profile()
+                .inherit_artist()
+                .inherit_info()
+                .inherit_type()
+                .inherit_language()
+                .inherit_rating()
+                .inherit_status()
+                .inherit_pub_date()
+                .inherit_tags()
+                .inherit_link()
+                .inherit_series_path()
+                .inherit_chapters()
+                .inherit_exed()
+            )
+            # @formatter: on
             gallerydb.execute(modifier.execute, True)
         if db_optimize:
             gallerydb.execute(gallerydb.GalleryDB.end, True)

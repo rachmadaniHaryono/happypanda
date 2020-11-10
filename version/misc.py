@@ -57,7 +57,7 @@ except ImportError:
     from .utils import (tag_to_string, tag_to_dict, title_parser, ARCHIVE_FILES,
                         ArchiveFile, IMG_FILES)
     from .executors import Executors
-    from . import utils
+    from . import utils, gallerydb
     from . import app_constants
     from . import gallerydb
     from . import fetch
@@ -1214,15 +1214,16 @@ class GalleryMenu(QMenu):
 
     def set_rating(self, x):
 
-        def save_rating(g):
-            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('rating',))
-            gallerydb.execute(modifier.execute, True)
-
         if self.selected:
-            [(setattr(g, "rating", x), save_rating(g)) for g in [idx.data(Qt.UserRole + 1) for idx in self.selected]]
+            for idx in self.selected:
+                g = idx.data(Qt.UserRole + 1)
+                g.rating = x
+                modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g).inherit_rating()
+                gallerydb.execute(modifier.execute, True)
         else:
             self.gallery.rating = x
-            save_rating(self.gallery)
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(self.gallery).inherit_rating()
+            gallerydb.execute(modifier.execute, True)
 
     def add_to_ignore(self):
         if self.selected:
@@ -1254,7 +1255,7 @@ class GalleryMenu(QMenu):
         self.view.gallery_model.removeRows(self.view.gallery_model.rowCount() - rows, rows)
         self.parent_widget.default_manga_view.add_gallery(galleries)
         for g in galleries:
-            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('view',))
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g).inherit_view()
             gallerydb.execute(modifier.execute, True)
         self.view.sort_model.refresh()
         self.view.clearSelection()
@@ -1265,11 +1266,11 @@ class GalleryMenu(QMenu):
             for idx in self.selected:
                 g = idx.data(Qt.UserRole + 1)
                 g.exed = exed
-                modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('exed',))
+                modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g).inherit_exed()
                 gallerydb.execute(modifier.execute, True)
         else:
             self.gallery.exed = exed
-            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(self.gallery, only_include=('exed',))
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(self.gallery).inherit_exed()
             gallerydb.execute(modifier.execute, True)
 
     def reset_read_count(self):
@@ -1277,11 +1278,11 @@ class GalleryMenu(QMenu):
             for idx in self.selected:
                 g = idx.data(Qt.UserRole + 1)
                 g.times_read = 0
-                modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g, only_include=('times_read',))
+                modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(g).inherit_times_read()
                 gallerydb.execute(modifier.execute, True)
         else:
             self.gallery.times_read = 0
-            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(self.gallery, only_include=('times_read',))
+            modifier = gallerydb.GalleryDB.new_gallery_modifier_based_on(self.gallery).inherit_times_read()
             gallerydb.execute(modifier.execute, True)
 
     def add_to_list(self, g_list):
