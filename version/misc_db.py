@@ -24,18 +24,11 @@ from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QWidget,
                              QFrame, QSizePolicy, QListView, QFormLayout, QLineEdit,
                              QStyledItemDelegate, QCheckBox, QButtonGroup, QPlainTextEdit)
 
-try:
-    import gallerydb
-    import app_constants
-    import utils
-    import misc
-    import gallery
-except ImportError:
-    from . import gallerydb
-    from . import app_constants
-    from . import utils
-    from . import misc
-    from . import gallery
+from . import gallerydb
+from . import app_constants
+from . import utils
+from . import misc
+from . import gallery
 
 log = logging.getLogger(__name__)
 log_i = log.info

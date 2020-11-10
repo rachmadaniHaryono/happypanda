@@ -37,16 +37,10 @@ import time
 from PyQt5.QtGui import QImage, qRgba
 from PIL import Image, ImageChops
 
-try:
-    import app_constants
-    from database import db_constants
-    if TYPE_CHECKING:
-        import gallerydb
-except ImportError:
-    from . import app_constants
-    from .database import db_constants
-    if TYPE_CHECKING:
-        from . import gallerydb
+from . import app_constants
+from .database import db_constants
+if TYPE_CHECKING:
+    from . import gallerydb
 
 log = logging.getLogger(__name__)
 log_i = log.info

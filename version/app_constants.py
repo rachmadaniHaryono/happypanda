@@ -22,17 +22,11 @@ from typing import Set, TYPE_CHECKING
 import qtawesome as qta
 from PyQt5.QtGui import QIcon
 
-try:
-    import settings
-    from database import db_constants
-    if TYPE_CHECKING:
-        import gallerydb
-except ImportError:
-    from . import settings
-    from .database import db_constants
+from . import settings
+from .database import db_constants
 
-    if TYPE_CHECKING:
-        from . import gallerydb
+if TYPE_CHECKING:
+    from . import gallerydb
 
 # Version number
 vs = '1.1'

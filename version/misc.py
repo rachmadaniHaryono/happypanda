@@ -44,30 +44,15 @@ from PyQt5.QtWidgets import (QWidget, QProgressBar, QLabel,
                              QCommonStyle, QTableWidget,
                              QTableWidgetItem, QTableView, QStyleOption)
 
-try:
-    from utils import (tag_to_string, tag_to_dict, title_parser, ARCHIVE_FILES,
-                       ArchiveFile, IMG_FILES)
-    from executors import Executors
-    import utils
-    import app_constants
-    import gallerydb
-    import fetch
-    import settings
+from .utils import (tag_to_string, tag_to_dict, title_parser, ARCHIVE_FILES,
+                    ArchiveFile, IMG_FILES)
+from .executors import Executors
+from . import utils, gallerydb
+from . import app_constants
+from . import gallerydb
+from . import fetch
+from . import settings
 
-    if TYPE_CHECKING:
-        import gallery_db
-except ImportError:
-    from .utils import (tag_to_string, tag_to_dict, title_parser, ARCHIVE_FILES,
-                        ArchiveFile, IMG_FILES)
-    from .executors import Executors
-    from . import utils, gallerydb
-    from . import app_constants
-    from . import gallerydb
-    from . import fetch
-    from . import settings
-
-    if TYPE_CHECKING:
-        from . import gallery_db
 
 log = logging.getLogger(__name__)
 log_i = log.info

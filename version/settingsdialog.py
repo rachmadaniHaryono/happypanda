@@ -9,16 +9,16 @@ from PyQt5.QtWidgets import (QVBoxLayout, QHBoxLayout, QListWidget, QWidget,
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPalette, QPixmapCache
 
-from color_line_edit import ColorLineEdit
-from misc import FlowLayout, Spacer, PathLineEdit, AppDialog, Line
-import misc
-import settings
-import app_constants
-import misc_db
-import gallerydb
-import utils
-import io_misc
-import pewnet
+from .color_line_edit import ColorLineEdit
+from .misc import FlowLayout, Spacer, PathLineEdit, AppDialog, Line
+from . import misc
+from . import settings
+from . import app_constants
+from . import misc_db
+from . import gallerydb
+from . import utils
+from . import io_misc
+from . import pewnet
 
 log = logging.getLogger(__name__)
 log_i = log.info
