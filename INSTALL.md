@@ -1,3 +1,6 @@
+## OUTDATED
+TODO: Redo instructions, freeze installation requirements.
+
 This guide will show you how to run from source.
 
 A better option is dowloading the latest version
