@@ -18,7 +18,7 @@ import math
 import os
 import threading
 import time
-from typing import ClassVar
+from typing import ClassVar, TYPE_CHECKING
 
 import scandir
 from PyQt5.QtCore import (Qt, QPoint, pyqtSignal, QTimer, QSize, QRect, QFileInfo,
@@ -53,6 +53,9 @@ try:
     import gallerydb
     import fetch
     import settings
+
+    if TYPE_CHECKING:
+        import gallery_db
 except ImportError:
     from .utils import (tag_to_string, tag_to_dict, title_parser, ARCHIVE_FILES,
                         ArchiveFile, IMG_FILES)
@@ -62,6 +65,9 @@ except ImportError:
     from . import gallerydb
     from . import fetch
     from . import settings
+
+    if TYPE_CHECKING:
+        from . import gallery_db
 
 log = logging.getLogger(__name__)
 log_i = log.info
@@ -1036,6 +1042,8 @@ class GalleryMenu(QMenu):
     delete_galleries: pyqtBoundSignal = pyqtSignal(bool)
     edit_gallery: pyqtBoundSignal = pyqtSignal(object, object)
 
+    gallery: gallerydb.Gallery
+
     def __init__(self, view, index, sort_model, app_window, selected_indexes=None):
         super().__init__(app_window)
         self.parent_widget = app_window
@@ -1059,7 +1067,8 @@ class GalleryMenu(QMenu):
                 favourite_act.setCheckable(True)
                 f = []
                 for idx in self.selected:
-                    if idx.data(Qt.UserRole + 1).fav:
+                    g: gallerydb.Gallery = idx.data(Qt.UserRole + 1)
+                    if g.fav:
                         f.append(True)
                     else:
                         f.append(False)
@@ -1086,9 +1095,8 @@ class GalleryMenu(QMenu):
             open_chapters = QMenu(self)
             chapters_menu.setMenu(open_chapters)
             for number, chap in enumerate(self.gallery.chapters, 1):
-                chap_action = QAction("Open chapter {}".format(number),
-                                      open_chapters,
-                                      triggered=functools.partial(chap.open))
+                chap_action = QAction("Open chapter {}".format(number), open_chapters)
+                chap_action.triggered.connect(functools.partial(chap.open))
                 open_chapters.addAction(chap_action)
         if self.selected:
             open_f_chapters = self.addAction('Open first chapters', self.open_first_chapters)
@@ -1210,10 +1218,10 @@ class GalleryMenu(QMenu):
             else:
                 tag.append('artist:' + self.index.data(Qt.UserRole + 2).strip())
 
-        [utils.lookup_tag(t) for t in tag]
+        for t in tag:
+            utils.lookup_tag(t)
 
     def set_rating(self, x):
-
         if self.selected:
             for idx in self.selected:
                 g = idx.data(Qt.UserRole + 1)
