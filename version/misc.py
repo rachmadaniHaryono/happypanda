@@ -1,5 +1,4 @@
-﻿# """
-# This file is part of Happypanda.
+﻿# This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
@@ -10,7 +9,6 @@
 # GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License
 # along with Happypanda.  If not, see <http://www.gnu.org/licenses/>.
-# """
 from __future__ import annotations
 import functools
 import logging
@@ -248,9 +246,15 @@ class SortMenu(QMenu):
         q_action_s_artist.setCheckable(True)
         s_artist = self.sort_actions.addAction(q_action_s_artist)
         s_artist.triggered.connect(functools.partial(self.new_sort.emit, 'artist'))
+<<<<<<< HEAD
         q_action_s_date = QAction("Date Added", self.sort_actions)
         q_action_s_date.setCheckable(True)
         s_date = self.sort_actions.addAction(q_action_s_date)
+=======
+        s_group = self.sort_actions.addAction(QAction("Group", self.sort_actions, checkable=True))
+        s_group.triggered.connect(functools.partial(self.new_sort.emit, 'group'))
+        s_date = self.sort_actions.addAction(QAction("Date Added", self.sort_actions, checkable=True))
+>>>>>>> Kramoule/develop
         s_date.triggered.connect(functools.partial(self.new_sort.emit, 'date_added'))
         q_action_pub_d = QAction("Date Published", self.sort_actions)
         q_action_pub_d.setCheckable(True)
@@ -272,6 +276,7 @@ class SortMenu(QMenu):
         self.addAction(asc_desc_act)
         self.addSeparator()
         self.addAction(s_artist)
+        self.addAction(s_group)
         self.addAction(s_date)
         self.addAction(s_pub_d)
         self.addAction(s_last_read)
@@ -294,8 +299,10 @@ class SortMenu(QMenu):
         for act in self.sort_actions.actions():
             if act.text() == 'Title':
                 check_key(act, 'title')
-            elif act.text() == 'Artist':
+            elif act.text() == 'Author':
                 check_key(act, 'artist')
+            elif act.text() == 'Group':
+                check_key(act, 'group')
             elif act.text() == 'Date Added':
                 check_key(act, 'date_added')
             elif act.text() == 'Date Published':

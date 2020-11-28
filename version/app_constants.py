@@ -1,4 +1,4 @@
-﻿# This file is part of Happypanda.
+# This file is part of Happypanda.
 # Happypanda is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from . import gallerydb
 
 # Version number
-vs = '1.1'
+vs  = '1.2'
 DEBUG = False
 
 OS_NAME = ''
@@ -99,18 +99,19 @@ THUMB_DEFAULT = (THUMB_W_SIZE, THUMB_H_SIZE)
 THUMB_SMALL = (140, 93)
 
 # Columns
-COLUMNS = tuple(range(11))
+COLUMNS = tuple(range(12))
 TITLE = 0
 ARTIST = 1
-DESCR = 2
-TAGS = 3
-TYPE = 4
-FAV = 5
-CHAPTERS = 6
-LANGUAGE = 7
-LINK = 8
-PUB_DATE = 9
-DATE_ADDED = 10
+GROUP = 2
+DESCR = 3
+TAGS = 4
+TYPE = 5
+FAV = 6
+CHAPTERS = 7
+LANGUAGE = 8
+LINK = 9
+PUB_DATE = 10
+DATE_ADDED = 11
 
 
 @enum.unique
@@ -735,7 +736,7 @@ ABOUT = (
 <li>Various python libraries (see github repo)</li>
 </ul>
 <p>Contributors (github):
-rachmadaniHaryono (big thanks!), nonamethanks, ImoutoChan, Moshidesu, peaceanpizza, utterbull, LePearlo</p>
+rachmadaniHaryono (big thanks!), nonamethanks, ImoutoChan, Moshidesu, peaceanpizza, utterbull, LePearlo, Kramoule</p>
 
 </body></html>
 """
