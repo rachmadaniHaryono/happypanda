@@ -1,14 +1,15 @@
 
-I don't promise anything, I picked this up because I like the program.
-Right now I'm trying to type hint the codebase while refactoring, there
-will be messy commits because I have no idea how to contribute properly.
-
-Using PyCharm and Python 3.8.
-
    Follow original creator on twitter to keep up to date with HPX:
 
    .. image:: https://img.shields.io/twitter/follow/pewspew.svg?style=social&label=Follow
      :target: https://twitter.com/twiddly_
+   
+    Note: Work on this program has been halted in favor of its successor
+    `HappyPanda X <https://github.com/happypandax/server>`__ (bugs and such won't be fixed).
+    Follow me on twitter to keep up to date with HPX:
+    
+    .. image:: https://img.shields.io/twitter/follow/twiddly_.svg?style=social&label=Follow
+        :target: https://twitter.com/twiddly_
 
 This is a cross platform manga/doujinshi manager with namespace & tag
 support.
@@ -35,6 +36,7 @@ Features
 
 Screenshots
 ===========
+<<<<<<< HEAD
 .. image:: https://github.com/rabaarabaa/happypanda/raw/master/misc/screenshot1.png
     :width: 100%
     :align: center
@@ -42,6 +44,15 @@ Screenshots
     :width: 100%
     :align: center
 .. image:: https://github.com/rabaarabaa/happypanda/raw/master/misc/screenshot3.png
+=======
+.. image:: https://github.com/Kramoule/happypanda/raw/master/misc/screenshot1.png
+    :width: 100%
+    :align: center
+.. image:: https://github.com/Kramoule/happypanda/raw/master/misc/screenshot2.png
+    :width: 100%
+    :align: center
+.. image:: https://github.com/Kramoule/happypanda/raw/master/misc/screenshot3.png
+>>>>>>> Kramoule/develop
     :width: 100%
     :align: center
 
@@ -52,14 +63,22 @@ Windows
 ^^^^^^^
 
 #. Download the archive from
+<<<<<<< HEAD
    `releases <https://github.com/rabaarabaa/happypanda/releases>`__
+=======
+   `releases <https://github.com/Kramoule/happypanda/releases>`__
+>>>>>>> Kramoule/develop
 #. Extract the archive to its own folder
 #. Find Happypanda.exe and double click on it!
 
 Mac and Linux
 ^^^^^^^^^^^^^
 
+<<<<<<< HEAD
 Install from PYPI or see `INSTALL.md <https://github.com/Pewpews/rabaarabaa/blob/master/INSTALL.md>`__
+=======
+Install from PYPI or see `INSTALL.md <https://github.com/Kramoule/happypanda/blob/master/INSTALL.md>`__
+>>>>>>> Kramoule/develop
 
 PYPI
 ^^^^^^^^^^^^^
